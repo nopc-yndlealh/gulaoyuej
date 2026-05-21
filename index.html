@@ -83,10 +83,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 }
 .card {
   background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-  padding: 20px; cursor: pointer; transition: all 0.2s; position: relative;
-  overflow: hidden;
+  cursor: pointer; transition: all 0.2s; position: relative;
+  overflow: hidden; display: flex; flex-direction: column;
 }
 .card:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-1px); }
+.card-img {
+  width: 100%; height: 180px; object-fit: cover; background: var(--bg);
+  flex-shrink: 0;
+}
+.card-img-placeholder {
+  width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
+  font-size: 48px; background: var(--bg); color: #ccc; flex-shrink: 0;
+}
+.card-body { padding: 16px 20px 20px; flex: 1; }
 .card-badge {
   display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 12px;
   margin-bottom: 10px; font-weight: 500;
@@ -123,7 +132,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
 .modal-close:hover { background: #e0e0e0; color: var(--text); }
 .modal-body {
   flex: 1; overflow-y: auto; padding: 24px; font-size: 14px; line-height: 1.8;
-  white-space: pre-wrap; word-break: break-word;
+}
+.modal-body-text { white-space: pre-wrap; word-break: break-word; }
+.modal-images {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.modal-images img {
+  max-width: 100%; max-height: 300px; border-radius: 8px; object-fit: contain;
+  border: 1px solid var(--border);
 }
 .modal-footer {
   padding: 12px 24px; border-top: 1px solid var(--border); font-size: 12px;
@@ -325,12 +341,19 @@ function renderCards(items) {
     const isRose = item.cat === '月季';
     const badgeClass = isRose ? 'rose' : 'succulent';
     const badgeText = isRose ? (item.sub || '月季') : '多肉植物';
+    const hasImg = item.images && item.images.length > 0;
+    const imgHtml = hasImg
+      ? `<img class="card-img" src="${item.images[0]}" alt="${escapeHtml(item.title)}" loading="lazy">`
+      : `<div class="card-img-placeholder">${isRose ? '🌹' : '🌵'}</div>`;
     html += `
       <div class="card" onclick="openArticle('${item.id}')">
-        <span class="card-badge ${badgeClass}">${badgeText}</span>
-        <div class="card-title">${escapeHtml(item.title)}</div>
-        <div class="card-meta">${escapeHtml(item.sub || item.cat)}</div>
-        <div class="card-source">${escapeHtml(item.source || '')}</div>
+        ${imgHtml}
+        <div class="card-body">
+          <span class="card-badge ${badgeClass}">${badgeText}</span>
+          <div class="card-title">${escapeHtml(item.title)}</div>
+          <div class="card-meta">${escapeHtml(item.sub || item.cat)}</div>
+          <div class="card-source">${escapeHtml(item.source || '')}</div>
+        </div>
       </div>`;
   });
   grid.innerHTML = html;
@@ -354,7 +377,16 @@ async function openArticle(id) {
     const data = contentCache[id];
     if (data) {
       document.getElementById('modalTitle').textContent = data.title;
-      document.getElementById('modalBody').textContent = data.content || '暂无内容';
+      // 构建图片HTML
+      let imgHtml = '';
+      if (data.images && data.images.length > 0) {
+        imgHtml = '<div class="modal-images">';
+        data.images.forEach(img => {
+          imgHtml += `<img src="${img}" alt="${data.title}" loading="lazy">`;
+        });
+        imgHtml += '</div>';
+      }
+      document.getElementById('modalBody').innerHTML = imgHtml + '<div class="modal-body-text">' + escapeHtml(data.content || '暂无内容') + '</div>';
       const catInfo = data.sub ? `${data.cat} / ${data.sub}` : data.cat;
       document.getElementById('modalCat').textContent = catInfo;
       document.getElementById('modalSource').textContent = data.source || '';
