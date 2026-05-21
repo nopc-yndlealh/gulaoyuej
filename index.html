@@ -363,7 +363,7 @@ function renderCards(items) {
 async function openArticle(id) {
   const overlay = document.getElementById('modalOverlay');
   document.getElementById('modalTitle').textContent = '加载中...';
-  document.getElementById('modalBody').textContent = '';
+  document.getElementById('modalBody').innerHTML = '';
   document.getElementById('modalCat').textContent = '';
   document.getElementById('modalSource').textContent = '';
   overlay.classList.remove('hidden');
@@ -377,16 +377,28 @@ async function openArticle(id) {
     const data = contentCache[id];
     if (data) {
       document.getElementById('modalTitle').textContent = data.title;
-      // 构建图片HTML
-      let imgHtml = '';
-      if (data.images && data.images.length > 0) {
-        imgHtml = '<div class="modal-images">';
-        data.images.forEach(img => {
-          imgHtml += `<img src="${img}" alt="${data.title}" loading="lazy">`;
+
+      // 用 segments 渲染，保持原文顺序
+      let bodyHtml = '';
+      if (data.segments && data.segments.length > 0) {
+        data.segments.forEach(seg => {
+          if (seg.t) {
+            // 文字段落
+            const escaped = escapeHtml(seg.t);
+            // 保留换行
+            const withBr = escaped.replace(/\n/g, '<br>');
+            bodyHtml += `<p style="margin:0 0 12px 0;line-height:1.8;">${withBr}</p>`;
+          } else if (seg.i) {
+            // 图片
+            bodyHtml += `<div style="margin:8px 0;"><img src="${seg.i}" alt="${escapeHtml(data.title)}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);height:auto;"></div>`;
+          }
         });
-        imgHtml += '</div>';
+      } else if (data.content) {
+        // 兼容旧格式
+        bodyHtml = '<p style="margin:0;line-height:1.8;">' + escapeHtml(data.content).replace(/\n/g, '<br>') + '</p>';
       }
-      document.getElementById('modalBody').innerHTML = imgHtml + '<div class="modal-body-text">' + escapeHtml(data.content || '暂无内容') + '</div>';
+
+      document.getElementById('modalBody').innerHTML = bodyHtml;
       const catInfo = data.sub ? `${data.cat} / ${data.sub}` : data.cat;
       document.getElementById('modalCat').textContent = catInfo;
       document.getElementById('modalSource').textContent = data.source || '';
