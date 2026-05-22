@@ -252,8 +252,8 @@ async function loadData() {
 function updateCounts() {
   let roseCount = 0, succCount = 0;
   allItems.forEach(item => {
-    if (item.cat === '月季') roseCount++;
-    else succCount++;
+    if (item.type === '月季') roseCount++;
+    else if (item.type === '多肉植物') succCount++;
   });
   document.getElementById('countAll').textContent = allItems.length;
   document.getElementById('countRose').textContent = roseCount;
@@ -264,9 +264,10 @@ function updateCounts() {
 function renderSidebar() {
   const subContainer = document.getElementById('subRose');
   const roseSubs = {};
-  allItems.filter(i => i.cat === '月季').forEach(i => {
-    if (!roseSubs[i.sub]) roseSubs[i.sub] = 0;
-    roseSubs[i.sub]++;
+  allItems.filter(i => i.type === '月季').forEach(i => {
+    const sub = i.cat || '其他';
+    if (!roseSubs[sub]) roseSubs[sub] = 0;
+    roseSubs[sub]++;
   });
   let html = '';
   for (const [sub, count] of Object.entries(roseSubs)) {
@@ -312,12 +313,12 @@ function applyFilters() {
   if (currentFilter === 'all') {
     // 显示全部
   } else if (currentFilter === '月季') {
-    filtered = allItems.filter(i => i.cat === '月季');
+    filtered = allItems.filter(i => i.type === '月季');
   } else if (currentFilter === '多肉植物') {
-    filtered = allItems.filter(i => i.cat === '多肉植物');
+    filtered = allItems.filter(i => i.type === '多肉植物');
   } else {
     // 月季子分类
-    filtered = allItems.filter(i => i.sub === currentFilter);
+    filtered = allItems.filter(i => i.cat === currentFilter);
   }
 
   if (currentSearch) {
@@ -338,9 +339,9 @@ function renderCards(items) {
   }
   let html = '';
   items.forEach(item => {
-    const isRose = item.cat === '月季';
+    const isRose = item.type === '月季';
     const badgeClass = isRose ? 'rose' : 'succulent';
-    const badgeText = isRose ? (item.sub || '月季') : '多肉植物';
+    const badgeText = isRose ? (item.cat || '月季') : '多肉植物';
     const hasImg = item.images && item.images.length > 0;
     const imgHtml = hasImg
       ? `<img class="card-img" src="${item.images[0]}" alt="${escapeHtml(item.title)}" loading="lazy">`
@@ -351,7 +352,7 @@ function renderCards(items) {
         <div class="card-body">
           <span class="card-badge ${badgeClass}">${badgeText}</span>
           <div class="card-title">${escapeHtml(item.title)}</div>
-          <div class="card-meta">${escapeHtml(item.sub || item.cat)}</div>
+          <div class="card-meta">${escapeHtml(item.cat || '')}</div>
           <div class="card-source">${escapeHtml(item.source || '')}</div>
         </div>
       </div>`;
@@ -399,9 +400,10 @@ async function openArticle(id) {
       }
 
       document.getElementById('modalBody').innerHTML = bodyHtml;
-      const catInfo = data.sub ? `${data.cat} / ${data.sub}` : data.cat;
+      const indexEntry = allItems.find(i => i.id === id);
+      const catInfo = indexEntry ? (indexEntry.cat || '') : '';
       document.getElementById('modalCat').textContent = catInfo;
-      document.getElementById('modalSource').textContent = data.source || '';
+      document.getElementById('modalSource').textContent = indexEntry ? (indexEntry.source || '') : '';
     } else {
       document.getElementById('modalTitle').textContent = '未找到';
       document.getElementById('modalBody').textContent = '该文章内容不存在';
