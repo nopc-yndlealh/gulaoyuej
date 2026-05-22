@@ -192,7 +192,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC'
       <div class="nav-sub open" id="subRose"></div>
     </div>
     <div class="nav-cat">
-      <div class="nav-cat-title" data-cat="多肉植物" onclick="filterCategory('多肉植物', this)">
+      <div class="nav-cat-title" data-cat="多肉" onclick="filterCategory('多肉', this)">
         <span class="nav-cat-icon">&#x1f335;</span>多肉植物
         <span class="nav-cat-count" id="countSucculent">0</span>
       </div>
@@ -253,7 +253,7 @@ function updateCounts() {
   let roseCount = 0, succCount = 0;
   allItems.forEach(item => {
     if (item.type === '月季') roseCount++;
-    else if (item.type === '多肉植物') succCount++;
+    else if (item.type === '多肉') succCount++;
   });
   document.getElementById('countAll').textContent = allItems.length;
   document.getElementById('countRose').textContent = roseCount;
@@ -314,8 +314,8 @@ function applyFilters() {
     // 显示全部
   } else if (currentFilter === '月季') {
     filtered = allItems.filter(i => i.type === '月季');
-  } else if (currentFilter === '多肉植物') {
-    filtered = allItems.filter(i => i.type === '多肉植物');
+  } else if (currentFilter === '多肉') {
+    filtered = allItems.filter(i => i.type === '多肉');
   } else {
     // 月季子分类
     filtered = allItems.filter(i => i.cat === currentFilter);
@@ -341,7 +341,7 @@ function renderCards(items) {
   items.forEach(item => {
     const isRose = item.type === '月季';
     const badgeClass = isRose ? 'rose' : 'succulent';
-    const badgeText = isRose ? (item.cat || '月季') : '多肉植物';
+    const badgeText = isRose ? (item.cat || '月季') : '多肉';
     const hasImg = item.images && item.images.length > 0;
     const imgHtml = hasImg
       ? `<img class="card-img" src="${item.images[0]}" alt="${escapeHtml(item.title)}" loading="lazy">`
