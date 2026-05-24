@@ -591,7 +591,19 @@ const TREE_CONFIG = [
       '竞赛,评选以及月季园实测', '其他育种家'
     ]
   },
-  { name: '多肉', children: [] }
+  { name: '多肉', children: [
+    '石莲花属',
+    '莲花掌属', 
+    '风车草属',
+    '青锁龙属',
+    '景天属',
+    '仙女杯属',
+    'Lenophyllum',
+    '美丽莲属',
+    '厚叶草属',
+    'Prometheum',
+    '瓦松属'
+  ] }
 ];
 
 /* 数据转换：扁平数组 → 树状分类结构 */
@@ -616,9 +628,11 @@ function transformData(rawData) {
     const node = { name: group.name, children: [], itemCount: 0 };
 
     if (group.children.length > 0) {
-      // 有显式 children 列表（月季）
+      // 有显式 children 列表（月季或带子分类的多肉）
       group.children.forEach(childName => {
-        const items = flatGroups[childName] || [];
+        // 多肉：cat 键为 "多肉/石莲花属" 格式
+        const catKey = (group.name === '多肉') ? (group.name + '/' + childName) : childName;
+        const items = flatGroups[catKey] || [];
         node.children.push({ name: childName, items: items, isLeaf: true });
         node.itemCount += items.length;
         totalItems += items.length;
