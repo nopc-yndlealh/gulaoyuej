@@ -480,7 +480,7 @@
 
 <!-- 桌面端顶栏 -->
 <header>
-  <span class="logo">?</span>
+  <span class="logo">🌺</span>
   <h1>园艺图鉴</h1>
   <div class="search-wrap">
     <input type="search" id="search-input" placeholder="搜索月季 / 多肉…">
@@ -561,10 +561,10 @@ async function loadData() {
 /* 数据转换：扁平数组 → 按分类分组 */
 function transformData(rawData) {
   const catIcons = {
-    '丹陶': '?', '科尔德斯': '?', '奥斯汀': '?', '玫昂': '?',
-    '戴尔巴德': '?', '吉洛': '?', '其他育种家': '?',
-    '竞赛,评选以及月季园实测': '?', '种植分享': '?',
-    '育种相关': '?', '多肉': '?'
+    '丹陶': '🌹', '科尔德斯': '🏅', '奥斯汀': '🇬🇧', '玫昂': '💐',
+    '戴尔巴德': '✨', '吉洛': '🌸', '其他育种家': '🎨',
+    '竞赛,评选以及月季园实测': '🏆', '种植分享': '🌱',
+    '育种相关': '🔬', '多肉': '🌵'
   };
   const groups = {};
   rawData.forEach(item => {
@@ -600,7 +600,7 @@ function renderSidebar() {
   const allCount = allData.reduce((s, c) => s + c.items.length, 0);
   container.innerHTML = `
     <div class="cat-item active" data-idx="-1">
-      <span class="icon">?</span>
+      <span class="icon">📚</span>
       <span class="label">全部条目</span>
       <span class="count">${allCount}</span>
     </div>`;
