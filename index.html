@@ -269,12 +269,6 @@
   }
   #modal-close:hover { background: rgba(255,255,255,.4); }
 
-  #modal-iframe {
-    flex: 1;
-    border: none;
-    width: 100%;
-    background: #fff;
-  }
 
   /* ===== 详情内联容器 ===== */
   #detail-view {
@@ -534,6 +528,8 @@
 
 <script>
 /* ==================== 主逻辑 ==================== */
+(function() {
+  'use strict';
 
 let allData = [];       // 全部分类数据（index.json）
 let contentData = {};   // 详情内容数据（content.json）
@@ -613,8 +609,8 @@ function renderSidebar() {
     div.className = 'cat-item';
     div.dataset.idx = idx;
     div.innerHTML = `
-      <span class="icon">${cat.icon || '?'}</span>
-      <span class="label">${cat.name}</span>
+      <span class="icon">${escapeHtml(cat.icon || '?')}</span>
+      <span class="label">${escapeHtml(cat.name)}</span>
       <span class="count">${cat.items.length}</span>`;
     container.appendChild(div);
   });
@@ -659,14 +655,16 @@ function renderGrid(catIdx, keyword = '') {
     return;
   }
   grid.innerHTML = items.map(it => {
+    const safeTitle = escapeHtml(it.title);
+    const safeUrl = escapeHtml(it.file_url || '');
     const thumbHtml = it.thumb
-      ? `<img class="thumb" src="${it.thumb}" alt="" loading="lazy"
+      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} 缩略图" loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-         <div class="no-thumb" style="display:none;">??</div>`
-      : `<div class="no-thumb">??</div>`;
-    return `<div class="card" data-url="${it.file_url || ''}" data-title="${it.title.replace(/"/g, '&quot;')}">
+         <div class="no-thumb" style="display:none;">?</div>`
+      : `<div class="no-thumb">?</div>`;
+    return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
       ${thumbHtml}
-      <div class="card-title">${it.title}</div>
+      <div class="card-title">${safeTitle}</div>
     </div>`;
   }).join('');
 }
@@ -684,6 +682,24 @@ function setActiveCategory(idx) {
   if (activeChip) {
     activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
+}
+
+/* 搜索防抖公共函数 */
+function debounceSearch(inputId, scrollTarget) {
+  let timer;
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  el.addEventListener('input', e => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      renderGrid(activeCatIdx, e.target.value.trim());
+      if (scrollTarget === 'content') {
+        document.getElementById('content').scrollTo(0, 0);
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }, 250);
+  });
 }
 
 /* 绑定事件 */
@@ -709,25 +725,9 @@ function bindEvents() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // 桌面端搜索
-  let searchTimer;
-  document.getElementById('search-input').addEventListener('input', e => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-      renderGrid(activeCatIdx, e.target.value.trim());
-      document.getElementById('content').scrollTo(0, 0);
-    }, 250);
-  });
-
-  // 移动端搜索
-  let mobileSearchTimer;
-  document.getElementById('mobile-search-input').addEventListener('input', e => {
-    clearTimeout(mobileSearchTimer);
-    mobileSearchTimer = setTimeout(() => {
-      renderGrid(activeCatIdx, e.target.value.trim());
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 250);
-  });
+  // 搜索（桌面端 + 移动端共用防抖逻辑）
+  debounceSearch('search-input', 'content');
+  debounceSearch('mobile-search-input', 'window');
 
   // 卡片点击 → 弹窗
   document.getElementById('grid').addEventListener('click', e => {
@@ -755,26 +755,41 @@ function openModal(url, title) {
   document.getElementById('modal-title').textContent = title;
 
   const detailEl = document.getElementById('detail-view');
-  const content = contentData[id];
 
-  if (content && content.segments) {
-    let html = `<h2 class="detail-title">${escapeHtml(title)}</h2><div class="detail-body">`;
-    content.segments.forEach(seg => {
-      if (seg.t) {
-        // 文本段
-        html += `<p>${escapeHtml(seg.t)}</p>`;
-      } else if (seg.i) {
-        // 图片段
-        html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" onclick="showLightbox(this.src)">`;
-      }
-    });
-    html += '</div>';
-    detailEl.innerHTML = html;
-  } else {
+  try {
+    const content = contentData[id];
+
+    if (content && Array.isArray(content.segments)) {
+      let html = `<h2 class="detail-title">${escapeHtml(title)}</h2><div class="detail-body">`;
+      content.segments.forEach(seg => {
+        if (seg.t) {
+          // 文本段
+          html += `<p>${escapeHtml(seg.t)}</p>`;
+        } else if (seg.i) {
+          // 图片段
+          html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy">`;
+        }
+      });
+      html += '</div>';
+      detailEl.innerHTML = html;
+      // 绑定图片点击灯箱事件（替代内联 onclick）
+      detailEl.querySelectorAll('.detail-body img').forEach(img => {
+        img.addEventListener('click', () => showLightbox(img.src));
+        img.style.cursor = 'pointer';
+      });
+    } else {
+      detailEl.innerHTML = `
+        <div class="detail-error">
+          <p>? 暂无详情内容</p>
+          <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
+        </div>`;
+    }
+  } catch (err) {
+    console.error('[openModal] 渲染详情失败:', err);
     detailEl.innerHTML = `
       <div class="detail-error">
-        <p>? 暂无详情内容</p>
-        <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
+        <p>? 内容渲染出错</p>
+        <p style="font-size:12px;color:#bbb;margin-top:8px;">请稍后重试</p>
       </div>`;
   }
 
@@ -813,6 +828,9 @@ function escapeHtml(str) {
 
 /* 启动 */
 loadData();
+
+/* 关闭 IIFE，避免全局变量污染 */
+})();
 </script>
 </body>
 </html>
