@@ -276,6 +276,68 @@
     background: #fff;
   }
 
+  /* ===== 详情内联容器 ===== */
+  #detail-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+    background: #fff;
+    display: none;
+  }
+  #detail-view.active { display: block; }
+  #detail-view .detail-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    padding: 16px 20px 8px;
+    border-bottom: 2px solid var(--accent);
+    margin: 0;
+  }
+  #detail-view .detail-body {
+    padding: 12px 20px 24px;
+    line-height: 1.8;
+    color: #444;
+    font-size: 14.5px;
+  }
+  #detail-view .detail-body p {
+    margin: 10px 0;
+    text-indent: 2em;
+  }
+  #detail-view .detail-body img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin: 8px 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.10);
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  #detail-view .detail-body img:hover {
+    transform: scale(1.02);
+  }
+  #detail-view .detail-error {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  /* 图片灯箱 */
+  #lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.85);
+    z-index: 99999;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  #lightbox.active { display: flex; }
+  #lightbox img {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
   /* ===== 加载状态：用 visibility + opacity 避免抖动 ===== */
   #loading {
     position: fixed;
@@ -461,31 +523,41 @@
   <div id="modal-box">
     <div id="modal-header">
       <span id="modal-title">详情</span>
-      <button id="modal-close">?</button>
+      <button id="modal-close">×</button>
     </div>
-    <iframe id="modal-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
+    <div id="detail-view"></div>
   </div>
 </div>
+
+<!-- 图片灯箱 -->
+<div id="lightbox"></div>
 
 <script>
 /* ==================== 主逻辑 ==================== */
 
-let allData = [];      // 全部分类数据
-let activeCatIdx = -1; // -1 = 全部
+let allData = [];       // 全部分类数据（index.json）
+let contentData = {};   // 详情内容数据（content.json）
+let activeCatIdx = -1;  // -1 = 全部
 
 /* 加载数据 */
 async function loadData() {
   try {
-    const res = await fetch('./data/index.json');
-    if (!res.ok) throw new Error('data/index.json 未找到');
-    const rawData = await res.json();
+    const [indexRes, contentRes] = await Promise.all([
+      fetch('./data/index.json'),
+      fetch('./data/content.json')
+    ]);
+    if (!indexRes.ok) throw new Error('data/index.json 未找到');
+    if (!contentRes.ok) throw new Error('data/content.json 未找到');
+
+    const rawData = await indexRes.json();
+    contentData = await contentRes.json();
     allData = transformData(rawData);
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
-      `<p style="color:#c0392b;font-size:16px;">?? 数据加载失败：${e.message}</p>
+      `<p style="color:#c0392b;font-size:16px;">? 数据加载失败：${e.message}</p>
        <p style="margin-top:8px;font-size:13px;color:#888;">
-         请确认 data/index.json 文件存在且格式正确。
+         请确认 data/index.json 和 data/content.json 文件存在且格式正确。
        </p>`;
   }
 }
@@ -670,14 +742,43 @@ function bindEvents() {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
   });
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeModal();
+      document.getElementById('lightbox').classList.remove('active');
+    }
   });
 }
 
-/* 打开弹窗 */
+/* 打开弹窗 — 内联渲染详情 */
 function openModal(url, title) {
+  const id = url.replace('./detail.html?id=', '');
   document.getElementById('modal-title').textContent = title;
-  document.getElementById('modal-iframe').src = url;
+
+  const detailEl = document.getElementById('detail-view');
+  const content = contentData[id];
+
+  if (content && content.segments) {
+    let html = `<h2 class="detail-title">${escapeHtml(title)}</h2><div class="detail-body">`;
+    content.segments.forEach(seg => {
+      if (seg.t) {
+        // 文本段
+        html += `<p>${escapeHtml(seg.t)}</p>`;
+      } else if (seg.i) {
+        // 图片段
+        html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" onclick="showLightbox(this.src)">`;
+      }
+    });
+    html += '</div>';
+    detailEl.innerHTML = html;
+  } else {
+    detailEl.innerHTML = `
+      <div class="detail-error">
+        <p>? 暂无详情内容</p>
+        <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
+      </div>`;
+  }
+
+  detailEl.classList.add('active');
   document.getElementById('modal-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -685,8 +786,29 @@ function openModal(url, title) {
 /* 关闭弹窗 */
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
-  document.getElementById('modal-iframe').src = 'about:blank';
+  const detailEl = document.getElementById('detail-view');
+  detailEl.classList.remove('active');
+  // 延迟清空内容，让关闭动画更平滑
+  setTimeout(() => { detailEl.innerHTML = ''; }, 300);
   document.body.style.overflow = '';
+}
+
+/* 图片灯箱 */
+function showLightbox(src) {
+  const lb = document.getElementById('lightbox');
+  lb.innerHTML = `<img src="${src}" alt="预览">`;
+  lb.classList.add('active');
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const lb = document.getElementById('lightbox');
+  lb.addEventListener('click', () => lb.classList.remove('active'));
+});
+
+/* HTML 转义 */
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 
 /* 启动 */
