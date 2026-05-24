@@ -477,18 +477,64 @@ let activeCatIdx = -1; // -1 = 全部
 /* 加载数据 */
 async function loadData() {
   try {
-    const res = await fetch('./data.json');
-    if (!res.ok) throw new Error('data.json 未找到');
-    allData = await res.json();
+    const res = await fetch('./data/index.json');
+    if (!res.ok) throw new Error('data/index.json 未找到');
+    const rawData = await res.json();
+    // 把扁平数组转换成按分类分组的结构
+    allData = transformData(rawData);
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
       `<p style="color:#c0392b;font-size:16px;">⚠️ 数据加载失败：${e.message}</p>
        <p style="margin-top:8px;font-size:13px;color:#888;">
-         请先运行 <code>scan_files.py</code> 生成 data.json，<br>
-         然后通过本地服务器（如 Live Server）打开此页面。
+         请确认 data/index.json 文件存在且格式正确。
        </p>`;
   }
+}
+
+/* 数据转换：扁平数组 → 按分类分组 */
+function transformData(rawData) {
+  // 分类映射表（可扩展）
+  const catIcons = {
+    '丹陶': '🌹', '科尔德斯': '🌹', '奥斯汀': '🌹', '玫昂': '🌹',
+    '戴尔巴德': '🌹', '吉洛': '🌹', '其他育种家': '🌹',
+    '竞赛,评选以及月季园实测': '🏆', '种植分享': '🌱',
+    '育种相关': '🔬', '多肉': '🌵'
+  };
+
+  // 按 cat 字段分组
+  const groups = {};
+  rawData.forEach(item => {
+    const catName = item.cat || '未分类';
+    if (!groups[catName]) {
+      groups[catName] = {
+        name: catName,
+        icon: catIcons[catName] || '📄',
+        items: []
+      };
+    }
+    groups[catName].items.push({
+      title: item.title,
+      thumb: item.images && item.images.length > 0 ? item.images[0] : '',
+      file_url: `./detail.html?id=${item.id}`  // 详情页链接
+    });
+  });
+
+  // 转换为数组，按特定顺序排序
+  const order = ['丹陶', '科尔德斯', '奥斯汀', '玫昂', '戴尔巴德', '吉洛', '其他育种家',
+                 '竞赛,评选以及月季园实测', '种植分享', '育种相关', '多肉'];
+  const result = [];
+  // 先按预设顺序添加
+  order.forEach(name => {
+    if (groups[name]) {
+      result.push(groups[name]);
+      delete groups[name];
+    }
+  });
+  // 再添加剩余分类
+  Object.values(groups).forEach(g => result.push(g));
+
+  return result;
 }
 
 /* 初始化 */
