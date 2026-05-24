@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>å›­è‰ºå›¾é‰´ Â· æœˆå­£ä¸å¤šè‚‰</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ô°ÒÕÍ¼¼ø ¡¤ ÔÂ¼¾Óë¶àÈâ</title>
 <style>
-  /* ===== åŸºç¡€ Reset ===== */
+  /* ===== »ù´¡ Reset ===== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -34,7 +34,7 @@
     overflow-x: hidden;
   }
 
-  /* ===== æ¡Œé¢ç«¯é¡¶æ  ===== */
+  /* ===== ×ÀÃæ¶Ë¶¥À¸ ===== */
   header {
     height: var(--header-h);
     background: var(--accent);
@@ -68,10 +68,10 @@
   header input[type=search]::placeholder { color: rgba(255,255,255,.65); }
   header input[type=search]:focus { background: rgba(255,255,255,.3); }
 
-  /* ===== ç§»åŠ¨ç«¯é¡¶éƒ¨å¯¼èˆªæ¡ï¼ˆé»˜è®¤éšè—ï¼‰===== */
+  /* ===== ÒÆ¶¯¶Ë¶¥²¿µ¼º½Ìõ£¨Ä¬ÈÏÒş²Ø£©===== */
   #mobile-nav { display: none; }
 
-  /* ===== ä¸»å¸ƒå±€ ===== */
+  /* ===== Ö÷²¼¾Ö ===== */
   .layout {
     display: flex;
     flex: 1;
@@ -79,7 +79,7 @@
     height: calc(100vh - var(--header-h));
   }
 
-  /* ===== å·¦ä¾§åˆ†ç±»ï¼ˆæ¡Œé¢ç«¯ï¼‰ ===== */
+  /* ===== ×ó²à·ÖÀà£¨×ÀÃæ¶Ë£© ===== */
   nav#sidebar {
     width: var(--sidebar-w);
     background: var(--sidebar-bg);
@@ -126,7 +126,7 @@
     color: #fff;
   }
 
-  /* ===== å³ä¾§ä¸»åŒºåŸŸ ===== */
+  /* ===== ÓÒ²àÖ÷ÇøÓò ===== */
   main#content {
     flex: 1;
     overflow-y: auto;
@@ -144,7 +144,7 @@
   .section-header h2 { font-size: 20px; color: var(--accent); }
   .section-header .total { font-size: 13px; color: var(--text-muted); }
 
-  /* ===== å¡ç‰‡ç½‘æ ¼ ===== */
+  /* ===== ¿¨Æ¬Íø¸ñ ===== */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -167,14 +167,14 @@
   }
   .card .thumb {
     width: 100%;
-    aspect-ratio: 4/3;
+    height: 140px;
     object-fit: cover;
     background: #eee;
     display: block;
   }
   .card .no-thumb {
     width: 100%;
-    aspect-ratio: 4/3;
+    height: 140px;
     background: linear-gradient(135deg, #f0e8e8, #e8d5d5);
     display: flex;
     align-items: center;
@@ -195,7 +195,7 @@
     flex: 1;
   }
 
-  /* ===== æ— åŒ¹é…æç¤º ===== */
+  /* ===== ÎŞÆ¥ÅäÌáÊ¾ ===== */
   .empty {
     grid-column: 1/-1;
     text-align: center;
@@ -204,7 +204,7 @@
     font-size: 15px;
   }
 
-  /* ===== å¼¹çª— ===== */
+  /* ===== µ¯´° ===== */
   #modal-overlay {
     display: none;
     position: fixed;
@@ -230,8 +230,8 @@
     animation: fadeIn .18s ease;
   }
   @keyframes fadeIn {
-    from { opacity: 0; transform: scale(.96) translateY(8px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
+    from { opacity:0; transform: scale(.96) translateY(8px); }
+    to   { opacity:1; transform: scale(1)  translateY(0); }
   }
 
   #modal-header {
@@ -276,7 +276,7 @@
     background: #fff;
   }
 
-  /* ===== åŠ è½½çŠ¶æ€ ===== */
+  /* ===== ¼ÓÔØ×´Ì¬£ºÓÃ visibility + opacity ±ÜÃâ¶¶¶¯ ===== */
   #loading {
     position: fixed;
     inset: 0;
@@ -287,6 +287,14 @@
     justify-content: center;
     z-index: 99999;
     gap: 16px;
+    transition: opacity .3s ease, visibility .3s ease;
+    opacity: 1;
+    visibility: visible;
+  }
+  #loading.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
   }
   #loading .spinner {
     width: 48px; height: 48px;
@@ -298,7 +306,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #loading p { color: #888; font-size: 14px; }
 
-  /* ===== æ»šåŠ¨æ¡ç¾åŒ– ===== */
+  /* ===== ¹ö¶¯ÌõÃÀ»¯ ===== */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
@@ -306,14 +314,14 @@
   nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); }
 
 /* ============================================
-   ç§»åŠ¨ç«¯å“åº”å¼ï¼šâ‰¤768px
+   ÒÆ¶¯¶ËÏìÓ¦Ê½£º¡Ü768px
    ============================================ */
 @media (max-width: 768px) {
-  /* éšè—æ¡Œé¢ç«¯ header å’Œ sidebar */
+  /* Òş²Ø×ÀÃæ¶Ë header ºÍ sidebar */
   header { display: none; }
   nav#sidebar { display: none; }
 
-  /* æ˜¾ç¤ºç§»åŠ¨ç«¯å¯¼èˆª */
+  /* ÏÔÊ¾ÒÆ¶¯¶Ëµ¼º½ */
   #mobile-nav {
     display: flex;
     flex-direction: column;
@@ -323,26 +331,23 @@
     flex-shrink: 0;
     z-index: 100;
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
-    position: sticky;
-    top: 0;
   }
 
-  /* ç§»åŠ¨ç«¯åˆ†ç±»æ¨ªå‘æ»šåŠ¨æ¡ */
+  /* ÒÆ¶¯¶Ë·ÖÀàºáÏò¹ö¶¯Ìõ */
   #mobile-nav .cat-scroll {
     display: flex;
     overflow-x: auto;
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
     gap: 0;
     padding: 0 4px;
-    scroll-behavior: smooth;
   }
   #mobile-nav .cat-scroll::-webkit-scrollbar { display: none; }
 
   #mobile-nav .cat-chip {
     flex-shrink: 0;
-    padding: 12px 16px;
+    padding: 10px 16px;
     font-size: 14px;
     cursor: pointer;
     white-space: nowrap;
@@ -351,7 +356,6 @@
     color: rgba(255,255,255,.8);
     user-select: none;
     -webkit-user-select: none;
-    font-weight: 500;
   }
   #mobile-nav .cat-chip:hover {
     background: rgba(255,255,255,.1);
@@ -360,20 +364,19 @@
   #mobile-nav .cat-chip.active {
     border-bottom-color: #fff;
     color: #fff;
-    font-weight: 700;
-    background: rgba(255,255,255,.08);
+    font-weight: 600;
   }
 
-  /* ç§»åŠ¨ç«¯æœç´¢æ¡† */
+  /* ÒÆ¶¯¶ËËÑË÷¿ò */
   #mobile-nav .search-bar {
     display: flex;
     align-items: center;
-    padding: 8px 12px 10px;
+    padding: 8px 12px;
     gap: 8px;
   }
   #mobile-nav .search-bar input[type=search] {
     flex: 1;
-    padding: 9px 16px;
+    padding: 8px 14px;
     border: none;
     border-radius: 20px;
     font-size: 14px;
@@ -384,7 +387,7 @@
   #mobile-nav .search-bar input[type=search]::placeholder { color: rgba(255,255,255,.65); }
   #mobile-nav .search-bar input[type=search]:focus { background: rgba(255,255,255,.35); }
 
-  /* ä¸»å†…å®¹åŒºè°ƒæ•´ */
+  /* Ö÷ÄÚÈİÇøµ÷Õû */
   .layout {
     flex-direction: column;
     height: auto;
@@ -402,7 +405,7 @@
   .section-header h2 { font-size: 17px; }
 }
 
-/* è¶…å°å±å¹•è¿›ä¸€æ­¥ç¼©å°å¡ç‰‡ */
+/* ³¬Ğ¡ÆÁÄ»½øÒ»²½ËõĞ¡¿¨Æ¬ */
 @media (max-width: 420px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
@@ -416,261 +419,204 @@
 
 <div id="loading">
   <div class="spinner"></div>
-  <p>æ­£åœ¨åŠ è½½å›¾é‰´æ•°æ®â€¦</p>
+  <p>ÕıÔÚ¼ÓÔØÍ¼¼øÊı¾İ¡­</p>
 </div>
 
-<!-- æ¡Œé¢ç«¯é¡¶æ  -->
+<!-- ×ÀÃæ¶Ë¶¥À¸ -->
 <header>
-  <span class="logo">ğŸŒ¿</span>
-  <h1>å›­è‰ºå›¾é‰´ Â· æœˆå­£ä¸å¤šè‚‰</h1>
+  <span class="logo">?</span>
+  <h1>Ô°ÒÕÍ¼¼ø</h1>
   <div class="search-wrap">
-    <input type="search" id="search-input" placeholder="æœç´¢æ¡ç›®åç§°â€¦" autocomplete="off">
+    <input type="search" id="search-input" placeholder="ËÑË÷ÔÂ¼¾ / ¶àÈâ¡­">
   </div>
 </header>
 
-<!-- ç§»åŠ¨ç«¯å¯¼èˆªæ¡ï¼šæ¨ªå‘æ»‘åŠ¨åˆ†ç±» + æœç´¢æ¡† -->
+<!-- ÒÆ¶¯¶Ëµ¼º½Ìõ -->
 <div id="mobile-nav">
-  <div class="cat-scroll" id="mobile-cat-scroll">
-    <!-- JS åŠ¨æ€ç”Ÿæˆåˆ†ç±» chips -->
-  </div>
+  <div class="cat-scroll" id="mobile-cat-scroll"></div>
   <div class="search-bar">
-    <input type="search" id="mobile-search-input" placeholder="æœç´¢æ¡ç›®åç§°â€¦" autocomplete="off">
+    <input type="search" id="mobile-search-input" placeholder="ËÑË÷ÔÂ¼¾ / ¶àÈâ¡­">
   </div>
 </div>
 
-<!-- ä¸»å¸ƒå±€ -->
+<!-- Ö÷²¼¾Ö -->
 <div class="layout">
-
-  <!-- å·¦ä¾§åˆ†ç±»ï¼ˆæ¡Œé¢ç«¯ï¼‰ -->
+  <!-- ×ÀÃæ¶Ë×ó²à·ÖÀà -->
   <nav id="sidebar">
-    <h2>åˆ†ç±»å¯¼èˆª</h2>
-    <div id="cat-list"><!-- JS ç”Ÿæˆ --></div>
+    <h2>·Ö¡¡Àà</h2>
+    <div id="cat-list"></div>
   </nav>
-
-  <!-- å³ä¾§å†…å®¹ -->
+  <!-- ÓÒ²àÄÚÈİ -->
   <main id="content">
     <div class="section-header">
-      <h2 id="section-title">å…¨éƒ¨æ¡ç›®</h2>
-      <span class="total" id="section-count"></span>
+      <h2 id="section-title">È«²¿ÌõÄ¿</h2>
+      <span class="total" id="total-count"></span>
     </div>
-    <div class="grid" id="grid"><!-- JS ç”Ÿæˆ --></div>
+    <div class="grid" id="grid"></div>
   </main>
 </div>
 
-<!-- é˜…è¯»å¼¹çª— -->
+<!-- µ¯´° -->
 <div id="modal-overlay">
   <div id="modal-box">
     <div id="modal-header">
-      <span id="modal-title">æ–‡ç« æ ‡é¢˜</span>
-      <button id="modal-close" title="å…³é—­ (Esc)">âœ•</button>
+      <span id="modal-title">ÏêÇé</span>
+      <button id="modal-close">?</button>
     </div>
-    <iframe id="modal-iframe" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>
+    <iframe id="modal-iframe" sandbox="allow-same-origin allow-scripts"></iframe>
   </div>
 </div>
 
 <script>
-/* ==================== ä¸»é€»è¾‘ ==================== */
+/* ==================== Ö÷Âß¼­ ==================== */
 
-let allData = [];      // å…¨éƒ¨åˆ†ç±»æ•°æ®
-let activeCatIdx = -1; // -1 = å…¨éƒ¨
+let allData = [];      // È«²¿·ÖÀàÊı¾İ
+let activeCatIdx = -1; // -1 = È«²¿
 
-/* åŠ è½½æ•°æ® */
+/* ¼ÓÔØÊı¾İ */
 async function loadData() {
   try {
     const res = await fetch('./data/index.json');
-    if (!res.ok) throw new Error('data/index.json æœªæ‰¾åˆ°');
+    if (!res.ok) throw new Error('data/index.json Î´ÕÒµ½');
     const rawData = await res.json();
-    // æŠŠæ‰å¹³æ•°ç»„è½¬æ¢æˆæŒ‰åˆ†ç±»åˆ†ç»„çš„ç»“æ„
     allData = transformData(rawData);
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
-      `<p style="color:#c0392b;font-size:16px;">âš ï¸ æ•°æ®åŠ è½½å¤±è´¥ï¼š${e.message}</p>
+      `<p style="color:#c0392b;font-size:16px;">?? Êı¾İ¼ÓÔØÊ§°Ü£º${e.message}</p>
        <p style="margin-top:8px;font-size:13px;color:#888;">
-         è¯·ç¡®è®¤ data/index.json æ–‡ä»¶å­˜åœ¨ä¸”æ ¼å¼æ­£ç¡®ã€‚
+         ÇëÈ·ÈÏ data/index.json ÎÄ¼ş´æÔÚÇÒ¸ñÊ½ÕıÈ·¡£
        </p>`;
   }
 }
 
-/* æ•°æ®è½¬æ¢ï¼šæ‰å¹³æ•°ç»„ â†’ æŒ‰åˆ†ç±»åˆ†ç»„ */
+/* Êı¾İ×ª»»£º±âÆ½Êı×é ¡ú °´·ÖÀà·Ö×é */
 function transformData(rawData) {
-  // åˆ†ç±»æ˜ å°„è¡¨ï¼ˆå¯æ‰©å±•ï¼‰
   const catIcons = {
-    'ä¸¹é™¶': 'ğŸŒ¹', 'ç§‘å°”å¾·æ–¯': 'ğŸŒ¹', 'å¥¥æ–¯æ±€': 'ğŸŒ¹', 'ç«æ˜‚': 'ğŸŒ¹',
-    'æˆ´å°”å·´å¾·': 'ğŸŒ¹', 'å‰æ´›': 'ğŸŒ¹', 'å…¶ä»–è‚²ç§å®¶': 'ğŸŒ¹',
-    'ç«èµ›,è¯„é€‰ä»¥åŠæœˆå­£å›­å®æµ‹': 'ğŸ†', 'ç§æ¤åˆ†äº«': 'ğŸŒ±',
-    'è‚²ç§ç›¸å…³': 'ğŸ”¬', 'å¤šè‚‰': 'ğŸŒµ'
+    'µ¤ÌÕ': '?', '¿Æ¶ûµÂË¹': '?', '°ÂË¹Í¡': '?', 'Ãµ°º': '?',
+    '´÷¶û°ÍµÂ': '?', '¼ªÂå': '?', 'ÆäËûÓıÖÖ¼Ò': '?',
+    '¾ºÈü,ÆÀÑ¡ÒÔ¼°ÔÂ¼¾Ô°Êµ²â': '?', 'ÖÖÖ²·ÖÏí': '?',
+    'ÓıÖÖÏà¹Ø': '?', '¶àÈâ': '?'
   };
-
-  // æŒ‰ cat å­—æ®µåˆ†ç»„
   const groups = {};
   rawData.forEach(item => {
-    const catName = item.cat || 'æœªåˆ†ç±»';
+    const catName = item.cat || 'Î´·ÖÀà';
     if (!groups[catName]) {
       groups[catName] = {
         name: catName,
-        icon: catIcons[catName] || 'ğŸ“„',
+        icon: catIcons[catName] || '?',
         items: []
       };
     }
     groups[catName].items.push({
       title: item.title,
       thumb: item.images && item.images.length > 0 ? item.images[0] : '',
-      file_url: `./detail.html?id=${item.id}`  // è¯¦æƒ…é¡µé“¾æ¥
+      file_url: `./detail.html?id=${item.id}`
     });
   });
-
-  // è½¬æ¢ä¸ºæ•°ç»„ï¼ŒæŒ‰ç‰¹å®šé¡ºåºæ’åº
-  const order = ['ä¸¹é™¶', 'ç§‘å°”å¾·æ–¯', 'å¥¥æ–¯æ±€', 'ç«æ˜‚', 'æˆ´å°”å·´å¾·', 'å‰æ´›', 'å…¶ä»–è‚²ç§å®¶',
-                 'ç«èµ›,è¯„é€‰ä»¥åŠæœˆå­£å›­å®æµ‹', 'ç§æ¤åˆ†äº«', 'è‚²ç§ç›¸å…³', 'å¤šè‚‰'];
-  const result = [];
-  // å…ˆæŒ‰é¢„è®¾é¡ºåºæ·»åŠ 
-  order.forEach(name => {
-    if (groups[name]) {
-      result.push(groups[name]);
-      delete groups[name];
-    }
-  });
-  // å†æ·»åŠ å‰©ä½™åˆ†ç±»
-  Object.values(groups).forEach(g => result.push(g));
-
-  return result;
+  return Object.values(groups);
 }
 
-/* åˆå§‹åŒ– */
+/* ³õÊ¼»¯ */
 function init() {
-  document.getElementById('loading').style.display = 'none';
+  document.getElementById('loading').classList.add('hidden');
   renderSidebar();
   renderMobileNav();
   renderGrid(-1);
   bindEvents();
 }
 
-/* æ¸²æŸ“æ¡Œé¢ç«¯å·¦ä¾§åˆ†ç±»åˆ—è¡¨ */
+/* äÖÈ¾×ÀÃæ¶Ë×ó²à·ÖÀàÁĞ±í */
 function renderSidebar() {
   const container = document.getElementById('cat-list');
-  // "å…¨éƒ¨" é¡¹
   const allCount = allData.reduce((s, c) => s + c.items.length, 0);
   container.innerHTML = `
     <div class="cat-item active" data-idx="-1">
-      <span class="icon">ğŸ“š</span>
-      <span class="label">å…¨éƒ¨æ¡ç›®</span>
+      <span class="icon">?</span>
+      <span class="label">È«²¿ÌõÄ¿</span>
       <span class="count">${allCount}</span>
     </div>`;
-
   allData.forEach((cat, idx) => {
     const div = document.createElement('div');
     div.className = 'cat-item';
     div.dataset.idx = idx;
     div.innerHTML = `
-      <span class="icon">${cat.icon || 'ğŸ“„'}</span>
+      <span class="icon">${cat.icon || '?'}</span>
       <span class="label">${cat.name}</span>
       <span class="count">${cat.items.length}</span>`;
     container.appendChild(div);
   });
 }
 
-/* æ¸²æŸ“ç§»åŠ¨ç«¯æ¨ªå‘åˆ†ç±»æ¡ */
+/* äÖÈ¾ÒÆ¶¯¶ËºáÏò·ÖÀàÌõ */
 function renderMobileNav() {
   const scrollContainer = document.getElementById('mobile-cat-scroll');
-  // "å…¨éƒ¨" é¡¹
   const allCount = allData.reduce((s, c) => s + c.items.length, 0);
   const allChip = document.createElement('div');
   allChip.className = 'cat-chip active';
   allChip.dataset.idx = '-1';
-  allChip.textContent = `å…¨éƒ¨ (${allCount})`;
+  allChip.textContent = `È«²¿ (${allCount})`;
   scrollContainer.appendChild(allChip);
-
   allData.forEach((cat, idx) => {
     const chip = document.createElement('div');
     chip.className = 'cat-chip';
     chip.dataset.idx = idx;
-    chip.textContent = `${cat.icon || 'ğŸ“„'} ${cat.name} (${cat.items.length})`;
+    chip.textContent = `${cat.icon || '?'} ${cat.name} (${cat.items.length})`;
     scrollContainer.appendChild(chip);
   });
 }
 
-/* æ¸²æŸ“å³ä¾§å¡ç‰‡ç½‘æ ¼ */
+/* äÖÈ¾ÓÒ²à¿¨Æ¬Íø¸ñ */
 function renderGrid(catIdx, keyword = '') {
   const grid = document.getElementById('grid');
-  grid.innerHTML = '';
-
   let items = [];
-  let title = 'å…¨éƒ¨æ¡ç›®';
-
   if (catIdx === -1) {
-    allData.forEach(cat => {
-      cat.items.forEach(item => items.push({ ...item, _cat: cat.name }));
-    });
-    title = 'å…¨éƒ¨æ¡ç›®';
-  } else {
-    const cat = allData[catIdx];
-    items = cat.items.map(item => ({ ...item, _cat: cat.name }));
-    title = `${cat.icon || ''} ${cat.name}`;
+    allData.forEach(c => items = items.concat(c.items));
+  } else if (allData[catIdx]) {
+    items = allData[catIdx].items;
   }
-
-  // å…³é”®è¯è¿‡æ»¤
   if (keyword) {
     const kw = keyword.toLowerCase();
-    items = items.filter(item => item.title.toLowerCase().includes(kw));
-    title = `"${keyword}" çš„æœç´¢ç»“æœ`;
+    items = items.filter(it => it.title.toLowerCase().includes(kw));
   }
-
-  document.getElementById('section-title').textContent = title;
-  document.getElementById('section-count').textContent = `å…± ${items.length} ç¯‡`;
-
+  document.getElementById('section-title').textContent =
+    catIdx === -1 ? 'È«²¿ÌõÄ¿' : allData[catIdx].name;
+  document.getElementById('total-count').textContent = `${items.length} ¸ö`;
   if (!items.length) {
-    grid.innerHTML = '<div class="empty">æš‚æ— åŒ¹é…æ¡ç›®</div>';
+    grid.innerHTML = '<div class="empty">ÔİÎŞÆ¥Åä½á¹û</div>';
     return;
   }
-
-  const frag = document.createDocumentFragment();
-  items.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.title = item.title;
-    card.dataset.url = item.file_url;
-    card.dataset.title = item.title;
-
-    const thumbHtml = item.thumb
-      ? `<img class="thumb" src="${item.thumb}" alt="${item.title}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=no-thumb>ğŸŒ¸</div>'">`
-      : `<div class="no-thumb">ğŸŒ¸</div>`;
-
-    card.innerHTML = `${thumbHtml}<div class="card-title">${escHtml(item.title)}</div>`;
-    frag.appendChild(card);
-  });
-  grid.appendChild(frag);
+  grid.innerHTML = items.map(it => {
+    const thumbHtml = it.thumb
+      ? `<img class="thumb" src="${it.thumb}" alt="" loading="lazy"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+         <div class="no-thumb" style="display:none;">??</div>`
+      : `<div class="no-thumb">??</div>`;
+    return `<div class="card" data-url="${it.file_url || ''}" data-title="${it.title.replace(/"/g, '&quot;')}">
+      ${thumbHtml}
+      <div class="card-title">${it.title}</div>
+    </div>`;
+  }).join('');
 }
 
-/* HTML è½¬ä¹‰ */
-function escHtml(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-/* åŒæ­¥æ¡Œé¢ç«¯å’Œç§»åŠ¨ç«¯çš„åˆ†ç±»é«˜äº® + æ»šåŠ¨åˆ°æ¿€æ´»é¡¹ */
+/* ÉèÖÃ¼¤»î·ÖÀà */
 function setActiveCategory(idx) {
   activeCatIdx = idx;
-
-  // æ¡Œé¢ç«¯ sidebar
-  document.querySelectorAll('#sidebar .cat-item').forEach(el => {
+  document.querySelectorAll('#cat-list .cat-item').forEach(el => {
     el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
   });
-
-  // ç§»åŠ¨ç«¯ chips
   document.querySelectorAll('#mobile-cat-scroll .cat-chip').forEach(el => {
     el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
   });
-
-  // ç§»åŠ¨ç«¯ï¼šå°†æ¿€æ´»çš„ chip æ»šåŠ¨åˆ°å¯è§†åŒºåŸŸ
   const activeChip = document.querySelector('#mobile-cat-scroll .cat-chip.active');
   if (activeChip) {
     activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 }
 
-/* ç»‘å®šäº‹ä»¶ */
+/* °ó¶¨ÊÂ¼ş */
 function bindEvents() {
-  // æ¡Œé¢ç«¯åˆ†ç±»ç‚¹å‡»
+  // ×ÀÃæ¶Ë·ÖÀàµã»÷
   document.getElementById('cat-list').addEventListener('click', e => {
     const item = e.target.closest('.cat-item');
     if (!item) return;
@@ -680,7 +626,7 @@ function bindEvents() {
     document.getElementById('content').scrollTo(0, 0);
   });
 
-  // ç§»åŠ¨ç«¯åˆ†ç±»ç‚¹å‡»
+  // ÒÆ¶¯¶Ë·ÖÀàµã»÷
   document.getElementById('mobile-cat-scroll').addEventListener('click', e => {
     const chip = e.target.closest('.cat-chip');
     if (!chip) return;
@@ -691,7 +637,7 @@ function bindEvents() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // æ¡Œé¢ç«¯æœç´¢
+  // ×ÀÃæ¶ËËÑË÷
   let searchTimer;
   document.getElementById('search-input').addEventListener('input', e => {
     clearTimeout(searchTimer);
@@ -701,7 +647,7 @@ function bindEvents() {
     }, 250);
   });
 
-  // ç§»åŠ¨ç«¯æœç´¢
+  // ÒÆ¶¯¶ËËÑË÷
   let mobileSearchTimer;
   document.getElementById('mobile-search-input').addEventListener('input', e => {
     clearTimeout(mobileSearchTimer);
@@ -711,14 +657,14 @@ function bindEvents() {
     }, 250);
   });
 
-  // å¡ç‰‡ç‚¹å‡» â†’ å¼¹çª—
+  // ¿¨Æ¬µã»÷ ¡ú µ¯´°
   document.getElementById('grid').addEventListener('click', e => {
     const card = e.target.closest('.card');
     if (!card) return;
     openModal(card.dataset.url, card.dataset.title);
   });
 
-  // å…³é—­å¼¹çª—
+  // ¹Ø±Õµ¯´°
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
@@ -728,7 +674,7 @@ function bindEvents() {
   });
 }
 
-/* æ‰“å¼€å¼¹çª— */
+/* ´ò¿ªµ¯´° */
 function openModal(url, title) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-iframe').src = url;
@@ -736,14 +682,14 @@ function openModal(url, title) {
   document.body.style.overflow = 'hidden';
 }
 
-/* å…³é—­å¼¹çª— */
+/* ¹Ø±Õµ¯´° */
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   document.getElementById('modal-iframe').src = 'about:blank';
   document.body.style.overflow = '';
 }
 
-/* å¯åŠ¨ */
+/* Æô¶¯ */
 loadData();
 </script>
 </body>
