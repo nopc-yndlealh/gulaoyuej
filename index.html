@@ -596,7 +596,7 @@ const TREE_CONFIG = [
 
 /* 数据转换：扁平数组 → 树状分类结构 */
 function transformData(rawData) {
-  // 先按原始 cat 分组
+  // 先按原始 cat 分组（支持 "多肉/石莲花属" 层级格式）
   const flatGroups = {};
   rawData.forEach(item => {
     const catName = item.cat || '未分类';
@@ -614,21 +614,47 @@ function transformData(rawData) {
 
   TREE_CONFIG.forEach(group => {
     const node = { name: group.name, children: [], itemCount: 0 };
-    group.children.forEach(childName => {
-      const items = flatGroups[childName] || [];
-      if (items.length > 0 || true) { // 保留空分类（如古老月季、特性合集）
+
+    if (group.children.length > 0) {
+      // 有显式 children 列表（月季）
+      group.children.forEach(childName => {
+        const items = flatGroups[childName] || [];
         node.children.push({ name: childName, items: items, isLeaf: true });
         node.itemCount += items.length;
         totalItems += items.length;
-      }
-    });
+      });
+    } else {
+      // 无显式 children（多肉）：从 flatGroups 中自动发现子分类
+      // 匹配 "多肉/xxx" 格式的 key
+      const prefix = group.name + '/';
+      const subCats = {};
+      const directItems = [];
 
-    // 如果多肉等组没有在 children 里列出，从 flatGroups 中直接取
-    if (group.children.length === 0 && flatGroups[group.name]) {
-      const items = flatGroups[group.name];
-      node.children.push({ name: group.name, items: items, isLeaf: true });
-      node.itemCount = items.length;
-      totalItems += items.length;
+      Object.keys(flatGroups).forEach(catName => {
+        if (catName.startsWith(prefix)) {
+          const subName = catName.slice(prefix.length);
+          subCats[subName] = flatGroups[catName];
+        } else if (catName === group.name) {
+          directItems.push(...flatGroups[catName]);
+        }
+      });
+
+      // 有子分类时按子分类展示
+      if (Object.keys(subCats).length > 0) {
+        Object.keys(subCats).sort().forEach(subName => {
+          const items = subCats[subName];
+          node.children.push({ name: subName, items: items, isLeaf: true });
+          node.itemCount += items.length;
+          totalItems += items.length;
+        });
+      }
+
+      // 直接属于多肉（无子分类）的条目
+      if (directItems.length > 0) {
+        node.children.push({ name: '其他', items: directItems, isLeaf: true });
+        node.itemCount += directItems.length;
+        totalItems += directItems.length;
+      }
     }
 
     tree.push(node);
