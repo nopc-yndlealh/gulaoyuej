@@ -3,580 +3,701 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪴</text></svg>">
-<title>园艺植物图鉴</title>
+<title>园艺图鉴 · 月季与多肉</title>
 <style>
-:root {
-  --bg: #f8f7f4;
-  --sidebar-bg: #fff;
-  --card-bg: #fff;
-  --text: #2c2c2c;
-  --text-muted: #888;
-  --border: #e8e5df;
-  --accent: #4a7c59;
-  --accent-light: #e8f5e9;
-  --hover: #f0ede6;
-  --shadow: 0 1px 3px rgba(0,0,0,0.06);
-  --modal-bg: rgba(0,0,0,0.5);
-  --rose-color: #c0392b;
-  --succulent-color: #2e7d32;
-}
+  /* ===== 基础 Reset ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-* { margin:0; padding:0; box-sizing:border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; display: flex; }
-
-/* 侧边栏 */
-.sidebar {
-  width: 260px; min-width: 260px; height: 100vh; background: var(--sidebar-bg);
-  border-right: 1px solid var(--border); display: flex; flex-direction: column;
-  overflow: hidden; z-index: 10;
-}
-.sidebar-header {
-  padding: 20px 16px; border-bottom: 1px solid var(--border);
-}
-.sidebar-header h1 {
-  font-size: 18px; font-weight: 600; color: var(--accent); letter-spacing: 0.5px;
-}
-.sidebar-header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.sidebar-nav { flex: 1; overflow-y: auto; padding: 8px 0; }
-.nav-cat { padding: 0 12px; }
-.nav-cat-title {
-  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-  border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500;
-  transition: background 0.15s; user-select: none; color: var(--text);
-}
-.nav-cat-title:hover { background: var(--hover); }
-.nav-cat-title.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
-.nav-cat-arrow { font-size: 10px; transition: transform 0.2s; color: var(--text-muted); }
-.nav-cat-title.open .nav-cat-arrow { transform: rotate(90deg); }
-.nav-cat-icon { width: 20px; text-align: center; font-size: 16px; }
-.nav-cat-count { margin-left: auto; font-size: 11px; color: var(--text-muted); background: var(--bg); padding: 2px 8px; border-radius: 10px; }
-.nav-sub { overflow: hidden; max-height: 0; transition: max-height 0.3s ease; }
-.nav-sub.open { max-height: 2000px; }
-.nav-sub-item {
-  display: block; padding: 8px 12px 8px 44px; font-size: 13px; color: var(--text-muted);
-  cursor: pointer; border-radius: 6px; margin: 2px 8px; transition: all 0.15s;
-}
-.nav-sub-item:hover { background: var(--hover); color: var(--text); }
-.nav-sub-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
-
-/* 主区域 */
-.main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-
-/* 搜索栏 */
-.search-bar {
-  padding: 16px 24px; background: var(--sidebar-bg); border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-}
-.search-input {
-  flex: 1; padding: 10px 16px; border: 1px solid var(--border); border-radius: 10px;
-  font-size: 14px; outline: none; background: var(--bg); color: var(--text);
-  transition: border-color 0.2s;
-}
-.search-input:focus { border-color: var(--accent); }
-.search-info { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
-
-/* 卡片网格 */
-.content-area { flex: 1; overflow-y: auto; padding: 20px 24px; }
-.card-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-}
-.card {
-  background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px;
-  cursor: pointer; transition: all 0.2s; position: relative;
-  overflow: hidden; display: flex; flex-direction: column;
-}
-.card:hover { border-color: var(--accent); box-shadow: var(--shadow); transform: translateY(-1px); }
-.card-img {
-  width: 100%; height: 180px; object-fit: cover; background: var(--bg);
-  flex-shrink: 0;
-}
-.card-img-placeholder {
-  width: 100%; height: 180px; display: flex; align-items: center; justify-content: center;
-  font-size: 48px; background: var(--bg); color: #ccc; flex-shrink: 0;
-}
-.card-body { padding: 16px 20px 20px; flex: 1; }
-.card-badge {
-  display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 12px;
-  margin-bottom: 10px; font-weight: 500;
-}
-.card-badge.rose { background: #fce4ec; color: var(--rose-color); }
-.card-badge.succulent { background: #e8f5e9; color: var(--succulent-color); }
-.card-title { font-size: 15px; font-weight: 500; line-height: 1.4; margin-bottom: 8px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.card-meta { font-size: 12px; color: var(--text-muted); }
-.card-source { font-size: 11px; color: #bbb; margin-top: 4px; }
-
-/* 模态框 */
-.modal-overlay {
-  position: fixed; inset: 0; background: var(--modal-bg); z-index: 100;
-  display: flex; align-items: center; justify-content: center;
-  animation: fadeIn 0.2s ease;
-}
-.modal-overlay.hidden { display: none; }
-@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
-.modal {
-  background: var(--sidebar-bg); border-radius: 16px; width: min(800px, 90vw);
-  max-height: 85vh; display: flex; flex-direction: column; overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.15);
-}
-.modal-header {
-  padding: 20px 24px; border-bottom: 1px solid var(--border);
-  display: flex; align-items: flex-start; justify-content: space-between;
-}
-.modal-title { font-size: 18px; font-weight: 600; line-height: 1.4; flex: 1; padding-right: 16px; }
-.modal-close {
-  width: 32px; height: 32px; border: none; background: var(--bg); border-radius: 8px;
-  cursor: pointer; font-size: 18px; color: var(--text-muted); display: flex;
-  align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s;
-}
-.modal-close:hover { background: #e0e0e0; color: var(--text); }
-.modal-body {
-  flex: 1; overflow-y: auto; padding: 24px; font-size: 14px; line-height: 1.8;
-}
-.modal-body-text { white-space: pre-wrap; word-break: break-word; }
-.modal-images {
-  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;
-}
-.modal-images img {
-  max-width: 100%; max-height: 300px; border-radius: 8px; object-fit: contain;
-  border: 1px solid var(--border);
-}
-.modal-footer {
-  padding: 12px 24px; border-top: 1px solid var(--border); font-size: 12px;
-  color: var(--text-muted); display: flex; gap: 8px;
-}
-
-/* 空状态 */
-.empty-state {
-  text-align: center; padding: 60px 20px; color: var(--text-muted);
-}
-.empty-state-icon { font-size: 48px; margin-bottom: 16px; }
-
-/* 滚动条 */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #d0cdc4; border-radius: 3px; }
-
-/* 响应式 */
-@media (max-width: 768px) {
-  .sidebar { width: 220px; min-width: 220px; }
-  .card-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-}
-@media (max-width: 600px) {
-  .sidebar { display: none; }
-  .card-grid { grid-template-columns: 1fr; }
-  
-  /* 移动端顶部标签栏 */
-  .mobile-tabs-container {
-    display: block;
-    background: var(--sidebar-bg);
-    border-bottom: 1px solid var(--border);
-    padding: 8px 0;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  :root {
+    --sidebar-w: 220px;
+    --header-h: 56px;
+    --accent: #c0392b;
+    --accent-light: #e74c3c;
+    --bg: #f7f4f0;
+    --sidebar-bg: #2c1a1a;
+    --sidebar-active: #5a1a1a;
+    --card-bg: #fff;
+    --text: #333;
+    --text-muted: #888;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,.10);
+    --shadow-hover: 0 6px 24px rgba(0,0,0,.18);
   }
-  .mobile-tabs {
-    display: flex;
-    gap: 8px;
-    padding: 0 12px;
-    white-space: nowrap;
-  }
-  .mobile-tab {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 8px 14px;
+
+  body {
+    font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
     background: var(--bg);
-    border: 1px solid var(--border);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* ===== 桌面端顶栏 ===== */
+  header {
+    height: var(--header-h);
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    z-index: 100;
+  }
+  header .logo { font-size: 20px; }
+  header h1 { font-size: 18px; font-weight: 600; letter-spacing: .05em; }
+  header .search-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  header input[type=search] {
+    padding: 6px 14px;
+    border: none;
     border-radius: 20px;
     font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-    transition: all 0.15s;
-    user-select: none;
+    width: 220px;
+    outline: none;
+    background: rgba(255,255,255,.2);
+    color: #fff;
   }
-  .mobile-tab:hover {
-    background: var(--hover);
+  header input[type=search]::placeholder { color: rgba(255,255,255,.65); }
+  header input[type=search]:focus { background: rgba(255,255,255,.3); }
+
+  /* ===== 移动端顶部导航条（默认隐藏）===== */
+  #mobile-nav { display: none; }
+
+  /* ===== 主布局 ===== */
+  .layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    height: calc(100vh - var(--header-h));
   }
-  .mobile-tab.active {
-    background: var(--accent-light);
-    color: var(--accent);
-    border-color: var(--accent);
-    font-weight: 600;
+
+  /* ===== 左侧分类（桌面端） ===== */
+  nav#sidebar {
+    width: var(--sidebar-w);
+    background: var(--sidebar-bg);
+    color: #ddd;
+    overflow-y: auto;
+    flex-shrink: 0;
+    padding: 12px 0 24px;
   }
-  .mobile-tab-icon {
-    font-size: 14px;
-  }
-  .mobile-tab-count {
+  nav#sidebar h2 {
     font-size: 11px;
-    color: var(--text-muted);
-    background: rgba(0,0,0,0.05);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: #888;
+    padding: 16px 18px 8px;
+  }
+  nav#sidebar .cat-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 18px;
+    cursor: pointer;
+    font-size: 14px;
+    border-left: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+    line-height: 1.3;
+  }
+  nav#sidebar .cat-item:hover { background: rgba(255,255,255,.07); }
+  nav#sidebar .cat-item.active {
+    background: var(--sidebar-active);
+    border-left-color: var(--accent-light);
+    color: #fff;
+  }
+  nav#sidebar .cat-item .icon { font-size: 16px; flex-shrink: 0; }
+  nav#sidebar .cat-item .label { flex: 1; }
+  nav#sidebar .cat-item .count {
+    font-size: 11px;
+    background: rgba(255,255,255,.12);
     padding: 1px 6px;
     border-radius: 10px;
+    color: #aaa;
   }
+  nav#sidebar .cat-item.active .count {
+    background: rgba(255,255,255,.22);
+    color: #fff;
+  }
+
+  /* ===== 右侧主区域 ===== */
+  main#content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid var(--accent);
+    padding-bottom: 8px;
+  }
+  .section-header h2 { font-size: 20px; color: var(--accent); }
+  .section-header .total { font-size: 13px; color: var(--text-muted); }
+
+  /* ===== 卡片网格 ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 16px;
+  }
+
+  .card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform .2s, box-shadow .2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+  .card .thumb {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    background: #eee;
+    display: block;
+  }
+  .card .no-thumb {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: linear-gradient(135deg, #f0e8e8, #e8d5d5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #c9a0a0;
+  }
+  .card .card-title {
+    padding: 8px 10px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    color: #444;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  /* ===== 无匹配提示 ===== */
+  .empty {
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 60px 0;
+    color: var(--text-muted);
+    font-size: 15px;
+  }
+
+  /* ===== 弹窗 ===== */
+  #modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 9000;
+    backdrop-filter: blur(3px);
+    align-items: center;
+    justify-content: center;
+  }
+  #modal-overlay.open { display: flex; }
+
+  #modal-box {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 48px rgba(0,0,0,.35);
+    width: min(92vw, 1080px);
+    height: min(90vh, 800px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    animation: fadeIn .18s ease;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: scale(.96) translateY(8px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  #modal-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--accent);
+    color: #fff;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  #modal-title {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  #modal-close {
+    background: rgba(255,255,255,.2);
+    border: none;
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background .15s;
+  }
+  #modal-close:hover { background: rgba(255,255,255,.4); }
+
+  #modal-iframe {
+    flex: 1;
+    border: none;
+    width: 100%;
+    background: #fff;
+  }
+
+  /* ===== 加载状态 ===== */
+  #loading {
+    position: fixed;
+    inset: 0;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    gap: 16px;
+  }
+  #loading .spinner {
+    width: 48px; height: 48px;
+    border: 4px solid #f0e0e0;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: #888; font-size: 14px; }
+
+  /* ===== 滚动条美化 ===== */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #aaa; }
+  nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); }
+
+/* ============================================
+   移动端响应式：≤768px
+   ============================================ */
+@media (max-width: 768px) {
+  /* 隐藏桌面端 header 和 sidebar */
+  header { display: none; }
+  nav#sidebar { display: none; }
+
+  /* 显示移动端导航 */
+  #mobile-nav {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: var(--accent);
+    color: #fff;
+    flex-shrink: 0;
+    z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    position: sticky;
+    top: 0;
+  }
+
+  /* 移动端分类横向滚动条 */
+  #mobile-nav .cat-scroll {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Firefox */
+    gap: 0;
+    padding: 0 4px;
+    scroll-behavior: smooth;
+  }
+  #mobile-nav .cat-scroll::-webkit-scrollbar { display: none; }
+
+  #mobile-nav .cat-chip {
+    flex-shrink: 0;
+    padding: 12px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 3px solid transparent;
+    transition: background .15s, border-color .15s;
+    color: rgba(255,255,255,.8);
+    user-select: none;
+    -webkit-user-select: none;
+    font-weight: 500;
+  }
+  #mobile-nav .cat-chip:hover {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+  }
+  #mobile-nav .cat-chip.active {
+    border-bottom-color: #fff;
+    color: #fff;
+    font-weight: 700;
+    background: rgba(255,255,255,.08);
+  }
+
+  /* 移动端搜索框 */
+  #mobile-nav .search-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px 10px;
+    gap: 8px;
+  }
+  #mobile-nav .search-bar input[type=search] {
+    flex: 1;
+    padding: 9px 16px;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    outline: none;
+    background: rgba(255,255,255,.2);
+    color: #fff;
+  }
+  #mobile-nav .search-bar input[type=search]::placeholder { color: rgba(255,255,255,.65); }
+  #mobile-nav .search-bar input[type=search]:focus { background: rgba(255,255,255,.35); }
+
+  /* 主内容区调整 */
+  .layout {
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+  main#content {
+    padding: 16px 12px;
+    overflow-y: visible;
+    height: auto;
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .section-header h2 { font-size: 17px; }
 }
 
-/* 电脑端隐藏移动端标签栏 */
-@media (min-width: 601px) {
-  .mobile-tabs-container {
-    display: none !important;
+/* 超小屏幕进一步缩小卡片 */
+@media (max-width: 420px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
+  .card .card-title { font-size: 11.5px; padding: 6px 8px; }
 }
 </style>
 </head>
 <body>
 
-<!-- 侧边栏 -->
-<aside class="sidebar">
-  <div class="sidebar-header">
-    <h1>园艺植物图鉴</h1>
-    <p>Rosa &amp; Succulent Reference</p>
-  </div>
-  <nav class="sidebar-nav" id="sidebarNav">
-    <div class="nav-cat">
-      <div class="nav-cat-title" data-cat="all" onclick="filterCategory('all', this)">
-        <span class="nav-cat-icon">&#x1f331;</span>全部
-        <span class="nav-cat-count" id="countAll">0</span>
-      </div>
-    </div>
-    <div class="nav-cat">
-      <div class="nav-cat-title open" data-cat="月季" onclick="toggleSub(this)">
-        <span class="nav-cat-arrow">&#9654;</span>
-        <span class="nav-cat-icon">&#x1f339;</span>月季
-        <span class="nav-cat-count" id="countRose">0</span>
-      </div>
-      <div class="nav-sub open" id="subRose"></div>
-    </div>
-    <div class="nav-cat">
-      <div class="nav-cat-title" data-cat="多肉" onclick="filterCategory('多肉', this)">
-        <span class="nav-cat-icon">&#x1f335;</span>多肉植物
-        <span class="nav-cat-count" id="countSucculent">0</span>
-      </div>
-    </div>
-  </nav>
-</aside>
+<div id="loading">
+  <div class="spinner"></div>
+  <p>正在加载图鉴数据…</p>
+</div>
 
-<!-- 主区域 -->
-<main class="main">
-  <!-- 移动端顶部标签栏 -->
-  <div class="mobile-tabs-container">
-    <div class="mobile-tabs" id="mobileTabs"></div>
+<!-- 桌面端顶栏 -->
+<header>
+  <span class="logo">🌿</span>
+  <h1>园艺图鉴 · 月季与多肉</h1>
+  <div class="search-wrap">
+    <input type="search" id="search-input" placeholder="搜索条目名称…" autocomplete="off">
   </div>
-  
+</header>
+
+<!-- 移动端导航条：横向滑动分类 + 搜索框 -->
+<div id="mobile-nav">
+  <div class="cat-scroll" id="mobile-cat-scroll">
+    <!-- JS 动态生成分类 chips -->
+  </div>
   <div class="search-bar">
-    <input type="text" class="search-input" id="searchInput" placeholder="搜索品种名称..." oninput="doSearch()">
-    <span class="search-info" id="searchInfo">共 0 篇</span>
+    <input type="search" id="mobile-search-input" placeholder="搜索条目名称…" autocomplete="off">
   </div>
-  <div class="content-area" id="contentArea">
-    <div class="card-grid" id="cardGrid"></div>
-  </div>
-</main>
+</div>
 
-<!-- 模态框 -->
-<div class="modal-overlay hidden" id="modalOverlay" onclick="closeModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <div class="modal-title" id="modalTitle"></div>
-      <button class="modal-close" onclick="closeModal()">&times;</button>
+<!-- 主布局 -->
+<div class="layout">
+
+  <!-- 左侧分类（桌面端） -->
+  <nav id="sidebar">
+    <h2>分类导航</h2>
+    <div id="cat-list"><!-- JS 生成 --></div>
+  </nav>
+
+  <!-- 右侧内容 -->
+  <main id="content">
+    <div class="section-header">
+      <h2 id="section-title">全部条目</h2>
+      <span class="total" id="section-count"></span>
     </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-footer">
-      <span id="modalCat"></span>
-      <span id="modalSource"></span>
+    <div class="grid" id="grid"><!-- JS 生成 --></div>
+  </main>
+</div>
+
+<!-- 阅读弹窗 -->
+<div id="modal-overlay">
+  <div id="modal-box">
+    <div id="modal-header">
+      <span id="modal-title">文章标题</span>
+      <button id="modal-close" title="关闭 (Esc)">✕</button>
     </div>
+    <iframe id="modal-iframe" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>
   </div>
 </div>
 
 <script>
-// 全局状态
-let allItems = [];
-let contentCache = {};
-let currentFilter = 'all';
-let currentSearch = '';
+/* ==================== 主逻辑 ==================== */
 
-// 加载数据
+let allData = [];      // 全部分类数据
+let activeCatIdx = -1; // -1 = 全部
+
+/* 加载数据 */
 async function loadData() {
   try {
-    const resp = await fetch('data/index.json');
-    allItems = await resp.json();
-    updateCounts();
-    renderSidebar();
-    renderMobileTabs();
-    renderCards(allItems);
-    document.getElementById('searchInfo').textContent = `共 ${allItems.length} 篇`;
-  } catch(e) {
-    document.getElementById('cardGrid').innerHTML =
-      '<div class="empty-state"><div class="empty-state-icon">&#x1f4e6;</div><p>数据加载失败，请确保 data/index.json 文件存在</p></div>';
+    const res = await fetch('./data.json');
+    if (!res.ok) throw new Error('data.json 未找到');
+    allData = await res.json();
+    init();
+  } catch (e) {
+    document.getElementById('loading').innerHTML =
+      `<p style="color:#c0392b;font-size:16px;">⚠️ 数据加载失败：${e.message}</p>
+       <p style="margin-top:8px;font-size:13px;color:#888;">
+         请先运行 <code>scan_files.py</code> 生成 data.json，<br>
+         然后通过本地服务器（如 Live Server）打开此页面。
+       </p>`;
   }
 }
 
-// 更新计数
-function updateCounts() {
-  let roseCount = 0, succCount = 0;
-  allItems.forEach(item => {
-    if (item.type === '月季') roseCount++;
-    else if (item.type === '多肉') succCount++;
-  });
-  document.getElementById('countAll').textContent = allItems.length;
-  document.getElementById('countRose').textContent = roseCount;
-  document.getElementById('countSucculent').textContent = succCount;
+/* 初始化 */
+function init() {
+  document.getElementById('loading').style.display = 'none';
+  renderSidebar();
+  renderMobileNav();
+  renderGrid(-1);
+  bindEvents();
 }
 
-// 渲染侧边栏子分类
+/* 渲染桌面端左侧分类列表 */
 function renderSidebar() {
-  const subContainer = document.getElementById('subRose');
-  const roseSubs = {};
-  allItems.filter(i => i.type === '月季').forEach(i => {
-    const sub = i.cat || '其他';
-    if (!roseSubs[sub]) roseSubs[sub] = 0;
-    roseSubs[sub]++;
-  });
-  let html = '';
-  for (const [sub, count] of Object.entries(roseSubs)) {
-    html += `<div class="nav-sub-item" data-sub="${sub}" onclick="filterSubCategory('${sub}', this)">${sub} <span style="font-size:11px;color:#bbb;margin-left:4px;">${count}</span></div>`;
-  }
-  subContainer.innerHTML = html;
-}
-
-// 渲染移动端顶部标签栏
-function renderMobileTabs() {
-  const container = document.getElementById('mobileTabs');
-  
-  // 统计分类
-  const roseSubs = {};
-  let succCount = 0;
-  
-  allItems.forEach(i => {
-    if (i.type === '月季') {
-      const sub = i.cat || '其他';
-      if (!roseSubs[sub]) roseSubs[sub] = 0;
-      roseSubs[sub]++;
-    } else if (i.type === '多肉') {
-      succCount++;
-    }
-  });
-  
-  // 生成标签 HTML
-  let html = '';
-  
-  // 全部
-  html += `<div class="mobile-tab active" data-cat="all" onclick="mobileFilter('all', this)">
-    <span class="mobile-tab-icon">🌱</span>
-    全部
-    <span class="mobile-tab-count">${allItems.length}</span>
-  </div>`;
-  
-  // 月季子分类
-  for (const [sub, count] of Object.entries(roseSubs)) {
-    html += `<div class="mobile-tab" data-cat="${sub}" onclick="mobileFilter('${sub}', this)">
-      <span class="mobile-tab-icon">🌹</span>
-      ${sub}
-      <span class="mobile-tab-count">${count}</span>
+  const container = document.getElementById('cat-list');
+  // "全部" 项
+  const allCount = allData.reduce((s, c) => s + c.items.length, 0);
+  container.innerHTML = `
+    <div class="cat-item active" data-idx="-1">
+      <span class="icon">📚</span>
+      <span class="label">全部条目</span>
+      <span class="count">${allCount}</span>
     </div>`;
-  }
-  
-  // 多肉
-  html += `<div class="mobile-tab" data-cat="多肉" onclick="mobileFilter('多肉', this)">
-    <span class="mobile-tab-icon">🌵</span>
-    多肉
-    <span class="mobile-tab-count">${succCount}</span>
-  </div>`;
-  
-  container.innerHTML = html;
-}
 
-// 移动端分类过滤
-function mobileFilter(cat, el) {
-  // 更新所有标签的 active 状态
-  document.querySelectorAll('.mobile-tab').forEach(t => t.classList.remove('active'));
-  if (el) el.classList.add('active');
-  
-  // 同步到主过滤逻辑
-  currentFilter = cat;
-  applyFilters();
-  
-  // 同步侧边栏状态（如果用户切换回电脑端）
-  document.querySelectorAll('.nav-cat-title').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.nav-sub-item').forEach(e => e.classList.remove('active'));
-}
-
-// 切换子分类展开/折叠
-function toggleSub(el) {
-  el.classList.toggle('open');
-  el.nextElementSibling.classList.toggle('open');
-}
-
-// 过滤：全部分类
-function filterCategory(cat, el) {
-  document.querySelectorAll('.nav-cat-title').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.nav-sub-item').forEach(e => e.classList.remove('active'));
-  if (el) el.classList.add('active');
-  currentFilter = cat;
-  applyFilters();
-  
-  // 同步移动端标签状态
-  syncMobileTabs(cat);
-}
-
-// 过滤：子分类
-function filterSubCategory(sub, el) {
-  document.querySelectorAll('.nav-cat-title').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.nav-sub-item').forEach(e => e.classList.remove('active'));
-  el.classList.add('active');
-  currentFilter = sub;
-  applyFilters();
-  
-  // 同步移动端标签状态
-  syncMobileTabs(sub);
-}
-
-// 同步移动端标签状态
-function syncMobileTabs(cat) {
-  document.querySelectorAll('.mobile-tab').forEach(t => {
-    if (t.dataset.cat === cat) {
-      t.classList.add('active');
-    } else {
-      t.classList.remove('active');
-    }
+  allData.forEach((cat, idx) => {
+    const div = document.createElement('div');
+    div.className = 'cat-item';
+    div.dataset.idx = idx;
+    div.innerHTML = `
+      <span class="icon">${cat.icon || '📄'}</span>
+      <span class="label">${cat.name}</span>
+      <span class="count">${cat.items.length}</span>`;
+    container.appendChild(div);
   });
 }
 
-// 搜索
-function doSearch() {
-  currentSearch = document.getElementById('searchInput').value.trim().toLowerCase();
-  applyFilters();
+/* 渲染移动端横向分类条 */
+function renderMobileNav() {
+  const scrollContainer = document.getElementById('mobile-cat-scroll');
+  // "全部" 项
+  const allCount = allData.reduce((s, c) => s + c.items.length, 0);
+  const allChip = document.createElement('div');
+  allChip.className = 'cat-chip active';
+  allChip.dataset.idx = '-1';
+  allChip.textContent = `全部 (${allCount})`;
+  scrollContainer.appendChild(allChip);
+
+  allData.forEach((cat, idx) => {
+    const chip = document.createElement('div');
+    chip.className = 'cat-chip';
+    chip.dataset.idx = idx;
+    chip.textContent = `${cat.icon || '📄'} ${cat.name} (${cat.items.length})`;
+    scrollContainer.appendChild(chip);
+  });
 }
 
-// 应用过滤和搜索
-function applyFilters() {
-  let filtered = allItems;
+/* 渲染右侧卡片网格 */
+function renderGrid(catIdx, keyword = '') {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
 
-  if (currentFilter === 'all') {
-    // 显示全部
-  } else if (currentFilter === '月季') {
-    filtered = allItems.filter(i => i.type === '月季');
-  } else if (currentFilter === '多肉') {
-    filtered = allItems.filter(i => i.type === '多肉');
+  let items = [];
+  let title = '全部条目';
+
+  if (catIdx === -1) {
+    allData.forEach(cat => {
+      cat.items.forEach(item => items.push({ ...item, _cat: cat.name }));
+    });
+    title = '全部条目';
   } else {
-    // 月季子分类
-    filtered = allItems.filter(i => i.cat === currentFilter);
+    const cat = allData[catIdx];
+    items = cat.items.map(item => ({ ...item, _cat: cat.name }));
+    title = `${cat.icon || ''} ${cat.name}`;
   }
 
-  if (currentSearch) {
-    filtered = filtered.filter(i => i.title.toLowerCase().includes(currentSearch));
+  // 关键词过滤
+  if (keyword) {
+    const kw = keyword.toLowerCase();
+    items = items.filter(item => item.title.toLowerCase().includes(kw));
+    title = `"${keyword}" 的搜索结果`;
   }
 
-  renderCards(filtered);
-  document.getElementById('searchInfo').textContent =
-    currentSearch ? `搜索 "${currentSearch}" - ${filtered.length} 篇` : `共 ${filtered.length} 篇`;
-}
+  document.getElementById('section-title').textContent = title;
+  document.getElementById('section-count').textContent = `共 ${items.length} 篇`;
 
-// 渲染卡片
-function renderCards(items) {
-  const grid = document.getElementById('cardGrid');
-  if (items.length === 0) {
-    grid.innerHTML = '<div class="empty-state"><div class="empty-state-icon">&#x1f50d;</div><p>没有找到匹配的品种</p></div>';
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty">暂无匹配条目</div>';
     return;
   }
-  let html = '';
+
+  const frag = document.createDocumentFragment();
   items.forEach(item => {
-    const isRose = item.type === '月季';
-    const badgeClass = isRose ? 'rose' : 'succulent';
-    const badgeText = isRose ? (item.cat || '月季') : '多肉';
-    const hasImg = item.images && item.images.length > 0;
-    const imgHtml = hasImg
-      ? `<img class="card-img" src="${item.images[0]}" alt="${escapeHtml(item.title)}" loading="lazy">`
-      : `<div class="card-img-placeholder">${isRose ? '🌹' : '🌵'}</div>`;
-    html += `
-      <div class="card" onclick="openArticle('${item.id}')">
-        ${imgHtml}
-        <div class="card-body">
-          <span class="card-badge ${badgeClass}">${badgeText}</span>
-          <div class="card-title">${escapeHtml(item.title)}</div>
-          <div class="card-meta">${escapeHtml(item.cat || '')}</div>
-          <div class="card-source">${escapeHtml(item.source || '')}</div>
-        </div>
-      </div>`;
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.title = item.title;
+    card.dataset.url = item.file_url;
+    card.dataset.title = item.title;
+
+    const thumbHtml = item.thumb
+      ? `<img class="thumb" src="${item.thumb}" alt="${item.title}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=no-thumb>🌸</div>'">`
+      : `<div class="no-thumb">🌸</div>`;
+
+    card.innerHTML = `${thumbHtml}<div class="card-title">${escHtml(item.title)}</div>`;
+    frag.appendChild(card);
   });
-  grid.innerHTML = html;
+  grid.appendChild(frag);
 }
 
-// 打开文章
-async function openArticle(id) {
-  const overlay = document.getElementById('modalOverlay');
-  document.getElementById('modalTitle').textContent = '加载中...';
-  document.getElementById('modalBody').innerHTML = '';
-  document.getElementById('modalCat').textContent = '';
-  document.getElementById('modalSource').textContent = '';
-  overlay.classList.remove('hidden');
+/* HTML 转义 */
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 
-  try {
-    if (!contentCache[id]) {
-      const resp = await fetch('data/content.json');
-      const allContent = await resp.json();
-      contentCache = allContent;
-    }
-    const data = contentCache[id];
-    if (data) {
-      document.getElementById('modalTitle').textContent = data.title;
+/* 同步桌面端和移动端的分类高亮 + 滚动到激活项 */
+function setActiveCategory(idx) {
+  activeCatIdx = idx;
 
-      // 用 segments 渲染，保持原文顺序
-      let bodyHtml = '';
-      if (data.segments && data.segments.length > 0) {
-        data.segments.forEach(seg => {
-          if (seg.t) {
-            // 文字段落
-            const escaped = escapeHtml(seg.t);
-            // 保留换行
-            const withBr = escaped.replace(/\n/g, '<br>');
-            bodyHtml += `<p style="margin:0 0 12px 0;line-height:1.8;">${withBr}</p>`;
-          } else if (seg.i) {
-            // 图片
-            bodyHtml += `<div style="margin:8px 0;"><img src="${seg.i}" alt="${escapeHtml(data.title)}" style="max-width:100%;border-radius:8px;border:1px solid var(--border);height:auto;"></div>`;
-          }
-        });
-      } else if (data.content) {
-        // 兼容旧格式
-        bodyHtml = '<p style="margin:0;line-height:1.8;">' + escapeHtml(data.content).replace(/\n/g, '<br>') + '</p>';
-      }
+  // 桌面端 sidebar
+  document.querySelectorAll('#sidebar .cat-item').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
+  });
 
-      document.getElementById('modalBody').innerHTML = bodyHtml;
-      const indexEntry = allItems.find(i => i.id === id);
-      const catInfo = indexEntry ? (indexEntry.cat || '') : '';
-      document.getElementById('modalCat').textContent = catInfo;
-      document.getElementById('modalSource').textContent = indexEntry ? (indexEntry.source || '') : '';
-    } else {
-      document.getElementById('modalTitle').textContent = '未找到';
-      document.getElementById('modalBody').textContent = '该文章内容不存在';
-    }
-  } catch(e) {
-    document.getElementById('modalBody').textContent = '加载内容失败';
+  // 移动端 chips
+  document.querySelectorAll('#mobile-cat-scroll .cat-chip').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
+  });
+
+  // 移动端：将激活的 chip 滚动到可视区域
+  const activeChip = document.querySelector('#mobile-cat-scroll .cat-chip.active');
+  if (activeChip) {
+    activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
   }
 }
 
-// 关闭模态框
-function closeModal(e) {
-  if (e && e.target !== document.getElementById('modalOverlay')) return;
-  document.getElementById('modalOverlay').classList.add('hidden');
+/* 绑定事件 */
+function bindEvents() {
+  // 桌面端分类点击
+  document.getElementById('cat-list').addEventListener('click', e => {
+    const item = e.target.closest('.cat-item');
+    if (!item) return;
+    const idx = parseInt(item.dataset.idx);
+    setActiveCategory(idx);
+    renderGrid(idx, document.getElementById('search-input').value.trim());
+    document.getElementById('content').scrollTo(0, 0);
+  });
+
+  // 移动端分类点击
+  document.getElementById('mobile-cat-scroll').addEventListener('click', e => {
+    const chip = e.target.closest('.cat-chip');
+    if (!chip) return;
+    const idx = parseInt(chip.dataset.idx);
+    setActiveCategory(idx);
+    const keyword = document.getElementById('mobile-search-input').value.trim();
+    renderGrid(idx, keyword);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  // 桌面端搜索
+  let searchTimer;
+  document.getElementById('search-input').addEventListener('input', e => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      renderGrid(activeCatIdx, e.target.value.trim());
+      document.getElementById('content').scrollTo(0, 0);
+    }, 250);
+  });
+
+  // 移动端搜索
+  let mobileSearchTimer;
+  document.getElementById('mobile-search-input').addEventListener('input', e => {
+    clearTimeout(mobileSearchTimer);
+    mobileSearchTimer = setTimeout(() => {
+      renderGrid(activeCatIdx, e.target.value.trim());
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 250);
+  });
+
+  // 卡片点击 → 弹窗
+  document.getElementById('grid').addEventListener('click', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    openModal(card.dataset.url, card.dataset.title);
+  });
+
+  // 关闭弹窗
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeModal();
+  });
 }
 
-// ESC关闭
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') {
-    document.getElementById('modalOverlay').classList.add('hidden');
-  }
-});
-
-// HTML转义
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+/* 打开弹窗 */
+function openModal(url, title) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-iframe').src = url;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
-// 初始化
+/* 关闭弹窗 */
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-iframe').src = 'about:blank';
+  document.body.style.overflow = '';
+}
+
+/* 启动 */
 loadData();
 </script>
 </body>
