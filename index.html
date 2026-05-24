@@ -706,15 +706,15 @@ function renderMobileNav() {
 function getItemsByIndex(catIdx) {
   if (catIdx === -1) {
     // 全部：合并所有叶子
-    const items = [];
-    allData.tree.forEach(g => g.children.forEach(c => items = items.concat(c.items)));
-    return items;
+    let result = [];
+    allData.tree.forEach(g => g.children.forEach(c => result.push(...c.items)));
+    return result;
   }
   // 父组节点（如 group-0 = 月季）
   if (/^group-(\d+)$/.test(catIdx)) {
     const gIdx = parseInt(catIdx.match(/^group-(\d+)$/)[1]);
     const group = allData.tree[gIdx];
-    if (group) { const items = []; group.children.forEach(c => items = items.concat(c.items)); return items; }
+    if (group) { let result = []; group.children.forEach(c => result.push(...c.items)); return result; }
   }
   // 叶子节点（如 group-0-0 = 丹陶）
   const leafMatch = catIdx.match(/^group-(\d+)-(\d+)$/);
