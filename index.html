@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+ï»¿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ô°ÒÕÍ¼¼ø ¡¤ ÔÂ¼¾Óë¶àÈâ</title>
+<title>å›­è‰ºå›¾é‰´ Â· æœˆå­£ä¸å¤šè‚‰</title>
 <style>
-  /* ===== »ù´¡ Reset ===== */
+  /* ===== åŸºç¡€ Reset ===== */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
@@ -34,7 +34,7 @@
     overflow-x: hidden;
   }
 
-  /* ===== ×ÀÃæ¶Ë¶¥À¸ ===== */
+  /* ===== æ¡Œé¢ç«¯é¡¶æ  ===== */
   header {
     height: var(--header-h);
     background: var(--accent);
@@ -68,10 +68,10 @@
   header input[type=search]::placeholder { color: rgba(255,255,255,.65); }
   header input[type=search]:focus { background: rgba(255,255,255,.3); }
 
-  /* ===== ÒÆ¶¯¶Ë¶¥²¿µ¼º½Ìõ£¨Ä¬ÈÏÒş²Ø£©===== */
+  /* ===== ç§»åŠ¨ç«¯é¡¶éƒ¨å¯¼èˆªæ¡ï¼ˆé»˜è®¤éšè—ï¼‰===== */
   #mobile-nav { display: none; }
 
-  /* ===== Ö÷²¼¾Ö ===== */
+  /* ===== ä¸»å¸ƒå±€ ===== */
   .layout {
     display: flex;
     flex: 1;
@@ -79,7 +79,7 @@
     height: calc(100vh - var(--header-h));
   }
 
-  /* ===== ×ó²à·ÖÀà£¨×ÀÃæ¶Ë£© ===== */
+  /* ===== å·¦ä¾§åˆ†ç±»ï¼ˆæ¡Œé¢ç«¯ï¼‰ ===== */
   nav#sidebar {
     width: var(--sidebar-w);
     background: var(--sidebar-bg);
@@ -126,7 +126,7 @@
     color: #fff;
   }
 
-  /* ===== ÓÒ²àÖ÷ÇøÓò ===== */
+  /* ===== å³ä¾§ä¸»åŒºåŸŸ ===== */
   main#content {
     flex: 1;
     overflow-y: auto;
@@ -144,7 +144,7 @@
   .section-header h2 { font-size: 20px; color: var(--accent); }
   .section-header .total { font-size: 13px; color: var(--text-muted); }
 
-  /* ===== ¿¨Æ¬Íø¸ñ ===== */
+  /* ===== å¡ç‰‡ç½‘æ ¼ ===== */
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
@@ -195,7 +195,7 @@
     flex: 1;
   }
 
-  /* ===== ÎŞÆ¥ÅäÌáÊ¾ ===== */
+  /* ===== æ— åŒ¹é…æç¤º ===== */
   .empty {
     grid-column: 1/-1;
     text-align: center;
@@ -204,7 +204,7 @@
     font-size: 15px;
   }
 
-  /* ===== µ¯´° ===== */
+  /* ===== å¼¹çª— ===== */
   #modal-overlay {
     display: none;
     position: fixed;
@@ -270,7 +270,7 @@
   #modal-close:hover { background: rgba(255,255,255,.4); }
 
 
-  /* ===== ÏêÇéÄÚÁªÈİÆ÷ ===== */
+  /* ===== è¯¦æƒ…å†…è”å®¹å™¨ ===== */
   #detail-view {
     flex: 1;
     overflow-y: auto;
@@ -313,7 +313,7 @@
     padding: 60px 20px;
     color: var(--text-muted);
   }
-  /* Í¼Æ¬µÆÏä */
+  /* å›¾ç‰‡ç¯ç®± */
   #lightbox {
     display: none;
     position: fixed;
@@ -332,7 +332,7 @@
     border-radius: 4px;
   }
 
-  /* ===== ¼ÓÔØ×´Ì¬£ºÓÃ visibility + opacity ±ÜÃâ¶¶¶¯ ===== */
+  /* ===== åŠ è½½çŠ¶æ€ï¼šç”¨ visibility + opacity é¿å…æŠ–åŠ¨ ===== */
   #loading {
     position: fixed;
     inset: 0;
@@ -362,7 +362,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   #loading p { color: #888; font-size: 14px; }
 
-  /* ===== ¹ö¶¯ÌõÃÀ»¯ ===== */
+  /* ===== æ»šåŠ¨æ¡ç¾åŒ– ===== */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
@@ -370,14 +370,14 @@
   nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); }
 
 /* ============================================
-   ÒÆ¶¯¶ËÏìÓ¦Ê½£º¡Ü768px
+   ç§»åŠ¨ç«¯å“åº”å¼ï¼šâ‰¤768px
    ============================================ */
 @media (max-width: 768px) {
-  /* Òş²Ø×ÀÃæ¶Ë header ºÍ sidebar */
+  /* éšè—æ¡Œé¢ç«¯ header å’Œ sidebar */
   header { display: none; }
   nav#sidebar { display: none; }
 
-  /* ÏÔÊ¾ÒÆ¶¯¶Ëµ¼º½ */
+  /* æ˜¾ç¤ºç§»åŠ¨ç«¯å¯¼èˆª */
   #mobile-nav {
     display: flex;
     flex-direction: column;
@@ -389,7 +389,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,.25);
   }
 
-  /* ÒÆ¶¯¶Ë·ÖÀàºáÏò¹ö¶¯Ìõ */
+  /* ç§»åŠ¨ç«¯åˆ†ç±»æ¨ªå‘æ»šåŠ¨æ¡ */
   #mobile-nav .cat-scroll {
     display: flex;
     overflow-x: auto;
@@ -423,7 +423,7 @@
     font-weight: 600;
   }
 
-  /* ÒÆ¶¯¶ËËÑË÷¿ò */
+  /* ç§»åŠ¨ç«¯æœç´¢æ¡† */
   #mobile-nav .search-bar {
     display: flex;
     align-items: center;
@@ -443,7 +443,7 @@
   #mobile-nav .search-bar input[type=search]::placeholder { color: rgba(255,255,255,.65); }
   #mobile-nav .search-bar input[type=search]:focus { background: rgba(255,255,255,.35); }
 
-  /* Ö÷ÄÚÈİÇøµ÷Õû */
+  /* ä¸»å†…å®¹åŒºè°ƒæ•´ */
   .layout {
     flex-direction: column;
     height: auto;
@@ -461,7 +461,7 @@
   .section-header h2 { font-size: 17px; }
 }
 
-/* ³¬Ğ¡ÆÁÄ»½øÒ»²½ËõĞ¡¿¨Æ¬ */
+/* è¶…å°å±å¹•è¿›ä¸€æ­¥ç¼©å°å¡ç‰‡ */
 @media (max-width: 420px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
@@ -475,75 +475,75 @@
 
 <div id="loading">
   <div class="spinner"></div>
-  <p>ÕıÔÚ¼ÓÔØÍ¼¼øÊı¾İ¡­</p>
+  <p>æ­£åœ¨åŠ è½½å›¾é‰´æ•°æ®â€¦</p>
 </div>
 
-<!-- ×ÀÃæ¶Ë¶¥À¸ -->
+<!-- æ¡Œé¢ç«¯é¡¶æ  -->
 <header>
   <span class="logo">?</span>
-  <h1>Ô°ÒÕÍ¼¼ø</h1>
+  <h1>å›­è‰ºå›¾é‰´</h1>
   <div class="search-wrap">
-    <input type="search" id="search-input" placeholder="ËÑË÷ÔÂ¼¾ / ¶àÈâ¡­">
+    <input type="search" id="search-input" placeholder="æœç´¢æœˆå­£ / å¤šè‚‰â€¦">
   </div>
 </header>
 
-<!-- ÒÆ¶¯¶Ëµ¼º½Ìõ -->
+<!-- ç§»åŠ¨ç«¯å¯¼èˆªæ¡ -->
 <div id="mobile-nav">
   <div class="cat-scroll" id="mobile-cat-scroll"></div>
   <div class="search-bar">
-    <input type="search" id="mobile-search-input" placeholder="ËÑË÷ÔÂ¼¾ / ¶àÈâ¡­">
+    <input type="search" id="mobile-search-input" placeholder="æœç´¢æœˆå­£ / å¤šè‚‰â€¦">
   </div>
 </div>
 
-<!-- Ö÷²¼¾Ö -->
+<!-- ä¸»å¸ƒå±€ -->
 <div class="layout">
-  <!-- ×ÀÃæ¶Ë×ó²à·ÖÀà -->
+  <!-- æ¡Œé¢ç«¯å·¦ä¾§åˆ†ç±» -->
   <nav id="sidebar">
-    <h2>·Ö¡¡Àà</h2>
+    <h2>åˆ†ã€€ç±»</h2>
     <div id="cat-list"></div>
   </nav>
-  <!-- ÓÒ²àÄÚÈİ -->
+  <!-- å³ä¾§å†…å®¹ -->
   <main id="content">
     <div class="section-header">
-      <h2 id="section-title">È«²¿ÌõÄ¿</h2>
+      <h2 id="section-title">å…¨éƒ¨æ¡ç›®</h2>
       <span class="total" id="total-count"></span>
     </div>
     <div class="grid" id="grid"></div>
   </main>
 </div>
 
-<!-- µ¯´° -->
+<!-- å¼¹çª— -->
 <div id="modal-overlay">
   <div id="modal-box">
     <div id="modal-header">
-      <span id="modal-title">ÏêÇé</span>
-      <button id="modal-close">¡Á</button>
+      <span id="modal-title">è¯¦æƒ…</span>
+      <button id="modal-close">Ã—</button>
     </div>
     <div id="detail-view"></div>
   </div>
 </div>
 
-<!-- Í¼Æ¬µÆÏä -->
+<!-- å›¾ç‰‡ç¯ç®± -->
 <div id="lightbox"></div>
 
 <script>
-/* ==================== Ö÷Âß¼­ ==================== */
+/* ==================== ä¸»é€»è¾‘ ==================== */
 (function() {
   'use strict';
 
-let allData = [];       // È«²¿·ÖÀàÊı¾İ£¨index.json£©
-let contentData = {};   // ÏêÇéÄÚÈİÊı¾İ£¨content.json£©
-let activeCatIdx = -1;  // -1 = È«²¿
+let allData = [];       // å…¨éƒ¨åˆ†ç±»æ•°æ®ï¼ˆindex.jsonï¼‰
+let contentData = {};   // è¯¦æƒ…å†…å®¹æ•°æ®ï¼ˆcontent.jsonï¼‰
+let activeCatIdx = -1;  // -1 = å…¨éƒ¨
 
-/* ¼ÓÔØÊı¾İ */
+/* åŠ è½½æ•°æ® */
 async function loadData() {
   try {
     const [indexRes, contentRes] = await Promise.all([
       fetch('./data/index.json'),
       fetch('./data/content.json')
     ]);
-    if (!indexRes.ok) throw new Error('data/index.json Î´ÕÒµ½');
-    if (!contentRes.ok) throw new Error('data/content.json Î´ÕÒµ½');
+    if (!indexRes.ok) throw new Error('data/index.json æœªæ‰¾åˆ°');
+    if (!contentRes.ok) throw new Error('data/content.json æœªæ‰¾åˆ°');
 
     const rawData = await indexRes.json();
     contentData = await contentRes.json();
@@ -551,24 +551,24 @@ async function loadData() {
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
-      `<p style="color:#c0392b;font-size:16px;">? Êı¾İ¼ÓÔØÊ§°Ü£º${e.message}</p>
+      `<p style="color:#c0392b;font-size:16px;">? æ•°æ®åŠ è½½å¤±è´¥ï¼š${e.message}</p>
        <p style="margin-top:8px;font-size:13px;color:#888;">
-         ÇëÈ·ÈÏ data/index.json ºÍ data/content.json ÎÄ¼ş´æÔÚÇÒ¸ñÊ½ÕıÈ·¡£
+         è¯·ç¡®è®¤ data/index.json å’Œ data/content.json æ–‡ä»¶å­˜åœ¨ä¸”æ ¼å¼æ­£ç¡®ã€‚
        </p>`;
   }
 }
 
-/* Êı¾İ×ª»»£º±âÆ½Êı×é ¡ú °´·ÖÀà·Ö×é */
+/* æ•°æ®è½¬æ¢ï¼šæ‰å¹³æ•°ç»„ â†’ æŒ‰åˆ†ç±»åˆ†ç»„ */
 function transformData(rawData) {
   const catIcons = {
-    'µ¤ÌÕ': '?', '¿Æ¶ûµÂË¹': '?', '°ÂË¹Í¡': '?', 'Ãµ°º': '?',
-    '´÷¶û°ÍµÂ': '?', '¼ªÂå': '?', 'ÆäËûÓıÖÖ¼Ò': '?',
-    '¾ºÈü,ÆÀÑ¡ÒÔ¼°ÔÂ¼¾Ô°Êµ²â': '?', 'ÖÖÖ²·ÖÏí': '?',
-    'ÓıÖÖÏà¹Ø': '?', '¶àÈâ': '?'
+    'ä¸¹é™¶': '?', 'ç§‘å°”å¾·æ–¯': '?', 'å¥¥æ–¯æ±€': '?', 'ç«æ˜‚': '?',
+    'æˆ´å°”å·´å¾·': '?', 'å‰æ´›': '?', 'å…¶ä»–è‚²ç§å®¶': '?',
+    'ç«èµ›,è¯„é€‰ä»¥åŠæœˆå­£å›­å®æµ‹': '?', 'ç§æ¤åˆ†äº«': '?',
+    'è‚²ç§ç›¸å…³': '?', 'å¤šè‚‰': '?'
   };
   const groups = {};
   rawData.forEach(item => {
-    const catName = item.cat || 'Î´·ÖÀà';
+    const catName = item.cat || 'æœªåˆ†ç±»';
     if (!groups[catName]) {
       groups[catName] = {
         name: catName,
@@ -585,7 +585,7 @@ function transformData(rawData) {
   return Object.values(groups);
 }
 
-/* ³õÊ¼»¯ */
+/* åˆå§‹åŒ– */
 function init() {
   document.getElementById('loading').classList.add('hidden');
   renderSidebar();
@@ -594,14 +594,14 @@ function init() {
   bindEvents();
 }
 
-/* äÖÈ¾×ÀÃæ¶Ë×ó²à·ÖÀàÁĞ±í */
+/* æ¸²æŸ“æ¡Œé¢ç«¯å·¦ä¾§åˆ†ç±»åˆ—è¡¨ */
 function renderSidebar() {
   const container = document.getElementById('cat-list');
   const allCount = allData.reduce((s, c) => s + c.items.length, 0);
   container.innerHTML = `
     <div class="cat-item active" data-idx="-1">
       <span class="icon">?</span>
-      <span class="label">È«²¿ÌõÄ¿</span>
+      <span class="label">å…¨éƒ¨æ¡ç›®</span>
       <span class="count">${allCount}</span>
     </div>`;
   allData.forEach((cat, idx) => {
@@ -616,14 +616,14 @@ function renderSidebar() {
   });
 }
 
-/* äÖÈ¾ÒÆ¶¯¶ËºáÏò·ÖÀàÌõ */
+/* æ¸²æŸ“ç§»åŠ¨ç«¯æ¨ªå‘åˆ†ç±»æ¡ */
 function renderMobileNav() {
   const scrollContainer = document.getElementById('mobile-cat-scroll');
   const allCount = allData.reduce((s, c) => s + c.items.length, 0);
   const allChip = document.createElement('div');
   allChip.className = 'cat-chip active';
   allChip.dataset.idx = '-1';
-  allChip.textContent = `È«²¿ (${allCount})`;
+  allChip.textContent = `å…¨éƒ¨ (${allCount})`;
   scrollContainer.appendChild(allChip);
   allData.forEach((cat, idx) => {
     const chip = document.createElement('div');
@@ -634,7 +634,7 @@ function renderMobileNav() {
   });
 }
 
-/* äÖÈ¾ÓÒ²à¿¨Æ¬Íø¸ñ */
+/* æ¸²æŸ“å³ä¾§å¡ç‰‡ç½‘æ ¼ */
 function renderGrid(catIdx, keyword = '') {
   const grid = document.getElementById('grid');
   let items = [];
@@ -648,28 +648,28 @@ function renderGrid(catIdx, keyword = '') {
     items = items.filter(it => it.title.toLowerCase().includes(kw));
   }
   document.getElementById('section-title').textContent =
-    catIdx === -1 ? 'È«²¿ÌõÄ¿' : allData[catIdx].name;
-  document.getElementById('total-count').textContent = `${items.length} ¸ö`;
+    catIdx === -1 ? 'å…¨éƒ¨æ¡ç›®' : allData[catIdx].name;
+  document.getElementById('total-count').textContent = `${items.length} ä¸ª`;
   if (!items.length) {
-    grid.innerHTML = '<div class="empty">ÔİÎŞÆ¥Åä½á¹û</div>';
+    grid.innerHTML = '<div class="empty">æš‚æ— åŒ¹é…ç»“æœ</div>';
     return;
   }
   grid.innerHTML = items.map(it => {
     const safeTitle = escapeHtml(it.title);
     const safeUrl = escapeHtml(it.file_url || '');
     const thumbHtml = it.thumb
-      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} ËõÂÔÍ¼" loading="lazy"
+      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} ç¼©ç•¥å›¾" loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
          <div class="no-thumb" style="display:none;">?</div>`
       : `<div class="no-thumb">?</div>`;
-    return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="²é¿´ÏêÇé£º${safeTitle}">
+    return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="æŸ¥çœ‹è¯¦æƒ…ï¼š${safeTitle}">
       ${thumbHtml}
       <div class="card-title">${safeTitle}</div>
     </div>`;
   }).join('');
 }
 
-/* ÉèÖÃ¼¤»î·ÖÀà */
+/* è®¾ç½®æ¿€æ´»åˆ†ç±» */
 function setActiveCategory(idx) {
   activeCatIdx = idx;
   document.querySelectorAll('#cat-list .cat-item').forEach(el => {
@@ -684,7 +684,7 @@ function setActiveCategory(idx) {
   }
 }
 
-/* ËÑË÷·À¶¶¹«¹²º¯Êı */
+/* æœç´¢é˜²æŠ–å…¬å…±å‡½æ•° */
 function debounceSearch(inputId, scrollTarget) {
   let timer;
   const el = document.getElementById(inputId);
@@ -702,9 +702,9 @@ function debounceSearch(inputId, scrollTarget) {
   });
 }
 
-/* °ó¶¨ÊÂ¼ş */
+/* ç»‘å®šäº‹ä»¶ */
 function bindEvents() {
-  // ×ÀÃæ¶Ë·ÖÀàµã»÷
+  // æ¡Œé¢ç«¯åˆ†ç±»ç‚¹å‡»
   document.getElementById('cat-list').addEventListener('click', e => {
     const item = e.target.closest('.cat-item');
     if (!item) return;
@@ -714,7 +714,7 @@ function bindEvents() {
     document.getElementById('content').scrollTo(0, 0);
   });
 
-  // ÒÆ¶¯¶Ë·ÖÀàµã»÷
+  // ç§»åŠ¨ç«¯åˆ†ç±»ç‚¹å‡»
   document.getElementById('mobile-cat-scroll').addEventListener('click', e => {
     const chip = e.target.closest('.cat-chip');
     if (!chip) return;
@@ -725,18 +725,18 @@ function bindEvents() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
-  // ËÑË÷£¨×ÀÃæ¶Ë + ÒÆ¶¯¶Ë¹²ÓÃ·À¶¶Âß¼­£©
+  // æœç´¢ï¼ˆæ¡Œé¢ç«¯ + ç§»åŠ¨ç«¯å…±ç”¨é˜²æŠ–é€»è¾‘ï¼‰
   debounceSearch('search-input', 'content');
   debounceSearch('mobile-search-input', 'window');
 
-  // ¿¨Æ¬µã»÷ ¡ú µ¯´°
+  // å¡ç‰‡ç‚¹å‡» â†’ å¼¹çª—
   document.getElementById('grid').addEventListener('click', e => {
     const card = e.target.closest('.card');
     if (!card) return;
     openModal(card.dataset.url, card.dataset.title);
   });
 
-  // ¹Ø±Õµ¯´°
+  // å…³é—­å¼¹çª—
   document.getElementById('modal-close').addEventListener('click', closeModal);
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === document.getElementById('modal-overlay')) closeModal();
@@ -749,7 +749,7 @@ function bindEvents() {
   });
 }
 
-/* ´ò¿ªµ¯´° ¡ª ÄÚÁªäÖÈ¾ÏêÇé */
+/* æ‰“å¼€å¼¹çª— â€” å†…è”æ¸²æŸ“è¯¦æƒ… */
 function openModal(url, title) {
   const id = url.replace('./detail.html?id=', '');
   document.getElementById('modal-title').textContent = title;
@@ -763,16 +763,16 @@ function openModal(url, title) {
       let html = `<h2 class="detail-title">${escapeHtml(title)}</h2><div class="detail-body">`;
       content.segments.forEach(seg => {
         if (seg.t) {
-          // ÎÄ±¾¶Î
+          // æ–‡æœ¬æ®µ
           html += `<p>${escapeHtml(seg.t)}</p>`;
         } else if (seg.i) {
-          // Í¼Æ¬¶Î
-          html += `<img src="${escapeHtml(seg.i)}" alt="Í¼Æ¬" loading="lazy">`;
+          // å›¾ç‰‡æ®µ
+          html += `<img src="${escapeHtml(seg.i)}" alt="å›¾ç‰‡" loading="lazy">`;
         }
       });
       html += '</div>';
       detailEl.innerHTML = html;
-      // °ó¶¨Í¼Æ¬µã»÷µÆÏäÊÂ¼ş£¨Ìæ´úÄÚÁª onclick£©
+      // ç»‘å®šå›¾ç‰‡ç‚¹å‡»ç¯ç®±äº‹ä»¶ï¼ˆæ›¿ä»£å†…è” onclickï¼‰
       detailEl.querySelectorAll('.detail-body img').forEach(img => {
         img.addEventListener('click', () => showLightbox(img.src));
         img.style.cursor = 'pointer';
@@ -780,16 +780,16 @@ function openModal(url, title) {
     } else {
       detailEl.innerHTML = `
         <div class="detail-error">
-          <p>? ÔİÎŞÏêÇéÄÚÈİ</p>
+          <p>? æš‚æ— è¯¦æƒ…å†…å®¹</p>
           <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
         </div>`;
     }
   } catch (err) {
-    console.error('[openModal] äÖÈ¾ÏêÇéÊ§°Ü:', err);
+    console.error('[openModal] æ¸²æŸ“è¯¦æƒ…å¤±è´¥:', err);
     detailEl.innerHTML = `
       <div class="detail-error">
-        <p>? ÄÚÈİäÖÈ¾³ö´í</p>
-        <p style="font-size:12px;color:#bbb;margin-top:8px;">ÇëÉÔºóÖØÊÔ</p>
+        <p>? å†…å®¹æ¸²æŸ“å‡ºé”™</p>
+        <p style="font-size:12px;color:#bbb;margin-top:8px;">è¯·ç¨åé‡è¯•</p>
       </div>`;
   }
 
@@ -798,20 +798,20 @@ function openModal(url, title) {
   document.body.style.overflow = 'hidden';
 }
 
-/* ¹Ø±Õµ¯´° */
+/* å…³é—­å¼¹çª— */
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('open');
   const detailEl = document.getElementById('detail-view');
   detailEl.classList.remove('active');
-  // ÑÓ³ÙÇå¿ÕÄÚÈİ£¬ÈÃ¹Ø±Õ¶¯»­¸üÆ½»¬
+  // å»¶è¿Ÿæ¸…ç©ºå†…å®¹ï¼Œè®©å…³é—­åŠ¨ç”»æ›´å¹³æ»‘
   setTimeout(() => { detailEl.innerHTML = ''; }, 300);
   document.body.style.overflow = '';
 }
 
-/* Í¼Æ¬µÆÏä */
+/* å›¾ç‰‡ç¯ç®± */
 function showLightbox(src) {
   const lb = document.getElementById('lightbox');
-  lb.innerHTML = `<img src="${src}" alt="Ô¤ÀÀ">`;
+  lb.innerHTML = `<img src="${src}" alt="é¢„è§ˆ">`;
   lb.classList.add('active');
 }
 document.addEventListener('DOMContentLoaded', () => {
@@ -819,17 +819,17 @@ document.addEventListener('DOMContentLoaded', () => {
   lb.addEventListener('click', () => lb.classList.remove('active'));
 });
 
-/* HTML ×ªÒå */
+/* HTML è½¬ä¹‰ */
 function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
 }
 
-/* Æô¶¯ */
+/* å¯åŠ¨ */
 loadData();
 
-/* ¹Ø±Õ IIFE£¬±ÜÃâÈ«¾Ö±äÁ¿ÎÛÈ¾ */
+/* å…³é—­ IIFEï¼Œé¿å…å…¨å±€å˜é‡æ±¡æŸ“ */
 })();
 </script>
 </body>
