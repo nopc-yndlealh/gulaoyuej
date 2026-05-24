@@ -112,7 +112,6 @@
     border-left-color: var(--accent-light);
     color: #fff;
   }
-  nav#sidebar .cat-item .icon { font-size: 16px; flex-shrink: 0; }
   nav#sidebar .cat-item .label { flex: 1; }
   nav#sidebar .cat-item .count {
     font-size: 11px;
@@ -124,6 +123,30 @@
   nav#sidebar .cat-item.active .count {
     background: rgba(255,255,255,.22);
     color: #fff;
+  }
+
+  /* ===== 树状分类结构 ===== */
+  .tree-group { }
+  .tree-group .parent-item {
+    position: relative;
+    font-weight: 600;
+    color: #e8d0d0;
+  }
+  .tree-group .parent-item:hover { background: rgba(255,255,255,.1); }
+  .tree-arrow {
+    font-size: 10px;
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+    transition: transform .2s;
+    color: #bbb;
+  }
+  .tree-children { }
+  .leaf-item .label { padding-left: 4px; font-size: 13.5px; }
+  .tree-indent {
+    width: 20px;
+    height: 1px;
+    flex-shrink: 0;
   }
 
   /* ===== 右侧主区域 ===== */
@@ -480,7 +503,6 @@
 
 <!-- 桌面端顶栏 -->
 <header>
-  <span class="logo">🌺</span>
   <h1>园艺图鉴</h1>
   <div class="search-wrap">
     <input type="search" id="search-input" placeholder="搜索月季 / 多肉…">
@@ -531,9 +553,9 @@
 (function() {
   'use strict';
 
-let allData = [];       // 全部分类数据（index.json）
+let allData = null;     // 树状分类数据 { tree, flatGroups, totalItems }
 let contentData = {};   // 详情内容数据（content.json）
-let activeCatIdx = -1;  // -1 = 全部
+let activeCatIdx = -1;  // -1 = 全部，格式: "group-child" 如 "月季-丹陶" 或 "多肉"
 
 /* 加载数据 */
 async function loadData() {
@@ -551,38 +573,67 @@ async function loadData() {
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
-      `<p style="color:#c0392b;font-size:16px;">? 数据加载失败：${e.message}</p>
+      `<p style="color:#c0392b;font-size:16px;">数据加载失败：${e.message}</p>
        <p style="margin-top:8px;font-size:13px;color:#888;">
          请确认 data/index.json 和 data/content.json 文件存在且格式正确。
        </p>`;
   }
 }
 
-/* 数据转换：扁平数组 → 按分类分组 */
+/* 树状分类配置 */
+const TREE_CONFIG = [
+  {
+    name: '月季',
+    children: [
+      '丹陶', '吉洛', '奥斯汀', '戴尔巴德', '玫昂', '科尔德斯',
+      '古老月季', '育种相关', '特性合集', '种植分享',
+      '竞赛,评选以及月季园实测', '其他育种家'
+    ]
+  },
+  { name: '多肉', children: [] }
+];
+
+/* 数据转换：扁平数组 → 树状分类结构 */
 function transformData(rawData) {
-  const catIcons = {
-    '丹陶': '🌹', '科尔德斯': '🏅', '奥斯汀': '🇬🇧', '玫昂': '💐',
-    '戴尔巴德': '✨', '吉洛': '🌸', '其他育种家': '🎨',
-    '竞赛,评选以及月季园实测': '🏆', '种植分享': '🌱',
-    '育种相关': '🔬', '多肉': '🌵'
-  };
-  const groups = {};
+  // 先按原始 cat 分组
+  const flatGroups = {};
   rawData.forEach(item => {
     const catName = item.cat || '未分类';
-    if (!groups[catName]) {
-      groups[catName] = {
-        name: catName,
-        icon: catIcons[catName] || '?',
-        items: []
-      };
-    }
-    groups[catName].items.push({
+    if (!flatGroups[catName]) flatGroups[catName] = [];
+    flatGroups[catName].push({
       title: item.title,
       thumb: item.images && item.images.length > 0 ? item.images[0] : '',
       file_url: `./detail.html?id=${item.id}`
     });
   });
-  return Object.values(groups);
+
+  // 构建树
+  const tree = [];
+  let totalItems = 0;
+
+  TREE_CONFIG.forEach(group => {
+    const node = { name: group.name, children: [], itemCount: 0 };
+    group.children.forEach(childName => {
+      const items = flatGroups[childName] || [];
+      if (items.length > 0 || true) { // 保留空分类（如古老月季、特性合集）
+        node.children.push({ name: childName, items: items, isLeaf: true });
+        node.itemCount += items.length;
+        totalItems += items.length;
+      }
+    });
+
+    // 如果多肉等组没有在 children 里列出，从 flatGroups 中直接取
+    if (group.children.length === 0 && flatGroups[group.name]) {
+      const items = flatGroups[group.name];
+      node.children.push({ name: group.name, items: items, isLeaf: true });
+      node.itemCount = items.length;
+      totalItems += items.length;
+    }
+
+    tree.push(node);
+  });
+
+  return { tree, flatGroups, totalItems };
 }
 
 /* 初始化 */
@@ -594,62 +645,108 @@ function init() {
   bindEvents();
 }
 
-/* 渲染桌面端左侧分类列表 */
+/* 渲染桌面端左侧树状分类 */
 function renderSidebar() {
   const container = document.getElementById('cat-list');
-  const allCount = allData.reduce((s, c) => s + c.items.length, 0);
-  container.innerHTML = `
-    <div class="cat-item active" data-idx="-1">
-      <span class="icon">📚</span>
-      <span class="label">全部条目</span>
-      <span class="count">${allCount}</span>
-    </div>`;
-  allData.forEach((cat, idx) => {
-    const div = document.createElement('div');
-    div.className = 'cat-item';
-    div.dataset.idx = idx;
-    div.innerHTML = `
-      <span class="icon">${escapeHtml(cat.icon || '?')}</span>
-      <span class="label">${escapeHtml(cat.name)}</span>
-      <span class="count">${cat.items.length}</span>`;
-    container.appendChild(div);
+  let html = `<div class="cat-item active" data-idx="-1">
+    <span class="label">全部植物</span>
+    <span class="count">${allData.totalItems}</span>
+  </div>`;
+
+  allData.tree.forEach((group, gIdx) => {
+    // 父节点（月季 / 多肉）
+    const groupId = `group-${gIdx}`;
+    html += `<div class="tree-group" data-group="${groupId}">
+      <div class="cat-item parent-item expanded" data-idx="${groupId}">
+        <span class="tree-arrow">▼</span>
+        <span class="label">${escapeHtml(group.name)}</span>
+        <span class="count">${group.itemCount}</span>
+      </div>
+      <div class="tree-children">`;
+
+    group.children.forEach((child, cIdx) => {
+      const leafId = `${groupId}-${cIdx}`;
+      html += `<div class="cat-item leaf-item" data-idx="${leafId}">
+        <span class="tree-indent"></span>
+        <span class="label">${escapeHtml(child.name)}</span>
+        <span class="count">${child.items.length}</span>
+      </div>`;
+    });
+
+    html += `</div></div>`;
   });
+
+  container.innerHTML = html;
 }
 
-/* 渲染移动端横向分类条 */
+/* 渲染移动端横向分类条（扁平展示，带分组前缀） */
 function renderMobileNav() {
   const scrollContainer = document.getElementById('mobile-cat-scroll');
-  const allCount = allData.reduce((s, c) => s + c.items.length, 0);
+
+  // 全部
   const allChip = document.createElement('div');
   allChip.className = 'cat-chip active';
   allChip.dataset.idx = '-1';
-  allChip.textContent = `全部 (${allCount})`;
+  allChip.textContent = `全部 (${allData.totalItems})`;
   scrollContainer.appendChild(allChip);
-  allData.forEach((cat, idx) => {
-    const chip = document.createElement('div');
-    chip.className = 'cat-chip';
-    chip.dataset.idx = idx;
-    chip.textContent = `${cat.icon || '?'} ${cat.name} (${cat.items.length})`;
-    scrollContainer.appendChild(chip);
+
+  // 各叶子分类
+  allData.tree.forEach(group => {
+    group.children.forEach((child, cIdx) => {
+      const chip = document.createElement('div');
+      chip.className = 'cat-chip';
+      chip.dataset.idx = `group-${allData.tree.indexOf(group)}-${cIdx}`;
+      chip.textContent = `${child.name} (${child.items.length})`;
+      scrollContainer.appendChild(chip);
+    });
   });
+}
+
+/* 根据树节点索引获取要展示的条目 */
+function getItemsByIndex(catIdx) {
+  if (catIdx === -1) {
+    // 全部：合并所有叶子
+    const items = [];
+    allData.tree.forEach(g => g.children.forEach(c => items = items.concat(c.items)));
+    return items;
+  }
+  // 父组节点（如 group-0 = 月季）
+  if (/^group-(\d+)$/.test(catIdx)) {
+    const gIdx = parseInt(catIdx.match(/^group-(\d+)$/)[1]);
+    const group = allData.tree[gIdx];
+    if (group) { const items = []; group.children.forEach(c => items = items.concat(c.items)); return items; }
+  }
+  // 叶子节点（如 group-0-0 = 丹陶）
+  const leafMatch = catIdx.match(/^group-(\d+)-(\d+)$/);
+  if (leafMatch) {
+    const gIdx = parseInt(leafMatch[1]);
+    const cIdx = parseInt(leafMatch[2]);
+    const group = allData.tree[gIdx];
+    if (group && group.children[cIdx]) return group.children[cIdx].items;
+  }
+  return [];
 }
 
 /* 渲染右侧卡片网格 */
 function renderGrid(catIdx, keyword = '') {
   const grid = document.getElementById('grid');
-  let items = [];
-  if (catIdx === -1) {
-    allData.forEach(c => items = items.concat(c.items));
-  } else if (allData[catIdx]) {
-    items = allData[catIdx].items;
-  }
+  let items = getItemsByIndex(catIdx);
   if (keyword) {
     const kw = keyword.toLowerCase();
     items = items.filter(it => it.title.toLowerCase().includes(kw));
   }
-  document.getElementById('section-title').textContent =
-    catIdx === -1 ? '全部条目' : allData[catIdx].name;
+
+  // 更新标题
+  let titleText = '全部植物';
+  if (/^group-(\d+)-(\d+)$/.test(catIdx)) {
+    const m = catIdx.match(/^group-(\d+)-(\d+)$/);
+    titleText = allData.tree[parseInt(m[1])].children[parseInt(m[2])].name;
+  } else if (/^group-(\d+)$/.test(catIdx)) {
+    titleText = allData.tree[parseInt(catIdx.match(/^group-(\d+)$/)[1])].name;
+  }
+  document.getElementById('section-title').textContent = titleText;
   document.getElementById('total-count').textContent = `${items.length} 个`;
+
   if (!items.length) {
     grid.innerHTML = '<div class="empty">暂无匹配结果</div>';
     return;
@@ -660,8 +757,8 @@ function renderGrid(catIdx, keyword = '') {
     const thumbHtml = it.thumb
       ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} 缩略图" loading="lazy"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-         <div class="no-thumb" style="display:none;">?</div>`
-      : `<div class="no-thumb">?</div>`;
+         <div class="no-thumb" style="display:none;">无图</div>`
+      : `<div class="no-thumb">无图</div>`;
     return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
       ${thumbHtml}
       <div class="card-title">${safeTitle}</div>
@@ -672,12 +769,15 @@ function renderGrid(catIdx, keyword = '') {
 /* 设置激活分类 */
 function setActiveCategory(idx) {
   activeCatIdx = idx;
+  // 桌面端 sidebar
   document.querySelectorAll('#cat-list .cat-item').forEach(el => {
-    el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
+    el.classList.toggle('active', el.dataset.idx === idx);
   });
+  // 移动端 chips
   document.querySelectorAll('#mobile-cat-scroll .cat-chip').forEach(el => {
-    el.classList.toggle('active', parseInt(el.dataset.idx) === idx);
+    el.classList.toggle('active', el.dataset.idx === idx);
   });
+  // 移动端滚动到激活项
   const activeChip = document.querySelector('#mobile-cat-scroll .cat-chip.active');
   if (activeChip) {
     activeChip.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -708,7 +808,27 @@ function bindEvents() {
   document.getElementById('cat-list').addEventListener('click', e => {
     const item = e.target.closest('.cat-item');
     if (!item) return;
-    const idx = parseInt(item.dataset.idx);
+
+    // 父节点：折叠/展开切换
+    if (item.classList.contains('parent-item')) {
+      item.classList.toggle('expanded');
+      const groupEl = item.closest('.tree-group');
+      if (groupEl) {
+        const children = groupEl.querySelector('.tree-children');
+        if (children) {
+          const isOpen = item.classList.contains('expanded');
+          children.style.display = isOpen ? '' : 'none';
+          item.querySelector('.tree-arrow').textContent = isOpen ? '▼' : '▶';
+        }
+      }
+      // 点击父节点也显示该组全部内容
+      setActiveCategory(item.dataset.idx);
+      renderGrid(item.dataset.idx, document.getElementById('search-input').value.trim());
+      document.getElementById('content').scrollTo(0, 0);
+      return;
+    }
+
+    const idx = item.dataset.idx;
     setActiveCategory(idx);
     renderGrid(idx, document.getElementById('search-input').value.trim());
     document.getElementById('content').scrollTo(0, 0);
@@ -718,7 +838,7 @@ function bindEvents() {
   document.getElementById('mobile-cat-scroll').addEventListener('click', e => {
     const chip = e.target.closest('.cat-chip');
     if (!chip) return;
-    const idx = parseInt(chip.dataset.idx);
+    const idx = chip.dataset.idx;
     setActiveCategory(idx);
     const keyword = document.getElementById('mobile-search-input').value.trim();
     renderGrid(idx, keyword);
@@ -780,7 +900,7 @@ function openModal(url, title) {
     } else {
       detailEl.innerHTML = `
         <div class="detail-error">
-          <p>? 暂无详情内容</p>
+          <p>暂无详情内容</p>
           <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
         </div>`;
     }
@@ -788,7 +908,7 @@ function openModal(url, title) {
     console.error('[openModal] 渲染详情失败:', err);
     detailEl.innerHTML = `
       <div class="detail-error">
-        <p>? 内容渲染出错</p>
+        <p>内容渲染出错</p>
         <p style="font-size:12px;color:#bbb;margin-top:8px;">请稍后重试</p>
       </div>`;
   }
