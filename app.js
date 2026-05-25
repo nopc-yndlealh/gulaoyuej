@@ -70,6 +70,7 @@ let contentCache = {};    // 内容缓存: slug → {id: content}
 let allData = null;       // 转换后的树状数据
 let activeCatIdx = -1;    // 当前选中的分类索引
 let searchIndex = {};     // 搜索索引: id → {title, cat, text, thumb}
+let featuredIds = [];     // 首页推荐 ID 列表
 
 /* 加载数据 */
 async function loadData() {
@@ -91,6 +92,14 @@ async function loadData() {
       else console.warn('搜索索引加载失败，仅支持标题搜索');
     } catch (e) {
       console.warn('搜索索引不可用:', e.message);
+    }
+
+    // 加载首页推荐列表
+    try {
+      const fRes = await fetch('./data/featured.json');
+      if (fRes.ok) featuredIds = await fRes.json();
+    } catch (e) {
+      console.warn('推荐列表不可用:', e.message);
     }
 
     allData = transformData(rawData);
@@ -227,7 +236,11 @@ function init() {
   document.getElementById('loading').classList.add('hidden');
   renderSidebar();
   renderMobileNav();
-  renderGrid(-1);
+  if (featuredIds.length > 0) {
+    renderFeatured();
+  } else {
+    renderGrid(-1);
+  }
   bindEvents();
 }
 
@@ -325,6 +338,41 @@ function getItemsByIndex(catIdx) {
     if (group && group.children[cIdx]) return group.children[cIdx].items;
   }
   return [];
+}
+
+/* 首页推荐 */
+function renderFeatured() {
+  const items = featuredIds
+    .map(id => searchIndex[id] ? { id, ...searchIndex[id] } : null)
+    .filter(Boolean);
+
+  document.getElementById('section-title').textContent = '精选推荐';
+  document.getElementById('total-count').textContent = `${items.length} 篇`;
+  activeCatIdx = -1;
+  setActiveCategory('-1');
+
+  const grid = document.getElementById('grid');
+  if (!items.length) {
+    grid.innerHTML = '<div class="empty">暂无推荐内容</div>';
+    return;
+  }
+
+  grid.innerHTML = items.map(it => {
+    const safeTitle = escapeHtml(it.title);
+    const safeCat = escapeHtml(it.cat);
+    const safeId = escapeHtml(it.id);
+    const thumbHtml = it.thumb
+      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle}" loading="lazy" decoding="async"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+             onload="this.classList.add('loaded')">
+         <div class="no-thumb" style="display:none;">无图</div>`
+      : `<div class="no-thumb">无图</div>`;
+    return `<div class="card" data-id="${safeId}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
+      <span class="card-cat">${safeCat}</span>
+      ${thumbHtml}
+      <div class="card-title">${safeTitle}</div>
+    </div>`;
+  }).join('');
 }
 
 /* 渲染右侧卡片网格 */
@@ -456,7 +504,11 @@ function bindEvents() {
 
     const idx = item.dataset.idx;
     setActiveCategory(idx);
-    renderGrid(idx, document.getElementById('search-input').value.trim());
+    if (idx === '-1' && featuredIds.length > 0) {
+      renderFeatured();
+    } else {
+      renderGrid(idx, document.getElementById('search-input').value.trim());
+    }
     document.getElementById('content').scrollTo(0, 0);
   });
 
@@ -466,8 +518,12 @@ function bindEvents() {
     if (!chip) return;
     const idx = chip.dataset.idx;
     setActiveCategory(idx);
-    const keyword = document.getElementById('mobile-search-input').value.trim();
-    renderGrid(idx, keyword);
+    if (idx === '-1' && featuredIds.length > 0) {
+      renderFeatured();
+    } else {
+      const keyword = document.getElementById('mobile-search-input').value.trim();
+      renderGrid(idx, keyword);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 
