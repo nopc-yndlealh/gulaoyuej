@@ -126,6 +126,16 @@
     color: #fff;
   }
 
+  /* 演化图谱入口 */
+  nav#sidebar .evo-link {
+    margin-top: 8px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding-top: 12px;
+    text-decoration: none;
+    color: #4fc3a7;
+  }
+  nav#sidebar .evo-link:hover { background: rgba(79,195,167,.12); }
+
   /* ===== 树状分类结构 ===== */
   .tree-group { }
   .tree-group .parent-item {
@@ -446,6 +456,15 @@
     color: #fff;
     font-weight: 600;
   }
+  #mobile-nav .evo-chip {
+    color: #4fc3a7;
+    border-bottom: 2px solid transparent;
+    text-decoration: none;
+  }
+  #mobile-nav .evo-chip:hover {
+    background: rgba(79,195,167,.12);
+    color: #4fc3a7;
+  }
 
   /* 移动端搜索框 */
   #mobile-nav .search-bar {
@@ -718,6 +737,13 @@ function renderSidebar() {
   });
 
   container.innerHTML = html;
+
+  // 演化图谱入口
+  const evoLink = document.createElement('a');
+  evoLink.href = '景天科演化图谱.html';
+  evoLink.className = 'cat-item evo-link';
+  evoLink.innerHTML = '<span class="label">🧬 景天科演化图谱</span>';
+  container.appendChild(evoLink);
 }
 
 /* 渲染移动端横向分类条（扁平展示，带分组前缀） */
@@ -741,6 +767,13 @@ function renderMobileNav() {
       scrollContainer.appendChild(chip);
     });
   });
+
+  // 演化图谱入口（移动端）
+  const evoChip = document.createElement('a');
+  evoChip.href = '景天科演化图谱.html';
+  evoChip.className = 'cat-chip evo-chip';
+  evoChip.textContent = '🧬 演化图谱';
+  scrollContainer.appendChild(evoChip);
 }
 
 /* 根据树节点索引获取要展示的条目 */
