@@ -2,30 +2,53 @@
 (function() {
   'use strict';
 
-let allData = null;     // 树状分类数据 { tree, flatGroups, totalItems }
-let contentData = {};   // 详情内容数据（content.json）
-let activeCatIdx = -1;  // -1 = 全部，格式: "group-child" 如 "月季-丹陶" 或 "多肉"
+let allData = null;      // 树状分类数据 { tree, flatGroups, totalItems }
+let contentIndex = null; // ID → 分类映射（content-index.json）
+let contentCache = {};   // 已加载的分类内容缓存 { '丹陶': {...}, '奥斯汀': {...}, ... }
+let activeCatIdx = -1;   // -1 = 全部，格式: "group-child" 如 "月季-丹陶" 或 "多肉"
 
 /* 加载数据 */
 async function loadData() {
   try {
-    const [indexRes, contentRes] = await Promise.all([
+    const [indexRes, ciRes] = await Promise.all([
       fetch('./data/index.json'),
-      fetch('./data/content.json')
+      fetch('./data/content/content-index.json')
     ]);
     if (!indexRes.ok) throw new Error('data/index.json 未找到');
-    if (!contentRes.ok) throw new Error('data/content.json 未找到');
+    if (!ciRes.ok) throw new Error('data/content/content-index.json 未找到');
 
     const rawData = await indexRes.json();
-    contentData = await contentRes.json();
+    contentIndex = await ciRes.json();
     allData = transformData(rawData);
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
       `<p style="color:#c0392b;font-size:16px;">数据加载失败：${e.message}</p>
        <p style="margin-top:8px;font-size:13px;color:#888;">
-         请确认 data/index.json 和 data/content.json 文件存在且格式正确。
+         请确认 data/index.json 和 data/content/ 文件存在且格式正确。
        </p>`;
+  }
+}
+
+/* 按需加载分类内容（带缓存） */
+async function getContent(id) {
+  const slug = contentIndex[id];
+  if (!slug) return null;
+
+  // 缓存命中
+  if (contentCache[slug]) {
+    return contentCache[slug][id] || null;
+  }
+
+  // 加载分类文件
+  try {
+    const res = await fetch(`./data/content/${slug}.json`);
+    if (!res.ok) throw new Error(`content/${slug}.json 加载失败`);
+    contentCache[slug] = await res.json();
+    return contentCache[slug][id] || null;
+  } catch (e) {
+    console.error('[getContent]', e);
+    return null;
   }
 }
 
@@ -372,30 +395,34 @@ function bindEvents() {
   });
 }
 
-/* 打开弹窗 — 内联渲染详情 */
-function openModal(url, title) {
+/* 打开弹窗 — 内联渲染详情（按需加载内容） */
+async function openModal(url, title) {
   const id = url.replace('./detail.html?id=', '');
   document.getElementById('modal-title').textContent = title;
 
   const detailEl = document.getElementById('detail-view');
 
+  // 先显示加载指示
+  detailEl.innerHTML = `<div class="detail-loading"><p>加载中...</p></div>`;
+  detailEl.classList.add('active');
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
   try {
-    const content = contentData[id];
+    const content = await getContent(id);
 
     if (content && Array.isArray(content.segments)) {
-      let html = `<h2 class="detail-title">${escapeHtml(title)}</h2><div class="detail-body">`;
+      let html = `<h2 class="detail-title">${escapeHtml(content.title || title)}</h2><div class="detail-body">`;
       content.segments.forEach(seg => {
         if (seg.t) {
-          // 文本段
           html += `<p>${escapeHtml(seg.t)}</p>`;
         } else if (seg.i) {
-          // 图片段
           html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy">`;
         }
       });
       html += '</div>';
       detailEl.innerHTML = html;
-      // 绑定图片点击灯箱事件（替代内联 onclick）
+      // 绑定图片点击灯箱事件
       detailEl.querySelectorAll('.detail-body img').forEach(img => {
         img.addEventListener('click', () => showLightbox(img.src));
         img.style.cursor = 'pointer';
@@ -415,10 +442,6 @@ function openModal(url, title) {
         <p style="font-size:12px;color:#bbb;margin-top:8px;">请稍后重试</p>
       </div>`;
   }
-
-  detailEl.classList.add('active');
-  document.getElementById('modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
 }
 
 /* 关闭弹窗 */
