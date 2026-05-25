@@ -4,3 +4,4 @@ parse_data.py
 images/
 *.bak
 data/.r2_upload_state.json
+data/*backup*
