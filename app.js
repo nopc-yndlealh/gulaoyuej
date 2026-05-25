@@ -579,5 +579,14 @@ function escapeHtml(str) {
 /* 启动 */
 loadData();
 
+/* 注册 Service Worker（PWA 离线支持） */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err =>
+      console.warn('SW 注册失败:', err.message)
+    );
+  });
+}
+
 /* 关闭 IIFE，避免全局变量污染 */
 })();
