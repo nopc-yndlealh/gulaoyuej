@@ -4,3 +4,10 @@ parse_data.py
 images/
 *.bak
 data/.r2_upload_state.json
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
