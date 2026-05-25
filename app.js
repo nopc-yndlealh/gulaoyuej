@@ -2,10 +2,69 @@
 (function() {
   'use strict';
 
-let allData = null;      // 树状分类数据 { tree, flatGroups, totalItems }
-let contentIndex = null; // ID → 分类映射（content-index.json）
-let contentCache = {};   // 已加载的分类内容缓存 { '丹陶': {...}, '奥斯汀': {...}, ... }
-let activeCatIdx = -1;   // -1 = 全部，格式: "group-child" 如 "月季-丹陶" 或 "多肉"
+/* ===== 主题切换 ===== */
+const THEME_KEY = 'feijibei-theme';
+const STORAGE_KEY = 'feijibei-theme-mode';
+
+function getTheme() {
+  const saved = localStorage.getItem(THEME_KEY);
+  if (saved === 'dark' || saved === 'light') return saved;
+  return 'auto'; // 跟随系统
+}
+
+function applyTheme(mode) {
+  const html = document.documentElement;
+  if (mode === 'dark') {
+    html.setAttribute('data-theme', 'dark');
+  } else if (mode === 'light') {
+    html.setAttribute('data-theme', 'light');
+  } else {
+    html.removeAttribute('data-theme'); // auto: 走 CSS media query
+  }
+  updateThemeIcons(mode);
+}
+
+function updateThemeIcons(mode) {
+  // 显示"点击后会变成什么"的图标
+  const icons = document.querySelectorAll('#theme-toggle, #mobile-theme-toggle');
+  icons.forEach(btn => {
+    if (mode === 'dark') {
+      btn.textContent = '☀️'; // 当前暗色 → 点我变浅色
+    } else if (mode === 'light') {
+      btn.textContent = '🌙'; // 当前浅色 → 点我变暗色
+    } else {
+      // auto: 检查当前实际生效的主题
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      btn.textContent = isDark ? '☀️' : '🌙';
+    }
+  });
+}
+
+function cycleTheme() {
+  const current = getTheme();
+  const next = current === 'light' ? 'dark' : current === 'dark' ? 'auto' : 'light';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+}
+
+// 初始化主题
+const savedMode = getTheme();
+applyTheme(savedMode);
+
+// 绑定桌面端主题按钮
+document.addEventListener('DOMContentLoaded', () => {
+  const dt = document.getElementById('theme-toggle');
+  const mt = document.getElementById('mobile-theme-toggle');
+  if (dt) dt.addEventListener('click', cycleTheme);
+  if (mt) mt.addEventListener('click', cycleTheme);
+});
+
+// 监听系统主题变化（仅在 auto 模式下响应）
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+  if (getTheme() === 'auto') updateThemeIcons('auto');
+});
+
+/* ===== 数据变量 ===== */
 
 /* 加载数据 */
 async function loadData() {
