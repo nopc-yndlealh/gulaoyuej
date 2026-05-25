@@ -65,6 +65,10 @@ window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () 
 });
 
 /* ===== 数据变量 ===== */
+let contentIndex = {};    // 内容索引: id → 分类 slug
+let contentCache = {};    // 内容缓存: slug → {id: content}
+let allData = null;       // 转换后的树状数据
+let activeCatIdx = -1;    // 当前选中的分类索引
 
 /* 加载数据 */
 async function loadData() {
