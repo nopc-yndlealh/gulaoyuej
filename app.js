@@ -69,6 +69,7 @@ let contentIndex = {};    // 内容索引: id → 分类 slug
 let contentCache = {};    // 内容缓存: slug → {id: content}
 let allData = null;       // 转换后的树状数据
 let activeCatIdx = -1;    // 当前选中的分类索引
+let searchIndex = {};     // 搜索索引: id → {title, cat, text, thumb}
 
 /* 加载数据 */
 async function loadData() {
@@ -82,6 +83,16 @@ async function loadData() {
 
     const rawData = await indexRes.json();
     contentIndex = await ciRes.json();
+
+    // 加载搜索索引（非阻塞，失败不影响主流程）
+    try {
+      const siRes = await fetch('./data/search-index.json');
+      if (siRes.ok) searchIndex = await siRes.json();
+      else console.warn('搜索索引加载失败，仅支持标题搜索');
+    } catch (e) {
+      console.warn('搜索索引不可用:', e.message);
+    }
+
     allData = transformData(rawData);
     init();
   } catch (e) {
@@ -319,15 +330,35 @@ function getItemsByIndex(catIdx) {
 /* 渲染右侧卡片网格 */
 function renderGrid(catIdx, keyword = '') {
   const grid = document.getElementById('grid');
-  let items = getItemsByIndex(catIdx);
-  if (keyword) {
+  let items;
+  let isSearch = false;
+
+  if (keyword && Object.keys(searchIndex).length > 0) {
+    // 全文搜索模式：跨分类匹配标题+正文
+    isSearch = true;
     const kw = keyword.toLowerCase();
-    items = items.filter(it => it.title.toLowerCase().includes(kw));
+    const results = [];
+    for (const [id, entry] of Object.entries(searchIndex)) {
+      if (entry.title.toLowerCase().includes(kw) || entry.text.toLowerCase().includes(kw)) {
+        results.push({ id, title: entry.title, cat: entry.cat, thumb: entry.thumb });
+      }
+    }
+    // 按分类分组排序，同分类内按标题排
+    results.sort((a, b) => a.cat.localeCompare(b.cat, 'zh') || a.title.localeCompare(b.title, 'zh'));
+    items = results;
+  } else {
+    items = getItemsByIndex(catIdx);
+    if (keyword) {
+      const kw = keyword.toLowerCase();
+      items = items.filter(it => it.title.toLowerCase().includes(kw));
+    }
   }
 
   // 更新标题
   let titleText = '全部植物';
-  if (/^group-(\d+)-(\d+)$/.test(catIdx)) {
+  if (isSearch) {
+    titleText = `搜索: ${keyword}`;
+  } else if (/^group-(\d+)-(\d+)$/.test(catIdx)) {
     const m = catIdx.match(/^group-(\d+)-(\d+)$/);
     titleText = allData.tree[parseInt(m[1])].children[parseInt(m[2])].name;
   } else if (/^group-(\d+)$/.test(catIdx)) {
@@ -340,16 +371,21 @@ function renderGrid(catIdx, keyword = '') {
     grid.innerHTML = '<div class="empty">暂无匹配结果</div>';
     return;
   }
+
   grid.innerHTML = items.map(it => {
     const safeTitle = escapeHtml(it.title);
     const safeUrl = escapeHtml(it.file_url || '');
+    const safeCat = escapeHtml(it.cat || '');
+    const safeId = escapeHtml(it.id || '');
     const thumbHtml = it.thumb
       ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} 缩略图" loading="lazy" decoding="async"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
              onload="this.classList.add('loaded')">
          <div class="no-thumb" style="display:none;">无图</div>`
       : `<div class="no-thumb">无图</div>`;
-    return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
+    const catBadge = isSearch ? `<span class="card-cat">${safeCat}</span>` : '';
+    return `<div class="card" data-id="${safeId}" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
+      ${catBadge}
       ${thumbHtml}
       <div class="card-title">${safeTitle}</div>
     </div>`;
@@ -439,11 +475,11 @@ function bindEvents() {
   debounceSearch('search-input', 'content');
   debounceSearch('mobile-search-input', 'window');
 
-  // 卡片点击 → 弹窗
+  // 卡片点击 → 弹窗（支持 data-id 直接打开, 或 data-url 兼容旧格式）
   document.getElementById('grid').addEventListener('click', e => {
     const card = e.target.closest('.card');
     if (!card) return;
-    openModal(card.dataset.url, card.dataset.title);
+    openModal(card.dataset.id || card.dataset.url, card.dataset.title);
   });
 
   // 关闭弹窗
@@ -460,8 +496,10 @@ function bindEvents() {
 }
 
 /* 打开弹窗 — 内联渲染详情（按需加载内容） */
-async function openModal(url, title) {
-  const id = url.replace('./detail.html?id=', '');
+async function openModal(urlOrId, title) {
+  const id = (typeof urlOrId === 'string' && urlOrId.startsWith('./detail.html'))
+    ? urlOrId.replace('./detail.html?id=', '')
+    : urlOrId;
   document.getElementById('modal-title').textContent = title;
 
   const detailEl = document.getElementById('detail-view');

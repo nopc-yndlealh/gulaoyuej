@@ -343,6 +343,23 @@ main#content {
   flex: 1;
 }
 
+/* 搜索结果的分类标签 */
+.card .card-cat {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 2;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: .02em;
+  opacity: .92;
+  box-shadow: 0 1px 4px rgba(0,0,0,.15);
+}
+
 /* ===== 无匹配提示 ===== */
 .empty {
   grid-column: 1 / -1;
