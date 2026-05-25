@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>墨西哥景天科演化树 · 知识图谱</title>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+  overflow: hidden;
+  height: 100vh;
+  user-select: none;
+}
+#toolbar {
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 100;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#toolbar button {
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  background: rgba(30,41,59,0.9);
+  backdrop-filter: blur(8px);
+  color: #cbd5e1;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+#toolbar button:hover {
+  background: rgba(51,65,85,0.9);
+  color: #f1f5f9;
+  border-color: rgba(255,255,255,0.3);
+}
+#toolbar button.active { background: #3B82F6; color:#fff; border-color:#3B82F6; }
+#legend {
+  position: fixed;
+  top: 12px; right: 12px;
+  z-index: 100;
+  background: rgba(30,41,59,0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 12px;
+}
+.legend-item { display:flex; align-items:center; gap:6px; margin:3px 0; }
+.legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+#tooltip {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  background: rgba(15,23,42,0.95);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 12px 16px;
+  max-width: 400px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 13px;
+  line-height: 1.6;
+}
+#tooltip img { max-width:300px; max-height:200px; border-radius:6px; margin-top:6px; display:block; }
+#tooltip .tt-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+#tooltip .tt-meta { color: #94a3b8; font-size: 11px; }
+#detail-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 90;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+#detail-backdrop.active { opacity: 1; pointer-events: auto; }
+#loading-overlay {
+  position:fixed; inset:0; background:#0f172a; display:flex;
+  align-items:center; justify-content:center; z-index:999;
+  transition: opacity 0.4s;
+}
+.loader { font-size:18px; color:#94a3b8; }
+svg { width:100vw; height:100vh; }
+
+/* Link styles */
+.link {
+  fill:none;
+  stroke:rgba(148,163,184,0.2);
+  stroke-width:1.2px;
+}
+
+/* Node hover effects */
+.clade-node:hover circle, .genus-node:hover circle {
+  stroke: #f8fafc;
+  stroke-width: 3px;
+}
+.species-node:hover .sp-card-bg {
+  stroke: #f8fafc;
+  stroke-width: 2px;
+}
+
+/* Node text */
+.node .genus-text { font-size: 12px; font-weight: 600; }
+.node .clade-text { font-size: 13px; font-weight: 700; }
+.node .root-text { font-size: 14px; font-weight: 800; fill: #f8fafc; }
+.node .count-text { font-size: 10px; fill: #64748b; }
+.node .expand-ind { pointer-events: none; }
+
+/* Species card */
+.sp-card-bg { fill: rgba(15,23,42,0.85); rx: 6; ry: 6; }
+.sp-card-img { clip-path: inset(0 round 4px 4px 0 0); }
+.sp-card-name { font-size: 10px; fill: #cbd5e1; text-anchor: middle; }
+.sp-card-noimg { fill: rgba(30,41,59,0.9); rx: 4; ry: 4; }
+.sp-card-noimg-text { font-size: 9px; fill: #64748b; text-anchor: middle; }
+
+/* Detail panel */
+#detail-panel {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: rgba(30,41,59,0.95);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255,255,255,0.15);
+  padding: 16px 24px;
+  z-index: 150;
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  max-height: 42vh;
+  overflow-y: auto;
+}
+#detail-panel.open { transform: translateY(0); }
+#detail-panel h3 { font-size: 16px; margin-bottom: 6px; }
+#detail-panel .desc { color: #94a3b8; font-size: 13px; margin-bottom: 10px; }
+#detail-panel .img-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+#detail-panel .img-card {
+  width: 130px; background: rgba(15,23,42,0.6);
+  border-radius: 8px; padding: 6px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: all 0.2s;
+}
+#detail-panel .img-card:hover {
+  border-color: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+#detail-panel .img-card img {
+  width: 118px; height: 85px; object-fit: cover;
+  border-radius: 4px; margin-bottom: 4px;
+}
+#detail-panel .img-card .lab {
+  font-size: 11px; text-align: center;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#close-panel {
+  position: absolute; top: 8px; right: 16px;
+  background: none; border: none; color: #64748b;
+  font-size: 20px; cursor: pointer;
+}
+#close-panel:hover { color: #f8fafc; }
+</style>
+</head>
+<body>
+
+<div id="loading-overlay"><div class="loader">正在构建演化树...</div></div>
+
+<div id="toolbar">
+  <button id="btn-zoom-in" title="放大">🔍+</button>
+  <button id="btn-zoom-out" title="缩小">🔍−</button>
+  <button id="btn-fit" title="适应屏幕">⊞ 适应</button>
+  <button id="btn-expand-all" title="全部展开">▼ 全部展开</button>
+  <button id="btn-collapse-species" title="收起物种">▶ 收起物种</button>
+  <button id="btn-reset" title="初始视图">↺ 初始</button>
+</div>
+
+<div id="legend">
+  <div class="legend-item"><span class="legend-dot" style="background:#6B7280"></span>外类群 Outgroup</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#8B5CF6"></span>Clade I — Pachyphytum支</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#3B82F6"></span>Clade II — Urbiniae系</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#10B981"></span>Clade III — Echeveria核心群</div>
+  <div class="legend-item"><span class="legend-dot" style="background:#F59E0B"></span>Clade IV — 混合大支</div>
+</div>
+
+<div id="detail-backdrop"></div>
+<div id="tooltip"></div>
+<div id="detail-panel">
+  <button id="close-panel" title="关闭">✕</button>
+  <div id="detail-content"></div>
+</div>
+
+<svg id="tree"></svg>
+
+<script>
+// ===== TREE DATA =====
+const TREE_DATA = {"name": "Crassulaceae\n墨西哥景天科", "shortName": "Crassulaceae", "type": "root", "color": "#374151", "children": [{"name": "外类群 Outgroup", "shortName": "Outgroup", "type": "clade", "color": "#6B7280", "desc": "包括仙女杯属(Dudleya)、罗莎属(Lenophyllum)、景天属(Sedum)、塔莲属(Villadia)，位于Echeveria群之外", "speciesCount": 11, "children": [{"name": "Dudleya", "shortName": "Dudleya", "type": "genus", "color": "#6B7280", "speciesCount": 2, "children": [{"name": "Dudleya pachyphytum仙女杯帕奇飞图", "shortName": "Dudleya pachyphytum仙女杯帕奇飞图", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image1.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image1.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image2.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image3.jpg"], "children": []}, {"name": "Dudleya attemuata奥特奴阿塔", "shortName": "Dudleya attemuata奥特奴阿塔", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image4.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image4.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image5.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image6.jpg"], "children": []}]}, {"name": "Lenophyllum", "shortName": "Lenophyllum", "type": "genus", "color": "#6B7280", "speciesCount": 1, "children": [{"name": "Lenophyllum texamum 罗莎属未有中文名", "shortName": "Lenophyllum texamum 罗莎属未有中文名", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image7.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image7.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image8.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image9.jpg"], "children": []}]}, {"name": "Lenophylum", "shortName": "Lenophylum", "type": "genus", "color": "#6B7280", "speciesCount": 1, "children": [{"name": "Lenophylum acutifolium 未有中文名", "shortName": "Lenophylum acutifolium 未有中文名", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image10.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image10.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image11.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image12.jpg"], "children": []}]}, {"name": "Sedum", "shortName": "Sedum", "type": "genus", "color": "#6B7280", "speciesCount": 5, "children": [{"name": "Sedum palmeri景天属薄化妆", "shortName": "Sedum palmeri景天属薄化妆", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image13.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image13.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image14.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image15.jpg"], "children": []}, {"name": "Sedum frutescens未有中文名", "shortName": "Sedum frutescens未有中文名", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image16.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image16.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image17.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image18.jpg"], "children": []}, {"name": "Sedum compactum 群碧 (微梗组", "shortName": "Sedum compactum 群碧 (微梗组", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image19.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image19.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image20.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image21.jpg"], "children": []}, {"name": "Sedum allantoides白叶弁庆", "shortName": "Sedum allantoides白叶弁庆", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image22.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image22.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image23.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image24.jpg"], "children": []}, {"name": "Sedum dendroideum 达摩宝珠", "shortName": "Sedum dendroideum 达摩宝珠", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image31.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image31.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image32.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image33.jpg"], "children": []}]}, {"name": "Villadia", "shortName": "Villadia", "type": "genus", "color": "#6B7280", "speciesCount": 2, "children": [{"name": "Villadia cucullata 塔莲属未有中文名", "shortName": "Villadia cucullata 塔莲属未有中文名", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image25.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image25.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image26.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image27.jpg"], "children": []}, {"name": "Villadia albiflora未有中文名", "shortName": "Villadia albiflora未有中文名", "type": "species", "color": "#6B7280", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image28.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image28.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image29.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image30.jpg"], "children": []}]}]}, {"name": "Clade I — Pachyphytum支", "shortName": "CladeI", "type": "clade", "color": "#8B5CF6", "desc": "以厚叶草属(Pachyphytum)为主体的单系群，位于Echeveria群之外", "speciesCount": 21, "children": [{"name": "Pachyphytum", "shortName": "Pachyphytum", "type": "genus", "color": "#8B5CF6", "speciesCount": 21, "children": [{"name": "Pachyphytum fittkaui 飞燕", "shortName": "Pachyphytum fittkaui 飞燕", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image34.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image34.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image35.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image36.jpg"], "children": []}, {"name": "Pachyphytum kimmachii 疑似紫丽殿", "shortName": "Pachyphytum kimmachii 疑似紫丽殿", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image37.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image37.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image38.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image39.jpg"], "children": []}, {"name": "Pachyphytum compactum 原始千化田之松/乌拉乌克", "shortName": "Pachyphytum compactum 原始千化田之松/", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image40.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image40.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image41.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image42.jpg"], "children": []}, {"name": "Pachyphytum brevifolium未有中文名", "shortName": "Pachyphytum brevifolium未有中文名", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image43.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image43.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image44.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image45.jpg"], "children": []}, {"name": "Pachyphytum viride维莱德", "shortName": "Pachyphytum viride维莱德", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image46.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image46.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image47.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image48.jpg"], "children": []}, {"name": "Pachyphytum brachetii 布拉榭蒂", "shortName": "Pachyphytum brachetii 布拉榭蒂", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image49.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image49.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image50.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image51.jpg"], "children": []}, {"name": "Pachyphytum glutinicaule 稻田姬", "shortName": "Pachyphytum glutinicaule 稻田姬", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image52.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image52.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image53.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image54.jpg"], "children": []}, {"name": "Pachyphytum sp.未知", "shortName": "Pachyphytum sp.未知", "type": "species", "color": "#8B5CF6", "thumbnail": null, "images": [], "children": []}, {"name": "Pachyphytum rzedowskii 婴儿手指", "shortName": "Pachyphytum rzedowskii 婴儿手指", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image55.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image55.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image56.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image57.jpg"], "children": []}, {"name": "Pachyphytum viride 维莱德", "shortName": "Pachyphytum viride 维莱德", "type": "species", "color": "#8B5CF6", "thumbnail": null, "images": [], "children": []}, {"name": "Pachyphytum glutinicaule稻田姬", "shortName": "Pachyphytum glutinicaule稻田姬", "type": "species", "color": "#8B5CF6", "thumbnail": null, "images": [], "children": []}, {"name": "Pachyphytum hookeri群雀", "shortName": "Pachyphytum hookeri群雀", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image58.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image58.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image59.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image60.jpg"], "children": []}, {"name": "Pachyphytum oviferum 鸡蛋美人", "shortName": "Pachyphytum oviferum 鸡蛋美人", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image61.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image61.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image62.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image63.jpg"], "children": []}, {"name": "Pachyphytum bracteosum可能是月美人", "shortName": "Pachyphytum bracteosum可能是月美人", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image64.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image64.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image65.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image66.jpg"], "children": []}, {"name": "Pachyphytum longifolium 长叶美人", "shortName": "Pachyphytum longifolium 长叶美人", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image67.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image67.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image68.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image69.jpg"], "children": []}, {"name": "Pachyphytum caesium 未有中文名", "shortName": "Pachyphytum caesium 未有中文名", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image70.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image70.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image71.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image72.jpg"], "children": []}, {"name": "Pachyphytum werdermannii 未有中文名", "shortName": "Pachyphytum werdermannii 未有中文名", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image73.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image73.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image74.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image75.jpg"], "children": []}, {"name": "Pachyphytum machucae 未有中文名", "shortName": "Pachyphytum machucae 未有中文名", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image76.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image76.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image77.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image78.jpg"], "children": []}, {"name": "Pachyphytum saltense未有中文名", "shortName": "Pachyphytum saltense未有中文名", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image79.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image79.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image80.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image81.jpg"], "children": []}, {"name": "Pachyphytum garciae加西亚", "shortName": "Pachyphytum garciae加西亚", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image82.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image82.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image83.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image84.jpg"], "children": []}, {"name": "Pachyphytum contrerasii 未有中文名", "shortName": "Pachyphytum contrerasii 未有中文名", "type": "species", "color": "#8B5CF6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image85.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image85.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image86.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image87.jpg"], "children": []}]}]}, {"name": "Clade II — Urbiniae系", "shortName": "CladeII", "type": "clade", "color": "#3B82F6", "desc": "沙薇娜系(Series Urbiniae)，吉娃莲、月影、花月夜、东云、魔爪等知名品种均属此支", "speciesCount": 17, "children": [{"name": "Echeveria", "shortName": "Echeveria", "type": "genus", "color": "#3B82F6", "speciesCount": 17, "children": [{"name": "Echeveria cuspidata var. cuspidata 墨西哥女孩", "shortName": "Echeveria cuspidata var. cuspi", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image88.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image88.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image89.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image90.jpg"], "children": []}, {"name": "Echeveria cuspidata var. zaragozae 红爪", "shortName": "Echeveria cuspidata var. zarag", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image91.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image91.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image92.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image93.jpg"], "children": []}, {"name": "Echeveria chihuahuaensis 吉娃莲", "shortName": "Echeveria chihuahuaensis 吉娃莲", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image94.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image94.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image95.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image96.jpg"], "children": []}, {"name": "Echeveria lilacina 丽娜莲", "shortName": "Echeveria lilacina 丽娜莲", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image97.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image97.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image98.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image99.jpg"], "children": []}, {"name": "Echeveria unguiculata 魔爪", "shortName": "Echeveria unguiculata 魔爪", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image100.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image100.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image101.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image102.jpg"], "children": []}, {"name": "Echeveria pulidonis 花月夜", "shortName": "Echeveria pulidonis 花月夜", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image103.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image103.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image104.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image105.jpg"], "children": []}, {"name": "Echeveria elegans月影", "shortName": "Echeveria elegans月影", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image106.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image106.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image107.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image108.jpg"], "children": []}, {"name": "Echeveria potosina星影", "shortName": "Echeveria potosina星影", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image109.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image109.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image110.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image111.jpg"], "children": []}, {"name": "Echeveria halbingeri var. halbingeri海滨格瑞桑切斯", "shortName": "Echeveria halbingeri var. halb", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image112.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image112.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image113.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image114.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image115.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image116.jpg"], "children": []}, {"name": "Echeveria simulans 镜莲", "shortName": "Echeveria simulans 镜莲", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image117.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image117.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image118.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image119.jpg"], "children": []}, {"name": "Echeveria juliana 朱莉安娜", "shortName": "Echeveria juliana 朱莉安娜", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image120.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image120.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image121.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image122.jpg"], "children": []}, {"name": "Echeveria tobarensis拓跋莲", "shortName": "Echeveria tobarensis拓跋莲", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image123.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image123.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image124.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image125.jpg"], "children": []}, {"name": "Echeveria turgida塔吉达(被大和峰昌名顶替)", "shortName": "Echeveria turgida塔吉达(被大和峰昌名顶替)", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image126.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image126.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image127.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image128.jpg"], "children": []}, {"name": "Echeveria tolimanensis杜里万莲", "shortName": "Echeveria tolimanensis杜里万莲", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image129.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image129.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image130.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image131.jpg"], "children": []}, {"name": "Echeveria agavoides 东云", "shortName": "Echeveria agavoides 东云", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image132.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image132.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image133.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image134.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image135.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image136.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image137.jpg"], "children": []}, {"name": "Echeveria colorata f. colorata 卡罗拉 市售名为 拉糖", "shortName": "Echeveria colorata f. colorata", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image138.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image138.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image139.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image140.jpg"], "children": []}, {"name": "Echeveria colorata 原始卡罗拉", "shortName": "Echeveria colorata 原始卡罗拉", "type": "species", "color": "#3B82F6", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image141.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image141.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image142.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image143.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image144.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image145.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image146.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image147.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image148.jpg"], "children": []}]}]}, {"name": "Clade III — Echeveria核心群", "shortName": "CladeIII", "type": "clade", "color": "#10B981", "desc": "Echeveria核心群，包含Chloranthae/Ciliatae/Mucronatae/Nudae/Racemosae/Thyrsiflorae系及Thompsonella属", "speciesCount": 37, "children": [{"name": "Echeveria", "shortName": "Echeveria", "type": "genus", "color": "#10B981", "speciesCount": 35, "children": [{"name": "Echeveria rosea妖精花伞", "shortName": "Echeveria rosea妖精花伞", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image152.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image152.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image153.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image154.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image155.jpg"], "children": []}, {"name": "Echeveria chiapensis 未有中文名", "shortName": "Echeveria chiapensis 未有中文名", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image156.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image156.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image157.jpg"], "children": []}, {"name": "Echeveria nuda原始蜡牡丹", "shortName": "Echeveria nuda原始蜡牡丹", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image158.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image158.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image159.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image160.jpg"], "children": []}, {"name": "Echeveria nebularum 云遮石莲", "shortName": "Echeveria nebularum 云遮石莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image161.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image161.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image162.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image163.jpg"], "children": []}, {"name": "Echeveria globulosa小红衣", "shortName": "Echeveria globulosa小红衣", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image164.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image164.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image165.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image166.jpg"], "children": []}, {"name": "Echeveria subcorymbosa蓝宝石", "shortName": "Echeveria subcorymbosa蓝宝石", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image167.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image167.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image168.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image169.jpg"], "children": []}, {"name": "Echeveria megacalyx 玉壶光", "shortName": "Echeveria megacalyx 玉壶光", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image170.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image170.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image171.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image172.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image173.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image174.jpg"], "children": []}, {"name": "Echeveria mondragoniana 梦龙", "shortName": "Echeveria mondragoniana 梦龙", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image175.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image175.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image176.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image177.jpg"], "children": []}, {"name": "Echeveria chazaroi 尺素", "shortName": "Echeveria chazaroi 尺素", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image178.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image178.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image179.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image180.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image181.jpg"], "children": []}, {"name": "Echeveria helmutiana海姆缇亚", "shortName": "Echeveria helmutiana海姆缇亚", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image182.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image182.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image183.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image184.jpg"], "children": []}, {"name": "Echeveria zorzaniana长茎司晃", "shortName": "Echeveria zorzaniana长茎司晃", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image185.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image185.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image186.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image187.jpg"], "children": []}, {"name": "Echeveria carminea 长青", "shortName": "Echeveria carminea 长青", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image188.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image188.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image189.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image190.jpg"], "children": []}, {"name": "Echeveria racemosa 摩莎", "shortName": "Echeveria racemosa 摩莎", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image191.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image191.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image192.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image193.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image194.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image195.jpg"], "children": []}, {"name": "Echeveria pinetorum 松间莲", "shortName": "Echeveria pinetorum 松间莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image196.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image196.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image197.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image198.jpg"], "children": []}, {"name": "Echeveria mucronata 摩卡", "shortName": "Echeveria mucronata 摩卡", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image199.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image199.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image200.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image201.jpg"], "children": []}, {"name": "Echeveria olivacea未有中文名", "shortName": "Echeveria olivacea未有中文名", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image202.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image202.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image203.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image204.jpg"], "children": []}, {"name": "Echeveria penduliflora 未有中文名", "shortName": "Echeveria penduliflora 未有中文名", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image205.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image205.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image206.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image207.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image208.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image209.jpg"], "children": []}, {"name": "Echeveria alata 红翼", "shortName": "Echeveria alata 红翼", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image213.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image213.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image214.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image215.jpg"], "children": []}, {"name": "Echeveria viridissima 维里迪斯马", "shortName": "Echeveria viridissima 维里迪斯马", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image216.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image216.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image217.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image218.jpg"], "children": []}, {"name": "Echeveria globuliflora珠花莲", "shortName": "Echeveria globuliflora珠花莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image219.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image219.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image220.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image221.jpg"], "children": []}, {"name": "Echeveria macdougalli原始紅稚莲/小红旗", "shortName": "Echeveria macdougalli原始紅稚莲/小红旗", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image222.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image222.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image223.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image224.jpg"], "children": []}, {"name": "Echeveria lurida红糖、赤花莲华", "shortName": "Echeveria lurida红糖、赤花莲华", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image225.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image225.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image226.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image227.jpg"], "children": []}, {"name": "Echeveria diffractens蒂芙尼/茜牡丹", "shortName": "Echeveria diffractens蒂芙尼/茜牡丹", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image228.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image228.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image229.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image230.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image231.jpg"], "children": []}, {"name": "Echeveria carnicolor 银明色", "shortName": "Echeveria carnicolor 银明色", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image232.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image232.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image233.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image234.jpg"], "children": []}, {"name": "Echeveria tencho天珠莲", "shortName": "Echeveria tencho天珠莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image235.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image235.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image236.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image237.jpg"], "children": []}, {"name": "Echeveria canaliculata 金明灭的异名.", "shortName": "Echeveria canaliculata 金明灭的异名.", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image238.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image238.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image239.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image240.jpg"], "children": []}, {"name": "Echeveria goldmanii金玛尼", "shortName": "Echeveria goldmanii金玛尼", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image241.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image241.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image242.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image243.jpg"], "children": []}, {"name": "Echeveria aff. bella 现在它拉丁文名已经改为Echeveria bella fa. bella 疑似红唇亲本的近似种", "shortName": "Echeveria aff. bella 现在它拉丁文名已经", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image244.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image244.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image245.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image246.jpg"], "children": []}, {"name": "Echeveria bella f. major  疑似红唇亲本", "shortName": "Echeveria bella f. major  疑似红唇", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image247.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image247.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image248.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image249.jpg"], "children": []}, {"name": "Echeveria sessiliflora 施施莲", "shortName": "Echeveria sessiliflora 施施莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image250.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image250.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image251.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image252.jpg"], "children": []}, {"name": "Echeveria heterosepala 望帝/望帝心", "shortName": "Echeveria heterosepala 望帝/望帝心", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image253.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image253.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image254.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image255.jpg"], "children": []}, {"name": "Echeveria crassicaulis 紅玉莲", "shortName": "Echeveria crassicaulis 紅玉莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image256.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image256.jpg"], "children": []}, {"name": "Echeveria platyphylla 宽叶青莲", "shortName": "Echeveria platyphylla 宽叶青莲", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image257.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image257.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image258.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image259.jpg"], "children": []}, {"name": "Echeveria longipes 长梗石莲", "shortName": "Echeveria longipes 长梗石莲", "type": "species", "color": "#10B981", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria paniculata var. maculata 龙田凤交种.", "shortName": "Echeveria paniculata var. macu", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image260.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image260.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image261.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image262.jpg"], "children": []}]}, {"name": "Pachyphytum", "shortName": "Pachyphytum", "type": "genus", "color": "#10B981", "speciesCount": 1, "children": [{"name": "Pachyphytum cuicatecanum 雪美人", "shortName": "Pachyphytum cuicatecanum 雪美人", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image210.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image210.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image211.png", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image212.jpg"], "children": []}]}, {"name": "Sedum", "shortName": "Sedum", "type": "genus", "color": "#10B981", "speciesCount": 1, "children": [{"name": "Sedum corynephyllum 八千代", "shortName": "Sedum corynephyllum 八千代", "type": "species", "color": "#10B981", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image149.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image149.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image150.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image151.jpg"], "children": []}]}]}, {"name": "Clade IV — 混合大支", "shortName": "CladeIV", "type": "clade", "color": "#F59E0B", "desc": "最大分支，包含Gibbiflorae/Graptopetalum/Cremnophila/Reidmorania等，静夜、罗西玛、锦晃星等均属此支", "speciesCount": 138, "children": [{"name": "Cremnophila", "shortName": "Cremnophila", "type": "genus", "color": "#F59E0B", "speciesCount": 6, "children": [{"name": "Cremnophila linguifolia 长叶泽米景天.", "shortName": "Cremnophila linguifolia 长叶泽米景天", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image388.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image388.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image389.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image390.jpg"], "children": []}, {"name": "Cremnophila linguifolia 长叶泽米景天", "shortName": "Cremnophila linguifolia 长叶泽米景天", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Cremnophila linguifolia.长叶泽米景天", "shortName": "Cremnophila linguifolia.长叶泽米景天", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Cremnophila nutans泽米景天.", "shortName": "Cremnophila nutans泽米景天.", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image391.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image391.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image392.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image393.jpg"], "children": []}, {"name": "Cremnophila nutans 泽米景天", "shortName": "Cremnophila nutans 泽米景天", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Cremnophila nutans 泽米景天", "shortName": "Cremnophila nutans 泽米景天", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}]}, {"name": "Echeveria", "shortName": "Echeveria", "type": "genus", "color": "#F59E0B", "speciesCount": 99, "children": [{"name": "Echeveria moranii 摩氏石莲", "shortName": "Echeveria moranii 摩氏石莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image263.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image263.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image264.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image265.jpg"], "children": []}, {"name": "Echeveria pringlei var. parva 未有中文名", "shortName": "Echeveria pringlei var. parva ", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image266.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image266.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image267.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image268.jpg"], "children": []}, {"name": "Echeveria pringlei 未有中文名", "shortName": "Echeveria pringlei 未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image269.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image269.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image270.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image271.jpg"], "children": []}, {"name": "Echeveria setosa var. ciliata 青渚莲", "shortName": "Echeveria setosa var. ciliata ", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image272.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image272.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image273.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image274.jpg"], "children": []}, {"name": "Echeveria coccinea 茜蝴蝶", "shortName": "Echeveria coccinea 茜蝴蝶", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image275.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image275.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image276.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image277.jpg"], "children": []}, {"name": "Echeveria coccinea 茜蝴蝶", "shortName": "Echeveria coccinea 茜蝴蝶", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria montana蒙大拿", "shortName": "Echeveria montana蒙大拿", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image278.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image278.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image279.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image280.jpg"], "children": []}, {"name": "Echeveria aff. longissima罗西玛近似种", "shortName": "Echeveria aff. longissima罗西玛近似", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria chapalensis 未有中文名", "shortName": "Echeveria chapalensis 未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image281.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image281.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image282.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image283.jpg"], "children": []}, {"name": "Echeveria derenbergii 静夜", "shortName": "Echeveria derenbergii 静夜", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image284.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image284.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image285.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image286.jpg"], "children": []}, {"name": "Echeveria gracilis细细石莲花", "shortName": "Echeveria gracilis细细石莲花", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image287.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image287.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image288.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image289.jpg"], "children": []}, {"name": "Echeveria pulvinata锦晃星", "shortName": "Echeveria pulvinata锦晃星", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image290.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image290.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image291.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image292.jpg"], "children": []}, {"name": "Echeveria pulvinata锦晃星", "shortName": "Echeveria pulvinata锦晃星", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria amphoralis玉松达", "shortName": "Echeveria amphoralis玉松达", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image293.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image293.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image294.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image295.jpg"], "children": []}, {"name": "Echeveria sp.未命名", "shortName": "Echeveria sp.未命名", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria uhlii青岫莲", "shortName": "Echeveria uhlii青岫莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image296.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image296.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image297.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image298.jpg"], "children": []}, {"name": "Echeveria setosa var. demimuta 小蓝衣/姬小光", "shortName": "Echeveria setosa var. demimuta", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image299.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image299.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image300.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image301.jpg"], "children": []}, {"name": "Echeveria setosa.锦司晃", "shortName": "Echeveria setosa.锦司晃", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria multicaulis多茎莲", "shortName": "Echeveria multicaulis多茎莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image302.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image302.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image303.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image304.jpg"], "children": []}, {"name": "Echeveria brachetii 布拉谢蒂", "shortName": "Echeveria brachetii 布拉谢蒂", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image305.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image305.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image306.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image307.jpg"], "children": []}, {"name": "Echeveria aff.setosa锦司晃近似种", "shortName": "Echeveria aff.setosa锦司晃近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria purpusorum 原始大和锦/白和锦", "shortName": "Echeveria purpusorum 原始大和锦/白和锦", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image308.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image308.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image309.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image310.jpg"], "children": []}, {"name": "Echeveria longissima var. aztatlensis罗西玛A", "shortName": "Echeveria longissima var. azta", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image311.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image311.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image312.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image313.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image314.jpg"], "children": []}, {"name": "Echeveria longissima var. brachyantha罗西玛B", "shortName": "Echeveria longissima var. brac", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image315.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image315.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image316.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image317.jpg"], "children": []}, {"name": "Echeveria craigiana 吴钩", "shortName": "Echeveria craigiana 吴钩", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image327.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image327.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image328.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image329.jpg"], "children": []}, {"name": "Echeveria affinis古紫/黑骑士", "shortName": "Echeveria affinis古紫/黑骑士", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image330.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image330.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image331.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image332.jpg"], "children": []}, {"name": "Echeveria valvata未有中文名", "shortName": "Echeveria valvata未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image355.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image355.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image356.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image357.jpg"], "children": []}, {"name": "Echeveria calycosa 金明灭", "shortName": "Echeveria calycosa 金明灭", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image238.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image238.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image239.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image240.jpg"], "children": []}, {"name": "Echeveria humilis胡美丽", "shortName": "Echeveria humilis胡美丽", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image394.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image394.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image395.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image396.jpg"], "children": []}, {"name": "Echeveria xichuensis 惜春", "shortName": "Echeveria xichuensis 惜春", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image397.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image397.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image398.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image399.jpg"], "children": []}, {"name": "Echeveria trianthina东天红", "shortName": "Echeveria trianthina东天红", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image400.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image400.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image401.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image402.jpg"], "children": []}, {"name": "Echeveria peacockii 蓝鸟/原始蓝鸟/皮氏", "shortName": "Echeveria peacockii 蓝鸟/原始蓝鸟/皮氏", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image403.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image403.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image404.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image405.jpg"], "children": []}, {"name": "Echeveria subalpina浮岳莲/萨宾娜", "shortName": "Echeveria subalpina浮岳莲/萨宾娜", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image406.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image406.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image407.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image408.jpg"], "children": []}, {"name": "Echeveria laui 雪莲", "shortName": "Echeveria laui 雪莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image409.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image409.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image410.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image411.jpg"], "children": []}, {"name": "Echeveria semivestita var. semivestita 奇幻乌", "shortName": "Echeveria semivestita var. sem", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image412.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image412.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image413.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image414.jpg"], "children": []}, {"name": "Echeveria semivestita var. floresiana 奇幻乌国内末做区分.", "shortName": "Echeveria semivestita var. flo", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria tamaulipana塔茉莉", "shortName": "Echeveria tamaulipana塔茉莉", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image415.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image415.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image416.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image417.jpg"], "children": []}, {"name": "Echeveria runyonii鲁氏石莲花", "shortName": "Echeveria runyonii鲁氏石莲花", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image418.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image418.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image419.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image420.jpg"], "children": []}, {"name": "Echeveria aff. secunda 赛康达近似种", "shortName": "Echeveria aff. secunda 赛康达近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria aff. secunda赛康达近似种", "shortName": "Echeveria aff. secunda赛康达近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria minima姬莲", "shortName": "Echeveria minima姬莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image421.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image421.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image422.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image423.jpg"], "children": []}, {"name": "Echeveria secunda赛康达", "shortName": "Echeveria secunda赛康达", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image424.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image424.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image425.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image426.jpg"], "children": []}, {"name": "Echeveria aff. secunda 赛康达近似种", "shortName": "Echeveria aff. secunda 赛康达近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria strictiflora .剑司", "shortName": "Echeveria strictiflora .剑司", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image427.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image427.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image428.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image429.jpg"], "children": []}, {"name": "Echeveria shaviana 莎薇娜", "shortName": "Echeveria shaviana 莎薇娜", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria calderoniae;狂刃.", "shortName": "Echeveria calderoniae;狂刃.", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image430.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image430.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image431.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image432.jpg"], "children": []}, {"name": "Echeveria shaviana .莎薇娜", "shortName": "Echeveria shaviana .莎薇娜", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image433.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image433.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image434.png", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image435.jpg"], "children": []}, {"name": "Echeveria lutea鱿鱼", "shortName": "Echeveria lutea鱿鱼", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image436.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image436.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image437.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image438.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image439.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image440.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image441.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image442.jpg"], "children": []}, {"name": "Echeveria bifida 贝飞达", "shortName": "Echeveria bifida 贝飞达", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image443.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image443.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image444.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image445.jpg"], "children": []}, {"name": "Echeveria lyonsii 龙司", "shortName": "Echeveria lyonsii 龙司", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image446.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image446.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image447.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image448.jpg"], "children": []}, {"name": "Echeveria bifurcata 水银", "shortName": "Echeveria bifurcata 水银", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image449.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image449.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image450.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image451.jpg"], "children": []}, {"name": "Echeveria rodolfi鲁道夫", "shortName": "Echeveria rodolfi鲁道夫", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image452.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image452.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image453.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image454.jpg"], "children": []}, {"name": "Echeveria aff. rodolfi 鲁道夫近似种", "shortName": "Echeveria aff. rodolfi 鲁道夫近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria gibbiflora 粉彩莲", "shortName": "Echeveria gibbiflora 粉彩莲", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria fulgens var. obtusifolia 浮光", "shortName": "Echeveria fulgens var. obtusif", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image455.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image455.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image456.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image457.jpg"], "children": []}, {"name": "Echeveria gibbiflora 粉彩莲", "shortName": "Echeveria gibbiflora 粉彩莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image458.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image458.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image459.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image460.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image461.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image462.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image463.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image464.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image465.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image466.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image467.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image468.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image469.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image470.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image471.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image472.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image473.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image474.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image475.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image476.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image477.jpg"], "children": []}, {"name": "Echeveria purhepecha 普雷佩查", "shortName": "Echeveria purhepecha 普雷佩查", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image478.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image478.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image479.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image480.jpg"], "children": []}, {"name": "Echeveria roseiflora 玫花石莲", "shortName": "Echeveria roseiflora 玫花石莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image481.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image481.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image482.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image483.jpg"], "children": []}, {"name": "Echeveria nayaritensis 纳亚里特", "shortName": "Echeveria nayaritensis 纳亚里特", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image484.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image484.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image485.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image486.jpg"], "children": []}, {"name": "Echeveria munizii 穆尼兹", "shortName": "Echeveria munizii 穆尼兹", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image487.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image487.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image488.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image489.jpg"], "children": []}, {"name": "Echeveria rulfiana 未有中文名.", "shortName": "Echeveria rulfiana 未有中文名.", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image490.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image490.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image491.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image492.jpg"], "children": []}, {"name": "Echeveria dactylifera 红酥手/凤凰精灵", "shortName": "Echeveria dactylifera 红酥手/凤凰精灵", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image493.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image493.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image494.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image495.jpg"], "children": []}, {"name": "Echeveria michihuacana 密齿花", "shortName": "Echeveria michihuacana 密齿花", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image496.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image496.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image497.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image498.jpg"], "children": []}, {"name": "Echeveria michihuacana 密齿花", "shortName": "Echeveria michihuacana 密齿花", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria michihuacana  密齿花", "shortName": "Echeveria michihuacana  密齿花", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria michihuacana  密齿花", "shortName": "Echeveria michihuacana  密齿花", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria michihuacana 密齿花", "shortName": "Echeveria michihuacana 密齿花", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria michihuacana 密齿花.", "shortName": "Echeveria michihuacana 密齿花.", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria cante 广寒官", "shortName": "Echeveria cante 广寒官", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image499.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image499.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image500.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image501.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image502.jpg"], "children": []}, {"name": "Echeveria subrigida 钢叶莲", "shortName": "Echeveria subrigida 钢叶莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image503.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image503.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image504.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image505.jpg"], "children": []}, {"name": "Echeveria novogaliciana 戈叶莲", "shortName": "Echeveria novogaliciana 戈叶莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image506.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image506.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image507.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image508.jpg"], "children": []}, {"name": "Echeveria perezcalixii 培瑞兹", "shortName": "Echeveria perezcalixii 培瑞兹", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image509.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image509.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image510.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image511.jpg"], "children": []}, {"name": "Echeveria cerrograndensis .瑟罗根", "shortName": "Echeveria cerrograndensis .瑟罗根", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image512.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image512.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image513.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image514.jpg"], "children": []}, {"name": "Echeveria sp.未定名", "shortName": "Echeveria sp.未定名", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria marianae 玛丽安", "shortName": "Echeveria marianae 玛丽安", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image515.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image515.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image516.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image517.jpg"], "children": []}, {"name": "Echeveria patriotica未有中文名", "shortName": "Echeveria patriotica未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image518.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image518.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image519.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image520.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image521.jpg"], "children": []}, {"name": "Echeveria uxorium未有中文名", "shortName": "Echeveria uxorium未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image522.png", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image522.png"], "children": []}, {"name": "Echeveria acutifolia未有中文名", "shortName": "Echeveria acutifolia未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image523.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image523.jpg"], "children": []}, {"name": "Echeveria fiulgens var. fulgens浮光园艺种", "shortName": "Echeveria fiulgens var. fulgen", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image524.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image524.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image525.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image526.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image527.jpg"], "children": []}, {"name": "Echeveria guerrerensis 未有中文名", "shortName": "Echeveria guerrerensis 未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image528.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image528.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image529.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image530.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image531.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image532.jpg"], "children": []}, {"name": "Echeveria aff. acutifolia 未有中文名", "shortName": "Echeveria aff. acutifolia 未有中文", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria aff. gigantea大瑞蝶", "shortName": "Echeveria aff. gigantea大瑞蝶", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria aff. acutifolia未有中文名", "shortName": "Echeveria aff. acutifolia未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria fulgens 原始浮光", "shortName": "Echeveria fulgens 原始浮光", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image533.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image533.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image534.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image535.jpg"], "children": []}, {"name": "Echeveria aff. gibbiflora 粉彩莲近似种", "shortName": "Echeveria aff. gibbiflora 粉彩莲近", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria fimbriata未有中文名(疑似国内的寒鸟巢)", "shortName": "Echeveria fimbriata未有中文名(疑似国内的", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image536.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image536.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image537.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image538.jpg"], "children": []}, {"name": "Echeveria fimbriata 未有中文名", "shortName": "Echeveria fimbriata 未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria rubromarginata 天魔舞/卢浮宫", "shortName": "Echeveria rubromarginata 天魔舞/卢", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image539.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image539.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image540.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image541.jpg"], "children": []}, {"name": "Echeveria sp. 未命名", "shortName": "Echeveria sp. 未命名", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria triquiana未有中文名", "shortName": "Echeveria triquiana未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image542.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image542.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image543.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image544.jpg"], "children": []}, {"name": "Echeveria gigantea大瑞蝶", "shortName": "Echeveria gigantea大瑞蝶", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image545.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image545.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image546.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image547.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image548.jpg"], "children": []}, {"name": "Echeveria longiflora未有中文名", "shortName": "Echeveria longiflora未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image549.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image549.jpg"], "children": []}, {"name": "Echeveria aff. fulgens浮光近似种", "shortName": "Echeveria aff. fulgens浮光近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria grisea未有中文名", "shortName": "Echeveria grisea未有中文名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image550.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image550.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image551.jpg"], "children": []}, {"name": "Echeveria crenulata 仙女花笠", "shortName": "Echeveria crenulata 仙女花笠", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image552.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image552.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image553.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image554.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image555.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image556.jpg"], "children": []}, {"name": "Echeveria rubromarginata天魔舞/卢浮宫/粉黛", "shortName": "Echeveria rubromarginata天魔舞/卢浮", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria aff. gibbiflora 大瑞蝶近似种", "shortName": "Echeveria aff. gibbiflora 大瑞蝶近", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Echeveria prunina 普鲁纳", "shortName": "Echeveria prunina 普鲁纳", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image557.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image557.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image558.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image559.jpg"], "children": []}, {"name": "Echeveria aff. fulgens浮光近似种", "shortName": "Echeveria aff. fulgens浮光近似种", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}]}, {"name": "Graptopetalum", "shortName": "Graptopetalum", "type": "genus", "color": "#F59E0B", "speciesCount": 20, "children": [{"name": "Graptopetalum mendozae 丸叶姬秋丽", "shortName": "Graptopetalum mendozae 丸叶姬秋丽", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image318.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image318.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image319.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image320.jpg"], "children": []}, {"name": "Graptopetalum amethystinum桃蛋/桃之卵", "shortName": "Graptopetalum amethystinum桃蛋/桃", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image321.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image321.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image322.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image323.jpg"], "children": []}, {"name": "Graptopetalum craigii 克雷吉", "shortName": "Graptopetalum craigii 克雷吉", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image324.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image324.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image325.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image326.jpg"], "children": []}, {"name": "Graptopetalum grande壮丽风车", "shortName": "Graptopetalum grande壮丽风车", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image333.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image333.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image334.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image335.jpg"], "children": []}, {"name": "Graptopetalum paraguayense胧月", "shortName": "Graptopetalum paraguayense胧月", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image336.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image336.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image337.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image338.jpg"], "children": []}, {"name": "Graptopetalum bernalense 幽灵胧月 胧月曾经的亚种", "shortName": "Graptopetalum bernalense 幽灵胧月 ", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image339.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image339.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image340.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image341.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image342.jpg"], "children": []}, {"name": "Graptopetalum pachyphyllum蓝豆", "shortName": "Graptopetalum pachyphyllum蓝豆", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image343.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image343.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image344.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image345.jpg"], "children": []}, {"name": "Graptopetalum bartramii 银天女的异名现己被废弃", "shortName": "Graptopetalum bartramii 银天女的异名", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image346.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image346.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image347.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image348.jpg"], "children": []}, {"name": "Graptopetalum suaveolens木犀景天", "shortName": "Graptopetalum suaveolens木犀景天", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image349.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image349.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image350.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image351.jpg"], "children": []}, {"name": "Graptopetalum saxifragoides 海葵", "shortName": "Graptopetalum saxifragoides 海葵", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image358.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image358.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image359.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image360.jpg"], "children": []}, {"name": "Graptopetalum pusillum未有中文名为风车草属模式种", "shortName": "Graptopetalum pusillum未有中文名为风车", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image361.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image361.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image362.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image363.jpg"], "children": []}, {"name": "Graptopetalum fruticosum 灌木丛", "shortName": "Graptopetalum fruticosum 灌木丛", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image364.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image364.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image365.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image366.jpg"], "children": []}, {"name": "Graptopetalum marginatum银翼风车", "shortName": "Graptopetalum marginatum银翼风车", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image367.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image367.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image368.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image369.jpg"], "children": []}, {"name": "Graptopetalum rusby银天女", "shortName": "Graptopetalum rusby银天女", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Graptopetalum filiferum 菊日和", "shortName": "Graptopetalum filiferum 菊日和", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image370.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image370.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image371.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image372.jpg"], "children": []}, {"name": "Graptopetalum macdougallii 蔓莲", "shortName": "Graptopetalum macdougallii 蔓莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image373.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image373.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image374.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image375.jpg"], "children": []}, {"name": "Graptopetalum glassii 琉璃风车", "shortName": "Graptopetalum glassii 琉璃风车", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image379.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image379.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image380.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image381.jpg"], "children": []}, {"name": "Graptopetalum pentandrum华丽风车", "shortName": "Graptopetalum pentandrum华丽风车", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image382.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image382.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image383.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image384.jpg"], "children": []}, {"name": "Graptopetalum superbum 朴素风车", "shortName": "Graptopetalum superbum 朴素风车", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image385.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image385.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image386.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image387.jpg"], "children": []}, {"name": "Graptopetalum superbum 朴素风车", "shortName": "Graptopetalum superbum 朴素风车", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}]}, {"name": "Reidmorania", "shortName": "Reidmorania", "type": "genus", "color": "#F59E0B", "speciesCount": 1, "children": [{"name": "Reidmorania occidentalis 金氏石莲花", "shortName": "Reidmorania occidentalis 金氏石莲花", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}]}, {"name": "Sedum", "shortName": "Sedum", "type": "genus", "color": "#F59E0B", "speciesCount": 1, "children": [{"name": "Sedum clavatum 凝脂莲", "shortName": "Sedum clavatum 凝脂莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image376.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image376.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image377.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image378.jpg"], "children": []}]}, {"name": "Tacitus", "shortName": "Tacitus", "type": "genus", "color": "#F59E0B", "speciesCount": 1, "children": [{"name": "Tacitus bellus 美丽莲", "shortName": "Tacitus bellus 美丽莲", "type": "species", "color": "#F59E0B", "thumbnail": "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image352.jpg", "images": ["https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image352.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image353.jpg", "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev/succulents/image354.jpg"], "children": []}]}, {"name": "Thompsonella", "shortName": "Thompsonella", "type": "genus", "color": "#F59E0B", "speciesCount": 10, "children": [{"name": "Thompsonella mixtecana 紫穗莲属皆无中文名", "shortName": "Thompsonella mixtecana 紫穗莲属皆无中", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella mixtecana", "shortName": "Thompsonella mixtecana", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella minutiflora", "shortName": "Thompsonella minutiflora", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella xochipalensis", "shortName": "Thompsonella xochipalensis", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella mimutiflora", "shortName": "Thompsonella mimutiflora", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella platyphylla", "shortName": "Thompsonella platyphylla", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella colliculosa", "shortName": "Thompsonella colliculosa", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella garcia-mendozae", "shortName": "Thompsonella garcia-mendozae", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella spathulata", "shortName": "Thompsonella spathulata", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}, {"name": "Thompsonella spathulata", "shortName": "Thompsonella spathulata", "type": "species", "color": "#F59E0B", "thumbnail": null, "images": [], "children": []}]}]}]};
+
+// ===== D3 SETUP =====
+const W = window.innerWidth;
+const H = window.innerHeight;
+const margin = {top: 80, right: 280, bottom: 80, left: 160};
+
+const svg = d3.select("#tree")
+  .attr("viewBox", [0, 0, W, H])
+  .call(d3.zoom().scaleExtent([0.1, 4]).on("zoom", (event) => {
+    g.attr("transform", event.transform);
+  }));
+
+const g = svg.append("g");
+
+// Species card dimensions
+const CARD_W = 105;
+const CARD_H = 82;
+const IMG_W = CARD_W - 6;
+const IMG_H = 54;
+const CARD_GAP = 6;  // pixels between species cards
+
+// ===== HELPER FUNCTIONS =====
+function countVisibleLeaves(node) {
+  if ((!node.children || !node.children.length) && (!node._children || !node._children.length)) return 1;
+  if (node.children && node.children.length) return node.children.reduce((sum, c) => sum + countVisibleLeaves(c), 0);
+  if (node._children) return 1;
+  return 1;
+}
+
+function findCladeAncestor(d) {
+  while (d) {
+    if (d.data.type === "clade" || d.data.type === "root") return d;
+    d = d.parent;
+  }
+  return null;
+}
+
+function findVisibleParent(d) {
+  let p = d.parent;
+  while (p) {
+    if (p.x !== undefined && p.y !== undefined) return p;
+    p = p.parent;
+  }
+  return null;
+}
+
+function truncate(str, len) {
+  return str.length > len ? str.substring(0, len) + "…" : str;
+}
+
+function cleanName(name) {
+  // Remove leading genus prefix like "Pachyphytum " and extract meaningful part
+  const parts = name.split(' ');
+  if (parts.length >= 3) return parts.slice(2).join(' ');
+  if (parts.length === 2) return parts[1];
+  return name;
+}
+
+// ===== DIAGONAL =====
+function diagonal(d) {
+  // For species-to-parent, draw straight line from card edge
+  if (d.target.data && d.target.data.type === 'species') {
+    const sx = d.source.y;
+    const sy = d.source.x;
+    const tx = d.target.y - CARD_W/2;
+    const ty = d.target.x;
+    return `M${sx},${sy}
+            C${(sx+tx)/2},${sy}
+             ${(sx+tx)/2},${ty}
+             ${tx},${ty}`;
+  }
+  return `M${d.source.y},${d.source.x}
+          C${(d.source.y + d.target.y) / 2},${d.source.x}
+           ${(d.source.y + d.target.y) / 2},${d.target.x}
+           ${d.target.y},${d.target.x}`;
+}
+
+// ===== TREE LAYOUT =====
+const treeLayout = d3.tree()
+  .nodeSize([CARD_H + CARD_GAP, 200])
+  .separation((a, b) => {
+    if (a.parent === b.parent) {
+      if (a.data.type === 'species') return 1.1;
+      return 1.4;
+    }
+    return 1.8;
+  });
+
+const root = d3.hierarchy(TREE_DATA);
+root.descendants().forEach(d => { d._depth = d.depth; });
+
+// ===== INITIAL STATE: only Outgroup expanded =====
+// Collapse ALL species first
+root.descendants().forEach(d => {
+  if (d.depth >= 3 && d.children) {
+    d._children = d.children;
+    d.children = null;
+  }
+});
+// Also collapse non-Outgroup genera
+root.descendants().forEach(d => {
+  if (d.depth >= 2 && d.children && d.data.type === 'genus') {
+    // Keep Outgroup genera expanded, collapse others
+    if (findCladeAncestor(d) && findCladeAncestor(d).data.shortName !== 'Outgroup') {
+      d._children = d.children;
+      d.children = null;
+    }
+  }
+});
+
+// ===== RENDER =====
+function update(source) {
+  treeLayout(root);
+
+  const nodes = root.descendants();
+  const links = root.links();
+
+  // --- LINKS ---
+  const link = g.selectAll(".link").data(links, d => d.target.data.shortName + "_" + d.target.depth);
+  link.exit()
+    .transition().duration(300)
+    .attr("stroke-opacity", 0).remove();
+
+  const linkEnter = link.enter().append("path")
+    .attr("class", "link")
+    .attr("d", d => {
+      const o = {x: source.x0 || 0, y: source.y0 || 0};
+      return diagonal({source: o, target: o});
+    })
+    .attr("stroke-opacity", 0);
+
+  link.merge(linkEnter)
+    .transition().duration(500)
+    .attr("d", diagonal)
+    .attr("stroke-opacity", 1)
+    .attr("stroke", d => {
+      const anc = findCladeAncestor(d.target);
+      return anc ? anc.data.color + "44" : "rgba(148,163,184,0.18)";
+    });
+
+  // --- NODES ---
+  const node = g.selectAll(".node").data(nodes, d => d.data.shortName + "_" + d.depth + "_" + (d.parent ? d.parent.data.shortName : ""));
+
+  node.exit()
+    .transition().duration(300)
+    .style("opacity", 0).remove();
+
+  const nodeEnter = node.enter().append("g")
+    .attr("class", d => `node ${d.data.type}-node`)
+    .attr("transform", d => {
+      const p = findVisibleParent(d);
+      return `translate(${p ? p.y : (source ? source.y0 : 0)},${p ? p.x : (source ? source.x0 : 0)})`;
+    })
+    .style("opacity", 0)
+    .on("click", (event, d) => { event.stopPropagation(); clickNode(d); })
+    .on("mouseenter", (event, d) => showTooltip(event, d))
+    .on("mouseleave", hideTooltip);
+
+  // Build node visuals
+  nodeEnter.each(function(d) {
+    const g = d3.select(this);
+    const color = d.data.color || "#64748b";
+    const hasHidden = d._children && d._children.length > 0;
+    const isExpanded = d.children && d.children.length > 0;
+
+    if (d.data.type === "root") {
+      g.append("circle").attr("r", 18).attr("fill", "#1e293b").attr("stroke", "#94a3b8").attr("stroke-width", 3);
+      g.append("text").attr("class", "root-text").attr("dy", 4).attr("text-anchor", "middle").attr("fill", "#f8fafc").text("景天科");
+    } else if (d.data.type === "clade") {
+      const r = 15;
+      g.append("circle").attr("r", r).attr("fill", color + "22").attr("stroke", color).attr("stroke-width", 2.5);
+      if (hasHidden) {
+        g.append("text").attr("class", "expand-ind").attr("dy", 5).attr("text-anchor", "middle")
+          .attr("font-size", "14px").attr("fill", color).attr("font-weight", "bold").text("+");
+      } else if (isExpanded) {
+        g.append("text").attr("class", "expand-ind").attr("dy", 5).attr("text-anchor", "middle")
+          .attr("font-size", "12px").attr("fill", color).text("\u2212");
+      }
+      const label = d.data.shortName.replace("Clade", "C");
+      g.append("text").attr("dy", -r - 4).attr("text-anchor", "middle").attr("class", "clade-text").attr("fill", color).text(label);
+      g.append("text").attr("dy", r + 14).attr("text-anchor", "middle").attr("class", "count-text").text(`${d.data.speciesCount || 0}种`);
+    } else if (d.data.type === "genus") {
+      const r = 11;
+      g.append("circle").attr("r", r).attr("fill", color + "33").attr("stroke", color).attr("stroke-width", 2);
+      if (hasHidden) {
+        g.append("text").attr("class", "expand-ind").attr("dy", 5).attr("text-anchor", "middle")
+          .attr("font-size", "12px").attr("fill", color).attr("font-weight", "bold").text("+");
+      } else if (isExpanded) {
+        g.append("text").attr("class", "expand-ind").attr("dy", 5).attr("text-anchor", "middle")
+          .attr("font-size", "11px").attr("fill", color).text("\u2212");
+      }
+      g.append("text").attr("dy", -r - 4).attr("text-anchor", "middle").attr("class", "genus-text").attr("fill", "#e2e8f0").text(d.data.shortName);
+      const cnt = d.data.speciesCount || 0;
+      g.append("text").attr("dy", r + 13).attr("text-anchor", "middle").attr("class", "count-text").text(`${cnt}种`);
+    } else if (d.data.type === "species") {
+      // --- SPECIES IMAGE CARD ---
+      const hasImg = d.data.thumbnail && d.data.images && d.data.images.length > 0;
+      // Card background
+      g.append("rect")
+        .attr("class", "sp-card-bg")
+        .attr("x", -CARD_W/2).attr("y", -CARD_H/2)
+        .attr("width", CARD_W).attr("height", CARD_H)
+        .attr("stroke", color + "55")
+        .attr("stroke-width", 1.5)
+        .attr("fill", "rgba(15,23,42,0.9)");
+
+      if (hasImg) {
+        // Image
+        g.append("image")
+          .attr("x", -IMG_W/2).attr("y", -CARD_H/2 + 3)
+          .attr("width", IMG_W).attr("height", IMG_H)
+          .attr("href", d.data.thumbnail)
+          .attr("preserveAspectRatio", "xMidYMid slice")
+          .attr("class", "sp-card-img")
+          .attr("clip-path", "url(#cardClip)");
+      } else {
+        // No image placeholder
+        g.append("rect")
+          .attr("x", -IMG_W/2).attr("y", -CARD_H/2 + 3)
+          .attr("width", IMG_W).attr("height", IMG_H)
+          .attr("fill", "rgba(30,41,59,0.8)")
+          .attr("class", "sp-card-noimg");
+        g.append("text")
+          .attr("x", 0).attr("y", -CARD_H/2 + IMG_H/2 + 4)
+          .attr("text-anchor", "middle").attr("class", "sp-card-noimg-text")
+          .text("暂无图片");
+      }
+      // Species name
+      const dName = cleanName(d.data.name);
+      g.append("text")
+        .attr("x", 0).attr("y", CARD_H/2 - 8)
+        .attr("text-anchor", "middle").attr("class", "sp-card-name")
+        .text(truncate(dName, 14));
+    }
+  });
+
+  // Merge + transition
+  node.merge(nodeEnter)
+    .transition().duration(500)
+    .attr("transform", d => {
+      // Species nodes offset slightly for card
+      if (d.data.type === 'species') return `translate(${d.y + CARD_W/2 + 8},${d.x})`;
+      return `translate(${d.y},${d.x})`;
+    })
+    .style("opacity", 1)
+    .on("end", function() {
+      const g = d3.select(this);
+      const d = g.datum();
+      const hasHidden = d._children && d._children.length > 0;
+      const isExpanded = d.children && d.children.length > 0;
+      g.select(".expand-ind").remove();
+      if (hasHidden && (d.data.type === "clade" || d.data.type === "genus")) {
+        const fs = d.data.type === "clade" ? "14px" : "12px";
+        g.insert("text", ":first-child").attr("class", "expand-ind")
+          .attr("dy", 5).attr("text-anchor", "middle")
+          .attr("font-size", fs).attr("fill", d.data.color).attr("font-weight", "bold").text("+");
+      } else if (isExpanded && (d.data.type === "clade" || d.data.type === "genus")) {
+        const fs = d.data.type === "clade" ? "12px" : "11px";
+        g.insert("text", ":first-child").attr("class", "expand-ind")
+          .attr("dy", 5).attr("text-anchor", "middle")
+          .attr("font-size", fs).attr("fill", d.data.color).text("\u2212");
+      }
+    });
+
+  // Store positions
+  root.descendants().forEach(d => {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+}
+
+// ===== CLICK =====
+function clickNode(d) {
+  if (d.data.type === "species") {
+    showDetailPanel(d);
+    return;
+  }
+  if (d.children) {
+    d._children = d.children;
+    d.children = null;
+  } else if (d._children) {
+    d.children = d._children;
+    d._children = null;
+  }
+  update(d);
+}
+
+// ===== TOOLTIP =====
+function showTooltip(event, d) {
+  const tip = document.getElementById("tooltip");
+  let html = "";
+
+  if (d.data.type === "root") {
+    html = `<div class="tt-name">${d.data.name.replace('\n',' ')}</div>
+            <div class="tt-meta">景天科 Crassulaceae</div>`;
+  } else if (d.data.type === "clade") {
+    html = `<div class="tt-name">${d.data.name}</div>
+            <div class="tt-meta">${d.data.speciesCount}个物种</div>
+            <div style="margin-top:6px;font-size:12px;color:#cbd5e1">${d.data.desc || ""}</div>`;
+  } else if (d.data.type === "genus") {
+    html = `<div class="tt-name">${d.data.name}</div>
+            <div class="tt-meta">${d.data.speciesCount}个物种</div>`;
+  } else if (d.data.type === "species") {
+    html = `<div class="tt-name">${d.data.name}</div>
+            <div class="tt-meta">${d.parent ? d.parent.data.name : ''}</div>`;
+    if (d.data.thumbnail && d.data.images && d.data.images.length > 0) {
+      html += `<img src="${d.data.thumbnail}" alt="">`;
+    } else {
+      html += `<div style="color:#64748b;font-size:12px;margin-top:4px">暂无图片</div>`;
+    }
+  }
+
+  tip.innerHTML = html;
+  tip.style.opacity = "1";
+  let left = event.clientX + 16;
+  let top = event.clientY - 40;
+  if (left + 420 > window.innerWidth) left = event.clientX - 420;
+  if (top + 250 > window.innerHeight) top = window.innerHeight - 270;
+  tip.style.left = left + "px";
+  tip.style.top = top + "px";
+}
+
+function hideTooltip() {
+  document.getElementById("tooltip").style.opacity = "0";
+}
+
+// ===== DETAIL PANEL =====
+function showDetailPanel(d) {
+  const panel = document.getElementById("detail-panel");
+  const content = document.getElementById("detail-content");
+
+  let imgsHtml = "";
+  if (d.data.images && d.data.images.length > 0) {
+    imgsHtml = d.data.images.map((img, i) =>
+      `<div class="img-card" onclick="openLightbox('${img}')">
+        <img src="${img}" alt="" loading="lazy"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+        <div style="display:none;width:118px;height:85px;background:rgba(30,41,59,0.8);align-items:center;justify-content:center;border-radius:4px;margin-bottom:4px;color:#64748b;font-size:11px;">图片加载失败</div>
+        <div class="lab">#${i + 1}</div>
+      </div>`
+    ).join("");
+  } else {
+    imgsHtml = "<div style='color:#64748b;padding:24px;text-align:center;font-size:14px'>暂无图片，待补充</div>";
+  }
+
+  // Breadcrumb
+  let breadcrumb = [];
+  let p = d;
+  while (p) {
+    breadcrumb.unshift(p.data.name);
+    p = p.parent;
+  }
+
+  content.innerHTML = `
+    <h3 style="color:${d.data.color}">${d.data.name}</h3>
+    <div class="desc">${breadcrumb.join(" \u2192 ")}</div>
+    <div style="color:#64748b;font-size:12px;margin-bottom:10px">共 ${d.data.images ? d.data.images.length : 0} 张图片</div>
+    <div class="img-grid">${imgsHtml}</div>
+  `;
+
+  panel.classList.add("open");
+  document.getElementById("detail-backdrop").classList.add("active");
+}
+
+// Close panel (unified)
+function closeDetailPanel() {
+  document.getElementById("detail-panel").classList.remove("open");
+  document.getElementById("detail-backdrop").classList.remove("active");
+}
+
+// Lightbox for full image
+function openLightbox(src) {
+  const overlay = document.createElement("div");
+  overlay.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;";
+  overlay.innerHTML = `<img src="${src}" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px;box-shadow:0 0 40px rgba(0,0,0,0.5)">`;
+  overlay.onclick = () => overlay.remove();
+  document.body.appendChild(overlay);
+}
+
+// Close panel
+document.getElementById("close-panel").addEventListener("click", closeDetailPanel);
+document.getElementById("detail-backdrop").addEventListener("click", closeDetailPanel);
+
+// ===== BUTTONS =====
+function zoomScale(s) {
+  const t = d3.zoomTransform(svg.node());
+  svg.transition().duration(300).call(
+    d3.zoom().scaleExtent([0.1, 4]).on("zoom", (ev) => g.attr("transform", ev.transform))
+      .transform, d3.zoomIdentity.translate(t.x, t.y).scale(t.k * s)
+  );
+}
+
+document.getElementById("btn-zoom-in").addEventListener("click", () => zoomScale(1.3));
+document.getElementById("btn-zoom-out").addEventListener("click", () => zoomScale(0.7));
+
+document.getElementById("btn-fit").addEventListener("click", () => {
+  const bounds = g.node().getBBox();
+  const scale = 0.85 / Math.max(bounds.width / W, bounds.height / H);
+  const tx = W / 2 - scale * (bounds.x + bounds.width / 2);
+  const ty = H / 2 - scale * (bounds.y + bounds.height / 2);
+  svg.transition().duration(750).call(
+    d3.zoom().scaleExtent([0.1, 4]).on("zoom", (ev) => g.attr("transform", ev.transform))
+      .transform, d3.zoomIdentity.translate(tx, ty).scale(scale)
+  );
+});
+
+document.getElementById("btn-expand-all").addEventListener("click", function() {
+  root.descendants().forEach(d => {
+    if (d._children) { d.children = d._children; d._children = null; }
+  });
+  update(root);
+});
+
+document.getElementById("btn-collapse-species").addEventListener("click", function() {
+  root.descendants().forEach(d => {
+    if (d.depth >= 3 && d.children) {
+      d._children = d.children;
+      d.children = null;
+    }
+  });
+  update(root);
+});
+
+document.getElementById("btn-reset").addEventListener("click", () => {
+  // Collapse all first
+  root.descendants().forEach(d => {
+    if (d.depth >= 2 && d.children) {
+      d._children = d.children;
+      d.children = null;
+    }
+  });
+  // Then expand only Outgroup
+  root.descendants().forEach(d => {
+    if (d.depth >= 2 && d._children) {
+      const anc = findCladeAncestor(d);
+      if (anc && anc.data.shortName === 'Outgroup') {
+        d.children = d._children;
+        d._children = null;
+      }
+    }
+  });
+  update(root);
+
+  // Reset zoom
+  svg.transition().duration(500).call(
+    d3.zoom().scaleExtent([0.1, 4]).on("zoom", (ev) => g.attr("transform", ev.transform))
+      .transform, d3.zoomIdentity
+  );
+  closeDetailPanel()
+});
+
+// Keyboard
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    closeDetailPanel()
+  }
+});
+
+// Fix SVG image clipping
+const defs = svg.append("defs");
+defs.append("clipPath").attr("id", "cardClip")
+  .append("rect")
+  .attr("x", -IMG_W/2).attr("y", -CARD_H/2 + 3)
+  .attr("width", IMG_W).attr("height", IMG_H)
+  .attr("rx", 4).attr("ry", 4);
+
+// ===== INITIAL RENDER =====
+root.x0 = H / 2;
+root.y0 = 100;
+update(root);
+
+// Hide loading overlay after render
+var overlay = document.getElementById("loading-overlay");
+if (overlay) {
+  overlay.style.opacity = "0";
+  overlay.style.pointerEvents = "none";
+  setTimeout(function() { overlay.style.display = "none"; }, 500);
+}
+
+// Fallback: force hide after 5s
+setTimeout(function() {
+  var ol = document.getElementById("loading-overlay");
+  if (ol && ol.style.display !== "none") {
+    ol.style.opacity = "0";
+    ol.style.pointerEvents = "none";
+    ol.style.display = "none";
+  }
+}, 5000);
+</script>
+</body>
+</html>
