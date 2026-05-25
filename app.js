@@ -281,8 +281,9 @@ function renderGrid(catIdx, keyword = '') {
     const safeTitle = escapeHtml(it.title);
     const safeUrl = escapeHtml(it.file_url || '');
     const thumbHtml = it.thumb
-      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} 缩略图" loading="lazy"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} 缩略图" loading="lazy" decoding="async"
+             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+             onload="this.classList.add('loaded')">
          <div class="no-thumb" style="display:none;">无图</div>`
       : `<div class="no-thumb">无图</div>`;
     return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
@@ -417,7 +418,8 @@ async function openModal(url, title) {
         if (seg.t) {
           html += `<p>${escapeHtml(seg.t)}</p>`;
         } else if (seg.i) {
-          html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy">`;
+          html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
+                        onload="this.classList.add('loaded')">`;
         }
       });
       html += '</div>';
@@ -457,7 +459,8 @@ function closeModal() {
 /* 图片灯箱 */
 function showLightbox(src) {
   const lb = document.getElementById('lightbox');
-  lb.innerHTML = `<img src="${src}" alt="预览">`;
+  lb.innerHTML = `<img src="${src}" alt="预览" loading="lazy" decoding="async"
+                     onload="this.classList.add('loaded')">`;
   lb.classList.add('active');
 }
 document.addEventListener('DOMContentLoaded', () => {
