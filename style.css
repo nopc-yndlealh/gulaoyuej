@@ -1,30 +1,13 @@
 /* ============================================================
    园艺图鉴 — 月季与多肉
-   设计系统：双主题（浅色/暗色）+ CSS 自定义属性驱动
+   设计系统：双色方案（绿/蓝）× 双主题（浅/暗）+ CSS Variables 驱动
    ============================================================ */
 
 /* ===== 基础 Reset ===== */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ===== 主题变量：浅色模式（默认） ===== */
+/* ===== 共享变量（非颜色 — 全局适用）===== */
 :root {
-  /* 色彩 */
-  --accent:        #b8382e;
-  --accent-light:  #d94a3f;
-  --accent-soft:   rgba(184, 56, 46, .08);
-  --bg:            #f5f2ed;
-  --surface:       #ffffff;
-  --surface-hover: #faf8f5;
-  --sidebar-bg:    #1e1010;
-  --sidebar-text:  #c4b0b0;
-  --sidebar-hover: rgba(255, 255, 255, .06);
-  --sidebar-active: rgba(184, 56, 46, .28);
-  --text:          #2c2c2c;
-  --text-secondary:#6b6b6b;
-  --text-muted:    #999999;
-  --border:        #e8e3dc;
-  --border-light:  rgba(0, 0, 0, .06);
-
   /* 阴影 */
   --shadow-sm:  0 1px 3px rgba(0, 0, 0, .06);
   --shadow-md:  0 4px 16px rgba(0, 0, 0, .08);
@@ -40,35 +23,172 @@
   /* 过渡 */
   --theme-transition: background-color .3s ease, color .3s ease,
                        border-color .3s ease, box-shadow .3s ease;
+
+  /* 叶子脉络纹理（仅绿色方案使用，蓝色方案覆盖为 none） */
+  --vein-pattern: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgMCBRMjcgMTIgMjQgMjQgUTIxIDM2IDI0IDQ4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wOCkiIHN0cm9rZS13aWR0aD0iMC43Ii8+PHBhdGggZD0iTTI0LjUgOSBRMzIgMTEgMzkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDE4IFEzMyAyMCA0MCAxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDI3IFEzMyAyOSA0MCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDkgUTE2IDExIDkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDE4IFExNSAyMCA4IDE1IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzLjUgMjcgUTE1IDI5IDggMjQiIGZpbGw9Imub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9zdmc+");
 }
 
-/* ===== 暗色主题 ===== */
-[data-theme="dark"] {
-  --accent:        #e85d52;
-  --accent-light:  #f07066;
-  --accent-soft:   rgba(232, 93, 82, .12);
-  --bg:            #131313;
-  --surface:       #1e1e1e;
-  --surface-hover: #242424;
-  --sidebar-bg:    #0a0a0a;
-  --sidebar-text:  #888888;
-  --sidebar-hover: rgba(255, 255, 255, .04);
-  --sidebar-active: rgba(232, 93, 82, .22);
-  --text:          #e0e0e0;
-  --text-secondary:#999999;
-  --text-muted:    #666666;
-  --border:        #2a2a2a;
-  --border-light:  rgba(255, 255, 255, .06);
 
-  --shadow-sm:  0 1px 3px rgba(0, 0, 0, .3);
-  --shadow-md:  0 4px 16px rgba(0, 0, 0, .4);
-  --shadow-lg:  0 8px 32px rgba(0, 0, 0, .5);
+/* ============================================================
+   🍃 绿色主题（默认）
+   ============================================================ */
+
+/* 绿色 — 浅色模式 */
+:root {
+  --accent:           #4d8540;
+  --accent-light:     #5ea054;
+  --accent-soft:      rgba(77, 133, 64, .08);
+  --bg:               #f5f2ed;
+  --surface:          #ffffff;
+  --surface-hover:    #f8faf7;
+  --sidebar-bg:       #0a1508;
+  --sidebar-text:     #a0be98;
+  --sidebar-parent:   #c8dcb8;
+  --sidebar-hover:    rgba(255, 255, 255, .06);
+  --sidebar-active:   rgba(77, 133, 64, .28);
+  --text:             #2c2c2c;
+  --text-secondary:   #5a6656;
+  --text-muted:       #8a9886;
+  --border:           #dce4d8;
+  --border-light:     rgba(0, 0, 0, .06);
+}
+
+/* 绿色 — 暗色模式 */
+[data-theme="dark"] {
+  --accent:           #6ab858;
+  --accent-light:     #7bc868;
+  --accent-soft:      rgba(106, 184, 88, .12);
+  --bg:               #131313;
+  --surface:          #1e1e1e;
+  --surface-hover:    #242424;
+  --sidebar-bg:       #060d04;
+  --sidebar-text:     #789070;
+  --sidebar-parent:   #a0b898;
+  --sidebar-hover:    rgba(255, 255, 255, .04);
+  --sidebar-active:   rgba(106, 184, 88, .22);
+  --text:             #e0e0e0;
+  --text-secondary:   #999999;
+  --text-muted:       #666666;
+  --border:           #2a2a2a;
+  --border-light:     rgba(255, 255, 255, .06);
+
+  --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
+  --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
+  --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
   --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
 }
 
+/* 绿色 — 系统暗色模式自动检测 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --accent:           #6ab858;
+    --accent-light:     #7bc868;
+    --accent-soft:      rgba(106, 184, 88, .12);
+    --bg:               #131313;
+    --surface:          #1e1e1e;
+    --surface-hover:    #242424;
+    --sidebar-bg:       #060d04;
+    --sidebar-text:     #789070;
+    --sidebar-parent:   #a0b898;
+    --sidebar-hover:    rgba(255, 255, 255, .04);
+    --sidebar-active:   rgba(106, 184, 88, .22);
+    --text:             #e0e0e0;
+    --text-secondary:   #999999;
+    --text-muted:       #666666;
+    --border:           #2a2a2a;
+    --border-light:     rgba(255, 255, 255, .06);
+    --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
+    --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
+    --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
+    --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
+  }
+}
+
+
+/* ============================================================
+   🔵 蓝色主题
+   ============================================================ */
+
+/* 蓝色 — 浅色模式 */
+[data-color-scheme="blue"] {
+  --accent:           #3b6d9e;
+  --accent-light:     #4d85b8;
+  --accent-soft:      rgba(59, 109, 158, .08);
+  --bg:               #f5f2ed;
+  --surface:          #ffffff;
+  --surface-hover:    #f5f7fa;
+  --sidebar-bg:       #0a111a;
+  --sidebar-text:     #9db2cc;
+  --sidebar-parent:   #b8c8dc;
+  --sidebar-hover:    rgba(255, 255, 255, .06);
+  --sidebar-active:   rgba(59, 109, 158, .28);
+  --text:             #2c2c2c;
+  --text-secondary:   #505866;
+  --text-muted:       #8090a0;
+  --border:           #d8dde4;
+  --border-light:     rgba(0, 0, 0, .06);
+  /* 蓝色方案不使用叶子纹理 */
+  --vein-pattern:     none;
+}
+
+/* 蓝色 — 暗色模式 */
+[data-color-scheme="blue"][data-theme="dark"] {
+  --accent:           #5698cc;
+  --accent-light:     #6ba8d8;
+  --accent-soft:      rgba(86, 152, 204, .12);
+  --bg:               #131313;
+  --surface:          #1e1e1e;
+  --surface-hover:    #242424;
+  --sidebar-bg:       #080d14;
+  --sidebar-text:     #708090;
+  --sidebar-parent:   #8898a8;
+  --sidebar-hover:    rgba(255, 255, 255, .04);
+  --sidebar-active:   rgba(86, 152, 204, .22);
+  --text:             #e0e0e0;
+  --text-secondary:   #999999;
+  --text-muted:       #666666;
+  --border:           #2a2a2a;
+  --border-light:     rgba(255, 255, 255, .06);
+
+  --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
+  --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
+  --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
+  --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
+}
+
+/* 蓝色 — 系统暗色模式自动检测 */
+@media (prefers-color-scheme: dark) {
+  [data-color-scheme="blue"]:not([data-theme]) {
+    --accent:           #5698cc;
+    --accent-light:     #6ba8d8;
+    --accent-soft:      rgba(86, 152, 204, .12);
+    --bg:               #131313;
+    --surface:          #1e1e1e;
+    --surface-hover:    #242424;
+    --sidebar-bg:       #080d14;
+    --sidebar-text:     #708090;
+    --sidebar-parent:   #8898a8;
+    --sidebar-hover:    rgba(255, 255, 255, .04);
+    --sidebar-active:   rgba(86, 152, 204, .22);
+    --text:             #e0e0e0;
+    --text-secondary:   #999999;
+    --text-muted:       #666666;
+    --border:           #2a2a2a;
+    --border-light:     rgba(255, 255, 255, .06);
+    --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
+    --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
+    --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
+    --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
+  }
+}
+
+
+/* ============================================================
+   组件样式（完全由 CSS Variables 驱动，不硬编码颜色）
+   ============================================================ */
+
 /* ===== 全局 ===== */
 html {
-  /* 所有颜色属性平滑过渡 */
   transition: var(--theme-transition);
 }
 
@@ -85,7 +205,9 @@ body {
 /* ===== 桌面端顶栏 ===== */
 header {
   height: var(--header-h);
-  background: var(--accent);
+  background-color: var(--accent);
+  background-image: var(--vein-pattern);
+  background-blend-mode: overlay;
   color: #fff;
   display: flex;
   align-items: center;
@@ -94,7 +216,7 @@ header {
   flex-shrink: 0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, .2);
   z-index: 100;
-  transition: background .3s;
+  transition: background-color .3s;
 }
 header h1 {
   font-size: 18px;
@@ -123,8 +245,8 @@ header input[type=search]:focus {
   background: rgba(255, 255, 255, .28);
 }
 
-/* 主题切换按钮 */
-#theme-toggle {
+/* 顶部工具栏按钮统一样式 */
+.header-btn {
   background: rgba(255, 255, 255, .15);
   border: none;
   color: #fff;
@@ -139,12 +261,42 @@ header input[type=search]:focus {
   transition: background .2s, transform .2s;
   flex-shrink: 0;
 }
-#theme-toggle:hover {
+.header-btn:hover {
   background: rgba(255, 255, 255, .28);
   transform: scale(1.08);
 }
-#theme-toggle:active {
+.header-btn:active {
   transform: scale(.94);
+}
+
+/* 颜色切换按钮 */
+#color-toggle {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, .5);
+  cursor: pointer;
+  transition: background .25s, border-color .25s, transform .2s;
+  flex-shrink: 0;
+  position: relative;
+}
+#color-toggle:hover {
+  transform: scale(1.08);
+  border-color: rgba(255, 255, 255, .8);
+}
+#color-toggle:active {
+  transform: scale(.94);
+}
+/* 按钮内圆圈指示当前/下个颜色 */
+#color-toggle::after {
+  content: '';
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin: auto;
+  /* 颜色由 JS 动态设置行内 style */
+  transition: background .25s;
 }
 
 /* ===== 移动端顶部导航条（默认隐藏）===== */
@@ -221,7 +373,7 @@ nav#sidebar .evo-link:hover { background: rgba(79, 195, 167, .12); }
 .tree-group .parent-item {
   position: relative;
   font-weight: 600;
-  color: #e0c8c8;
+  color: var(--sidebar-parent);
 }
 .tree-arrow {
   font-size: 10px;
@@ -405,7 +557,9 @@ main#content {
   display: flex;
   align-items: center;
   padding: 12px 20px;
-  background: var(--accent);
+  background-color: var(--accent);
+  background-image: var(--vein-pattern);
+  background-blend-mode: overlay;
   color: #fff;
   gap: 12px;
   flex-shrink: 0;
@@ -608,7 +762,7 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
     text-decoration: none;
   }
 
-  /* 移动端主题切换 + 搜索栏 */
+  /* 移动端工具栏 */
   #mobile-nav .mobile-toolbar {
     display: flex;
     align-items: center;
@@ -651,6 +805,32 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
     background: rgba(255, 255, 255, .28);
   }
 
+  /* 移动端颜色切换按钮 */
+  #mobile-color-toggle {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, .5);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: border-color .25s, transform .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #mobile-color-toggle:hover {
+    border-color: rgba(255, 255, 255, .8);
+    transform: scale(1.08);
+  }
+  #mobile-color-toggle::after {
+    content: '';
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transition: background .25s;
+  }
+
   /* 主内容区调整 */
   .layout {
     flex-direction: column;
@@ -682,29 +862,4 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
-}
-
-/* ===== 系统暗色模式自动检测（无用户手动选择时） ===== */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) {
-    --accent:        #e85d52;
-    --accent-light:  #f07066;
-    --accent-soft:   rgba(232, 93, 82, .12);
-    --bg:            #131313;
-    --surface:       #1e1e1e;
-    --surface-hover: #242424;
-    --sidebar-bg:    #0a0a0a;
-    --sidebar-text:  #888888;
-    --sidebar-hover: rgba(255, 255, 255, .04);
-    --sidebar-active: rgba(232, 93, 82, .22);
-    --text:          #e0e0e0;
-    --text-secondary:#999999;
-    --text-muted:    #666666;
-    --border:        #2a2a2a;
-    --border-light:  rgba(255, 255, 255, .06);
-    --shadow-sm:  0 1px 3px rgba(0, 0, 0, .3);
-    --shadow-md:  0 4px 16px rgba(0, 0, 0, .4);
-    --shadow-lg:  0 8px 32px rgba(0, 0, 0, .5);
-    --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
-  }
 }
