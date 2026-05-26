@@ -4,7 +4,6 @@
 
 /* ===== 主题切换 ===== */
 const THEME_KEY = 'feijibei-theme';
-const COLOR_KEY = 'feijibei-color';
 
 function getTheme() {
   const saved = localStorage.getItem(THEME_KEY);
@@ -51,72 +50,19 @@ function cycleTheme() {
 const savedMode = getTheme();
 applyTheme(savedMode);
 
-// 绑定桌面端主题按钮 + 颜色切换按钮
+// 绑定桌面端主题按钮
 document.addEventListener('DOMContentLoaded', () => {
   const dt = document.getElementById('theme-toggle');
   const mt = document.getElementById('mobile-theme-toggle');
-  const dc = document.getElementById('color-toggle');
-  const mc = document.getElementById('mobile-color-toggle');
 
   if (dt) dt.addEventListener('click', cycleTheme);
   if (mt) mt.addEventListener('click', cycleTheme);
-  if (dc) dc.addEventListener('click', cycleColorScheme);
-  if (mc) mc.addEventListener('click', cycleColorScheme);
 });
 
 // 监听系统主题变化（仅在 auto 模式下响应）
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
   if (getTheme() === 'auto') updateThemeIcons('auto');
 });
-
-/* ===== 颜色方案切换 ===== */
-const COLOR_SCHEMES = {
-  green: { name: '绿色', color: '#4d8540', next: 'blue' },
-  blue:  { name: '蓝色', color: '#3b6d9e', next: 'green' }
-};
-
-function getColorScheme() {
-  const saved = localStorage.getItem(COLOR_KEY);
-  return (saved === 'blue') ? 'blue' : 'green';
-}
-
-function applyColorScheme(scheme) {
-  const html = document.documentElement;
-  if (scheme === 'blue') {
-    html.setAttribute('data-color-scheme', 'blue');
-  } else {
-    html.removeAttribute('data-color-scheme'); // green = default
-  }
-  updateColorButtons(scheme);
-}
-
-function cycleColorScheme() {
-  const current = getColorScheme();
-  const next = COLOR_SCHEMES[current].next;
-  localStorage.setItem(COLOR_KEY, next);
-  applyColorScheme(next);
-}
-
-function updateColorButtons(scheme) {
-  // 按钮显示"下一色"的颜色
-  const nextScheme = COLOR_SCHEMES[scheme].next;
-  const nextColor = COLOR_SCHEMES[nextScheme].color;
-
-  const dtBtn = document.getElementById('color-toggle');
-  const mbBtn = document.getElementById('mobile-color-toggle');
-
-  if (dtBtn) {
-    dtBtn.style.background = nextColor;
-    dtBtn.title = `当前：${COLOR_SCHEMES[scheme].name} — 点击切换为${COLOR_SCHEMES[nextScheme].name}`;
-  }
-  if (mbBtn) {
-    mbBtn.style.background = nextColor;
-    mbBtn.title = `点击切换为${COLOR_SCHEMES[nextScheme].name}`;
-  }
-}
-
-// 初始化颜色方案
-applyColorScheme(getColorScheme());
 
 /* ===== 数据变量 ===== */
 let contentIndex = {};    // 内容索引: id → 分类 slug

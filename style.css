@@ -1,6 +1,7 @@
 /* ============================================================
    园艺图鉴 — 月季与多肉
-   设计系统：双色方案（绿/蓝）× 双主题（浅/暗）+ CSS Variables 驱动
+   设计系统：🌤 白天蓝天 × 🌙 黑夜绿植 + CSS Variables 驱动
+   颜色自动跟随日夜主题切换，无需手动选择
    ============================================================ */
 
 /* ===== 基础 Reset ===== */
@@ -24,36 +25,40 @@
   --theme-transition: background-color .3s ease, color .3s ease,
                        border-color .3s ease, box-shadow .3s ease;
 
-  /* 叶子脉络纹理（仅绿色方案使用，蓝色方案覆盖为 none） */
-  --vein-pattern: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgMCBRMjcgMTIgMjQgMjQgUTIxIDM2IDI0IDQ4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wOCkiIHN0cm9rZS13aWR0aD0iMC43Ii8+PHBhdGggZD0iTTI0LjUgOSBRMzIgMTEgMzkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDE4IFEzMyAyMCA0MCAxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDI3IFEzMyAyOSA0MCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDkgUTE2IDExIDkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDE4IFExNSAyMCA4IDE1IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzLjUgMjcgUTE1IDI5IDggMjQiIGZpbGw9Imub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNCkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PC9zdmc+");
+  /* 叶子脉络纹理（仅暗色绿植主题使用） */
+  --vein-pattern: none;
 }
 
 
 /* ============================================================
-   🍃 绿色主题（默认）
+   🔵 蓝天主题（默认 — 浅色 / 白天）
    ============================================================ */
 
-/* 绿色 — 浅色模式 */
+/* 蓝色 — 浅色模式 */
 :root {
-  --accent:           #4d8540;
-  --accent-light:     #5ea054;
-  --accent-soft:      rgba(77, 133, 64, .08);
+  --accent:           #4a90c4;
+  --accent-light:     #5da0d4;
+  --accent-soft:      rgba(74, 144, 196, .08);
   --bg:               #f5f2ed;
   --surface:          #ffffff;
-  --surface-hover:    #f8faf7;
-  --sidebar-bg:       #0a1508;
-  --sidebar-text:     #a0be98;
-  --sidebar-parent:   #c8dcb8;
+  --surface-hover:    #f5f7fa;
+  --sidebar-bg:       #0a111a;
+  --sidebar-text:     #9db2cc;
+  --sidebar-parent:   #b8c8dc;
   --sidebar-hover:    rgba(255, 255, 255, .06);
-  --sidebar-active:   rgba(77, 133, 64, .28);
+  --sidebar-active:   rgba(74, 144, 196, .28);
   --text:             #2c2c2c;
-  --text-secondary:   #5a6656;
-  --text-muted:       #8a9886;
-  --border:           #dce4d8;
+  --text-secondary:   #505866;
+  --text-muted:       #8090a0;
+  --border:           #d8dde4;
   --border-light:     rgba(0, 0, 0, .06);
 }
 
-/* 绿色 — 暗色模式 */
+
+/* ============================================================
+   🌿 绿植主题（暗色 / 黑夜）
+   ============================================================ */
+
 [data-theme="dark"] {
   --accent:           #6ab858;
   --accent-light:     #7bc868;
@@ -76,9 +81,12 @@
   --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
   --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
   --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
+
+  /* 暗色模式显示叶子脉络纹理 */
+  --vein-pattern: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgMCBRMjcgMTIgMjQgMjQgUTIxIDM2IDI0IDQ4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wOCkiIHN0cm9rZS13aWR0aD0iMC43Ii8+PHBhdGggZD0iTTI0LjUgOSBRMzIgMTEgMzkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDE4IFEzMyAyMCA0MCAxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDI3IFEzMyAyOSA0MCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDkgUTE2IDExIDkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDE4IFExNSAyMCA4IDE1IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzLjUgMjcgUTE1IDI5IDggMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=");
 }
 
-/* 绿色 — 系统暗色模式自动检测 */
+/* 绿植 — 系统暗色模式自动检测 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     --accent:           #6ab858;
@@ -101,85 +109,42 @@
     --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
     --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
     --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
+    --vein-pattern: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgMCBRMjcgMTIgMjQgMjQgUTIxIDM2IDI0IDQ4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wOCkiIHN0cm9rZS13aWR0aD0iMC43Ii8+PHBhdGggZD0iTTI0LjUgOSBRMzIgMTEgMzkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDE4IFEzMyAyMCA0MCAxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDI3IFEzMyAyOSA0MCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDkgUTE2IDExIDkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDE4IFExNSAyMCA4IDE1IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzLjUgMjcgUTE1IDI5IDggMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=");
   }
 }
 
 
 /* ============================================================
-   🔵 蓝色主题
+   🌤 白天云朵 + 🌱 黑夜盆栽装饰
    ============================================================ */
 
-/* 蓝色 — 浅色模式 */
-[data-color-scheme="blue"] {
-  --accent:           #3b6d9e;
-  --accent-light:     #4d85b8;
-  --accent-soft:      rgba(59, 109, 158, .08);
-  --bg:               #f5f2ed;
-  --surface:          #ffffff;
-  --surface-hover:    #f5f7fa;
-  --sidebar-bg:       #0a111a;
-  --sidebar-text:     #9db2cc;
-  --sidebar-parent:   #b8c8dc;
-  --sidebar-hover:    rgba(255, 255, 255, .06);
-  --sidebar-active:   rgba(59, 109, 158, .28);
-  --text:             #2c2c2c;
-  --text-secondary:   #505866;
-  --text-muted:       #8090a0;
-  --border:           #d8dde4;
-  --border-light:     rgba(0, 0, 0, .06);
-  /* 蓝色方案不使用叶子纹理 */
-  --vein-pattern:     none;
+/* 云朵 — 白天显示在主题按钮旁 */
+.cloud-deco {
+  display: inline-block;
+  width: 36px;
+  height: 22px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  opacity: .8;
+  transition: opacity .3s;
 }
-
-/* 蓝色 — 暗色模式 */
-[data-color-scheme="blue"][data-theme="dark"] {
-  --accent:           #5698cc;
-  --accent-light:     #6ba8d8;
-  --accent-soft:      rgba(86, 152, 204, .12);
-  --bg:               #131313;
-  --surface:          #1e1e1e;
-  --surface-hover:    #242424;
-  --sidebar-bg:       #080d14;
-  --sidebar-text:     #708090;
-  --sidebar-parent:   #8898a8;
-  --sidebar-hover:    rgba(255, 255, 255, .04);
-  --sidebar-active:   rgba(86, 152, 204, .22);
-  --text:             #e0e0e0;
-  --text-secondary:   #999999;
-  --text-muted:       #666666;
-  --border:           #2a2a2a;
-  --border-light:     rgba(255, 255, 255, .06);
-
-  --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
-  --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
-  --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
-  --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
-}
-
-/* 蓝色 — 系统暗色模式自动检测 */
+[data-theme="dark"] .cloud-deco { display: none; }
 @media (prefers-color-scheme: dark) {
-  [data-color-scheme="blue"]:not([data-theme]) {
-    --accent:           #5698cc;
-    --accent-light:     #6ba8d8;
-    --accent-soft:      rgba(86, 152, 204, .12);
-    --bg:               #131313;
-    --surface:          #1e1e1e;
-    --surface-hover:    #242424;
-    --sidebar-bg:       #080d14;
-    --sidebar-text:     #708090;
-    --sidebar-parent:   #8898a8;
-    --sidebar-hover:    rgba(255, 255, 255, .04);
-    --sidebar-active:   rgba(86, 152, 204, .22);
-    --text:             #e0e0e0;
-    --text-secondary:   #999999;
-    --text-muted:       #666666;
-    --border:           #2a2a2a;
-    --border-light:     rgba(255, 255, 255, .06);
-    --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
-    --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
-    --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
-    --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
-  }
+  :root:not([data-theme]) .cloud-deco { display: none; }
+}
+
+/* 小盆栽 — 黑夜显示在"园艺图鉴"旁 */
+.potted-plant {
+  display: none;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin-left: 6px;
+}
+[data-theme="dark"] .potted-plant { display: inline-block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .potted-plant { display: inline-block; }
 }
 
 
@@ -222,6 +187,8 @@ header h1 {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: .04em;
+  display: flex;
+  align-items: center;
 }
 header .search-wrap {
   margin-left: auto;
@@ -267,36 +234,6 @@ header input[type=search]:focus {
 }
 .header-btn:active {
   transform: scale(.94);
-}
-
-/* 颜色切换按钮 */
-#color-toggle {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, .5);
-  cursor: pointer;
-  transition: background .25s, border-color .25s, transform .2s;
-  flex-shrink: 0;
-  position: relative;
-}
-#color-toggle:hover {
-  transform: scale(1.08);
-  border-color: rgba(255, 255, 255, .8);
-}
-#color-toggle:active {
-  transform: scale(.94);
-}
-/* 按钮内圆圈指示当前/下个颜色 */
-#color-toggle::after {
-  content: '';
-  display: block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin: auto;
-  /* 颜色由 JS 动态设置行内 style */
-  transition: background .25s;
 }
 
 /* ===== 移动端顶部导航条（默认隐藏）===== */
@@ -803,32 +740,6 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
   }
   #mobile-theme-toggle:hover {
     background: rgba(255, 255, 255, .28);
-  }
-
-  /* 移动端颜色切换按钮 */
-  #mobile-color-toggle {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, .5);
-    cursor: pointer;
-    flex-shrink: 0;
-    transition: border-color .25s, transform .2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  #mobile-color-toggle:hover {
-    border-color: rgba(255, 255, 255, .8);
-    transform: scale(1.08);
-  }
-  #mobile-color-toggle::after {
-    content: '';
-    display: block;
-    width: 14px;
-    height: 14px;
-    border-radius: 50%;
-    transition: background .25s;
   }
 
   /* 主内容区调整 */
