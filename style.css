@@ -36,9 +36,9 @@
 
 /* 蓝色 — 浅色模式 */
 :root {
-  --accent:           #4a90c4;
-  --accent-light:     #5da0d4;
-  --accent-soft:      rgba(74, 144, 196, .08);
+  --accent:           #5599cc;
+  --accent-light:     #6baed8;
+  --accent-soft:      rgba(85, 153, 204, .08);
   --bg:               #f5f2ed;
   --surface:          #ffffff;
   --surface-hover:    #f5f7fa;
@@ -46,7 +46,7 @@
   --sidebar-text:     #9db2cc;
   --sidebar-parent:   #b8c8dc;
   --sidebar-hover:    rgba(255, 255, 255, .06);
-  --sidebar-active:   rgba(74, 144, 196, .28);
+  --sidebar-active:   rgba(85, 153, 204, .28);
   --text:             #2c2c2c;
   --text-secondary:   #505866;
   --text-muted:       #8090a0;
@@ -60,9 +60,9 @@
    ============================================================ */
 
 [data-theme="dark"] {
-  --accent:           #6ab858;
-  --accent-light:     #7bc868;
-  --accent-soft:      rgba(106, 184, 88, .12);
+  --accent:           #4d8540;
+  --accent-light:     #5ea054;
+  --accent-soft:      rgba(77, 133, 64, .12);
   --bg:               #131313;
   --surface:          #1e1e1e;
   --surface-hover:    #242424;
@@ -70,7 +70,7 @@
   --sidebar-text:     #789070;
   --sidebar-parent:   #a0b898;
   --sidebar-hover:    rgba(255, 255, 255, .04);
-  --sidebar-active:   rgba(106, 184, 88, .22);
+  --sidebar-active:   rgba(77, 133, 64, .22);
   --text:             #e0e0e0;
   --text-secondary:   #999999;
   --text-muted:       #666666;
@@ -89,9 +89,9 @@
 /* 绿植 — 系统暗色模式自动检测 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --accent:           #6ab858;
-    --accent-light:     #7bc868;
-    --accent-soft:      rgba(106, 184, 88, .12);
+    --accent:           #4d8540;
+    --accent-light:     #5ea054;
+    --accent-soft:      rgba(77, 133, 64, .12);
     --bg:               #131313;
     --surface:          #1e1e1e;
     --surface-hover:    #242424;
@@ -99,7 +99,7 @@
     --sidebar-text:     #789070;
     --sidebar-parent:   #a0b898;
     --sidebar-hover:    rgba(255, 255, 255, .04);
-    --sidebar-active:   rgba(106, 184, 88, .22);
+    --sidebar-active:   rgba(77, 133, 64, .22);
     --text:             #e0e0e0;
     --text-secondary:   #999999;
     --text-muted:       #666666;
