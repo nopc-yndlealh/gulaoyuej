@@ -115,40 +115,6 @@
 
 
 /* ============================================================
-   🌤 白天云朵 + 🌱 黑夜盆栽装饰
-   ============================================================ */
-
-/* 云朵 — 白天显示在主题按钮旁 */
-.cloud-deco {
-  display: inline-block;
-  width: 36px;
-  height: 22px;
-  flex-shrink: 0;
-  vertical-align: middle;
-  opacity: .8;
-  transition: opacity .3s;
-}
-[data-theme="dark"] .cloud-deco { display: none; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .cloud-deco { display: none; }
-}
-
-/* 小盆栽 — 黑夜显示在"园艺图鉴"旁 */
-.potted-plant {
-  display: none;
-  width: 26px;
-  height: 26px;
-  flex-shrink: 0;
-  vertical-align: middle;
-  margin-left: 6px;
-}
-[data-theme="dark"] .potted-plant { display: inline-block; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme]) .potted-plant { display: inline-block; }
-}
-
-
-/* ============================================================
    组件样式（完全由 CSS Variables 驱动，不硬编码颜色）
    ============================================================ */
 
@@ -187,8 +153,6 @@ header h1 {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: .04em;
-  display: flex;
-  align-items: center;
 }
 header .search-wrap {
   margin-left: auto;
