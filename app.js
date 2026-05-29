@@ -142,7 +142,7 @@ const TREE_CONFIG = [
     children: [
       '丹陶', '吉洛', '奥斯汀', '戴尔巴德', '玫昂', '科尔德斯',
       '古老月季', '育种相关', '特性合集', '种植分享',
-      '竞赛,评选以及月季园实测', '其他育种家', '贴吧'
+      '竞赛,评选以及月季园实测', '其他育种家', '贴吧', '微博', '小红书'
     ]
   },
   { name: '多肉', children: [
@@ -570,22 +570,72 @@ async function openModal(urlOrId, title) {
     const content = await getContent(id);
 
     if (content && Array.isArray(content.segments)) {
-      let html = `<h2 class="detail-title">${escapeHtml(content.title || title)}</h2><div class="detail-body">`;
-      content.segments.forEach(seg => {
-        if (seg.t) {
-          html += `<p>${escapeHtml(seg.t)}</p>`;
-        } else if (seg.i) {
-          html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
-                        onload="this.classList.add('loaded')">`;
+      const isSocial = content.type === '小红书' || content.type === '微博';
+      const author = content.author || {};
+      const authorName = typeof author === 'string' ? author : (author.name || '');
+      const postTime = content.time || '';
+
+      if (isSocial) {
+        // 左图右文布局
+        const images = content.segments.filter(s => s.i);
+        const texts = content.segments.filter(s => s.t).map(s => s.t).join('\n');
+        const totalImg = images.length;
+        html = `<h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
+        html += '<div class="social-post">';
+        // 左侧图片轮播
+        html += '<div class="social-gallery">';
+        if (totalImg > 0) {
+          html += '<div class="gallery-track" id="gallery-track">';
+          images.forEach((seg, idx) => {
+            html += `<div class="gallery-slide" data-idx="${idx}">
+              <img src="${escapeHtml(seg.i)}" alt="图片 ${idx+1}" loading="lazy" decoding="async"
+                   onload="this.classList.add('loaded')">
+            </div>`;
+          });
+          html += '</div>';
+          if (totalImg > 1) {
+            html += `<button class="gallery-arrow prev" onclick="slideGallery(-1)" aria-label="上一张">‹</button>`;
+            html += `<button class="gallery-arrow next" onclick="slideGallery(1)" aria-label="下一张">›</button>`;
+          }
+          html += `<div class="gallery-counter">${totalImg > 1 ? '<span id="gallery-idx">1</span> / ' : ''}${totalImg}</div>`;
+          // inject current index
         }
-      });
-      html += '</div>';
-      detailEl.innerHTML = html;
-      // 绑定图片点击灯箱事件
-      detailEl.querySelectorAll('.detail-body img').forEach(img => {
-        img.addEventListener('click', () => showLightbox(img.src));
-        img.style.cursor = 'pointer';
-      });
+        html += '</div>';
+        // 右侧正文
+        html += '<div class="social-content">';
+        if (authorName) html += `<div class="social-author">👤 ${escapeHtml(authorName)}</div>`;
+        if (postTime) html += `<div class="social-time">${escapeHtml(postTime)}</div>`;
+        if (texts) html += `<div class="social-text">${escapeHtml(texts)}</div>`;
+        html += '</div></div>';
+
+        detailEl.innerHTML = html;
+        // 绑定图片点击灯箱
+        detailEl.querySelectorAll('.gallery-slide img').forEach(img => {
+          img.addEventListener('click', () => showLightbox(img.src));
+          img.style.cursor = 'pointer';
+        });
+        // 初始化轮播状态
+        window._galleryTotal = totalImg;
+        window._galleryIdx = 1;
+      } else {
+        // 原有布局：文字图片交错
+        html = `<h2 class="detail-title">${escapeHtml(content.title || title)}</h2><div class="detail-body">`;
+        content.segments.forEach(seg => {
+          if (seg.t) {
+            html += `<p>${escapeHtml(seg.t)}</p>`;
+          } else if (seg.i) {
+            html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
+                          onload="this.classList.add('loaded')">`;
+          }
+        });
+        html += '</div>';
+        detailEl.innerHTML = html;
+        // 绑定图片点击灯箱事件
+        detailEl.querySelectorAll('.detail-body img').forEach(img => {
+          img.addEventListener('click', () => showLightbox(img.src));
+          img.style.cursor = 'pointer';
+        });
+      }
     } else {
       detailEl.innerHTML = `
         <div class="detail-error">
@@ -624,6 +674,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const lb = document.getElementById('lightbox');
   lb.addEventListener('click', () => lb.classList.remove('active'));
 });
+
+/* 图片轮播切换 */
+function slideGallery(dir) {
+  const track = document.getElementById('gallery-track');
+  if (!track || !window._galleryTotal) return;
+  window._galleryIdx = Math.max(1, Math.min(window._galleryTotal, window._galleryIdx + dir));
+  track.style.transform = `translateX(-${(window._galleryIdx - 1) * 100}%)`;
+  const counter = document.getElementById('gallery-idx');
+  if (counter) counter.textContent = window._galleryIdx;
+}
 
 /* HTML 转义 */
 function escapeHtml(str) {
