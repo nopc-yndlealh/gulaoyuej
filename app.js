@@ -169,9 +169,12 @@ function transformData(rawData) {
     const catName = item.cat || '未分类';
     if (!flatGroups[catName]) flatGroups[catName] = [];
     flatGroups[catName].push({
+      id: item.id,
       title: item.title,
       thumb: item.images && item.images.length > 0 ? item.images[0] : '',
-      file_url: `./detail.html?id=${item.id}`
+      file_url: `./detail.html?id=${item.id}`,
+      tag: item.tag || '',
+      author: item.author || '',
     });
   });
 
@@ -368,8 +371,10 @@ function renderFeatured() {
              onload="this.classList.add('loaded')">
          <div class="no-thumb" style="display:none;">无图</div>`
       : `<div class="no-thumb">无图</div>`;
-    return `<div class="card" data-id="${safeId}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
+    const tagBadge = it.tag ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>` : '';
+    return `<div class="card" data-id="${escapeHtml(it.id)}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
       <span class="card-cat">${safeCat}</span>
+      ${tagBadge}
       ${thumbHtml}
       <div class="card-title">${safeTitle}</div>
     </div>`;
@@ -433,8 +438,10 @@ function renderGrid(catIdx, keyword = '') {
          <div class="no-thumb" style="display:none;">无图</div>`
       : `<div class="no-thumb">无图</div>`;
     const catBadge = isSearch ? `<span class="card-cat">${safeCat}</span>` : '';
+    const tagBadge = it.tag ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>` : '';
     return `<div class="card" data-id="${safeId}" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
       ${catBadge}
+      ${tagBadge}
       ${thumbHtml}
       <div class="card-title">${safeTitle}</div>
     </div>`;
@@ -576,6 +583,7 @@ async function openModal(urlOrId, title) {
       const authorName = typeof author === 'string' ? author : (author.name || '');
       const postTime = content.time || '';
 
+      let html;
       if (isSocial) {
         // 左图右文布局
         const images = content.segments.filter(s => s.i);
@@ -685,6 +693,7 @@ function slideGallery(dir) {
   const counter = document.getElementById('gallery-idx');
   if (counter) counter.textContent = window._galleryIdx;
 }
+window.slideGallery = slideGallery;  // 暴露到全局，供 onclick 调用
 
 /* HTML 转义 */
 function escapeHtml(str) {

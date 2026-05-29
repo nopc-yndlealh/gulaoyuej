@@ -412,6 +412,19 @@ main#content {
   opacity: .92;
   box-shadow: 0 1px 4px rgba(0,0,0,.15);
 }
+.card .card-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: .02em;
+}
 
 /* ===== 无匹配提示 ===== */
 .empty {
