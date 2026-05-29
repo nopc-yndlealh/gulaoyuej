@@ -579,9 +579,11 @@ async function openModal(urlOrId, title) {
 
     if (content && Array.isArray(content.segments)) {
       const isSocial = content.type === '小红书' || content.type === '微博';
-      const author = content.author || {};
-      const authorName = typeof author === 'string' ? author : (author.name || '');
       const postTime = content.time || '';
+
+      const tagLabel = content.tag ? `#${escapeHtml(String(content.tag))}` : '';
+      const authorObj = content.author || {};
+      const authorName = typeof authorObj === 'string' ? authorObj : (authorObj.name || '');
 
       let html;
       if (isSocial) {
@@ -589,8 +591,11 @@ async function openModal(urlOrId, title) {
         const images = content.segments.filter(s => s.i);
         const texts = content.segments.filter(s => s.t).map(s => s.t).join('\n');
         const totalImg = images.length;
-        html = `<h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
-        html += '<div class="social-post">';
+        html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
+        if (tagLabel || authorName) {
+          html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}</div>`;
+        }
+        html += '</div><div class="social-post">';
         // 左侧图片轮播
         html += '<div class="social-gallery">';
         if (totalImg > 0) {
@@ -628,7 +633,11 @@ async function openModal(urlOrId, title) {
         window._galleryIdx = 1;
       } else {
         // 原有布局：文字图片交错
-        html = `<h2 class="detail-title">${escapeHtml(content.title || title)}</h2><div class="detail-body">`;
+        html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
+        if (tagLabel || authorName) {
+          html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}</div>`;
+        }
+        html += '</div><div class="detail-body">';
         content.segments.forEach(seg => {
           if (seg.t) {
             html += `<p>${escapeHtml(seg.t)}</p>`;

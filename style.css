@@ -321,6 +321,7 @@ main#content {
 }
 
 .card {
+  position: relative;
   background: var(--surface);
   border-radius: var(--radius);
   border: 1px solid var(--border-light);
@@ -517,13 +518,33 @@ main#content {
   transition: var(--theme-transition);
 }
 #detail-view.active { display: block; }
+#detail-view .detail-header {
+  border-bottom: 2px solid var(--accent);
+}
 #detail-view .detail-title {
   font-size: 20px;
   font-weight: 700;
   color: var(--accent);
-  padding: 18px 24px 10px;
-  border-bottom: 2px solid var(--accent);
+  padding: 18px 24px 6px;
   margin: 0;
+}
+#detail-view .detail-meta {
+  padding: 4px 24px 10px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+#detail-view .detail-tag {
+  background: rgba(0,0,0,.55);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+#detail-view .detail-author {
+  font-size: 13px;
+  color: var(--text-muted);
 }
 #detail-view .detail-body {
   padding: 14px 24px 28px;
