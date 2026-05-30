@@ -547,14 +547,17 @@ main#content {
   color: var(--text-muted);
 }
 #detail-view .detail-body {
+  max-width: 720px;
+  margin: 0 auto;
   padding: 14px 24px 28px;
   line-height: 1.85;
   color: var(--text-secondary);
   font-size: 14.5px;
 }
 #detail-view .detail-body p {
-  margin: 10px 0;
+  margin: 0.8em 0;
   text-indent: 2em;
+  white-space: pre-line;
 }
 #detail-view .detail-body img {
   max-width: 100%;
@@ -843,7 +846,8 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
 }
 .social-text {
   font-size: 15px; line-height: 1.8;
-  color: var(--text-primary);
+  color: var(--text);
+  margin: 0.6em 0;
   white-space: pre-wrap;
   word-break: break-word;
 }

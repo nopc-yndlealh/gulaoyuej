@@ -589,7 +589,6 @@ async function openModal(urlOrId, title) {
       if (isSocial) {
         // 左图右文布局
         const images = content.segments.filter(s => s.i);
-        const texts = content.segments.filter(s => s.t).map(s => s.t).join('\n');
         const totalImg = images.length;
         html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
         if (tagLabel || authorName) {
@@ -619,7 +618,12 @@ async function openModal(urlOrId, title) {
         html += '<div class="social-content">';
         if (authorName) html += `<div class="social-author">👤 ${escapeHtml(authorName)}</div>`;
         if (postTime) html += `<div class="social-time">${escapeHtml(postTime)}</div>`;
-        if (texts) html += `<div class="social-text">${escapeHtml(texts)}</div>`;
+        content.segments.filter(function(s) { return s.t; }).forEach(function(seg) {
+          var paragraphs = splitParagraphs(seg.t);
+          paragraphs.forEach(function(p) {
+            html += '<p class="social-text">' + escapeHtml(p) + '</p>';
+          });
+        });
         html += '</div></div>';
 
         detailEl.innerHTML = html;
@@ -709,6 +713,39 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+/* 智能分段：自动识别文本中的段落边界 */
+function splitParagraphs(text) {
+  if (!text || !text.trim()) return [];
+  // 1. 双换行 = 明确自然段
+  if (text.includes('\n\n')) {
+    return text.split(/\n\n+/).map(function(p) { return p.trim(); }).filter(Boolean);
+  }
+  // 2. 单换行 = 手动分行
+  if (text.includes('\n')) {
+    return text.split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean);
+  }
+  // 3. 无换行：按句号/感叹号/问号切分，每2句合并为一个段落
+  var sentences = [];
+  var buf = '';
+  for (var i = 0; i < text.length; i++) {
+    var ch = text[i];
+    buf += ch;
+    if ('。！？!?'.indexOf(ch) !== -1) {
+      sentences.push(buf.trim());
+      buf = '';
+    }
+  }
+  if (buf.trim()) sentences.push(buf.trim());
+  if (sentences.length === 0) return [text];
+
+  // 合并：每2句一组，避免段落太碎
+  var paragraphs = [];
+  for (var i = 0; i < sentences.length; i += 2) {
+    paragraphs.push(sentences.slice(i, i + 2).join(''));
+  }
+  return paragraphs;
 }
 
 /* 启动 */
