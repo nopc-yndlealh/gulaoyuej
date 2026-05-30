@@ -5,64 +5,65 @@
 /* ===== 主题切换 ===== */
 const THEME_KEY = 'feijibei-theme';
 
+function isDaytime() {
+  const hour = new Date().getHours();
+  return hour >= 8 && hour < 20;
+}
+
 function getTheme() {
   const saved = localStorage.getItem(THEME_KEY);
   if (saved === 'dark' || saved === 'light') return saved;
-  return 'auto'; // 跟随系统
+  return 'auto'; // 早8-晚8白天, 其余黑夜
+}
+
+function getEffectiveTheme() {
+  const mode = getTheme();
+  if (mode === 'dark') return 'dark';
+  if (mode === 'light') return 'light';
+  return isDaytime() ? 'light' : 'dark';
 }
 
 function applyTheme(mode) {
-  const html = document.documentElement;
-  if (mode === 'dark') {
-    html.setAttribute('data-theme', 'dark');
-  } else if (mode === 'light') {
-    html.setAttribute('data-theme', 'light');
-  } else {
-    html.removeAttribute('data-theme'); // auto: 走 CSS media query
-  }
+  var html = document.documentElement;
+  var effective = mode === 'auto' ? (isDaytime() ? 'light' : 'dark') : mode;
+  html.setAttribute('data-theme', effective);
   updateThemeIcons(mode);
 }
 
 function updateThemeIcons(mode) {
-  // 显示"点击后会变成什么"的图标
-  const icons = document.querySelectorAll('#theme-toggle, #mobile-theme-toggle');
-  icons.forEach(btn => {
+  var icons = document.querySelectorAll('#theme-toggle, #mobile-theme-toggle');
+  var effective = getEffectiveTheme();
+  icons.forEach(function(btn) {
     if (mode === 'dark') {
-      btn.textContent = '☀️'; // 当前暗色 → 点我变浅色
+      btn.textContent = '☀️';
     } else if (mode === 'light') {
-      btn.textContent = '🌙'; // 当前浅色 → 点我变暗色
+      btn.textContent = '🌙';
     } else {
-      // auto: 检查当前实际生效的主题
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      btn.textContent = isDark ? '☀️' : '🌙';
+      btn.textContent = effective === 'dark' ? '☀️' : '🌙';
     }
   });
 }
 
 function cycleTheme() {
-  const current = getTheme();
-  const next = current === 'light' ? 'dark' : current === 'dark' ? 'auto' : 'light';
+  var current = getTheme();
+  var next = current === 'light' ? 'dark' : current === 'dark' ? 'auto' : 'light';
   localStorage.setItem(THEME_KEY, next);
   applyTheme(next);
 }
 
 // 初始化主题
-const savedMode = getTheme();
-applyTheme(savedMode);
+applyTheme(getTheme());
 
-// 绑定桌面端主题按钮
-document.addEventListener('DOMContentLoaded', () => {
-  const dt = document.getElementById('theme-toggle');
-  const mt = document.getElementById('mobile-theme-toggle');
-
-  if (dt) dt.addEventListener('click', cycleTheme);
-  if (mt) mt.addEventListener('click', cycleTheme);
+// 绑定按钮
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('theme-toggle').addEventListener('click', cycleTheme);
+  document.getElementById('mobile-theme-toggle').addEventListener('click', cycleTheme);
 });
 
-// 监听系统主题变化（仅在 auto 模式下响应）
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-  if (getTheme() === 'auto') updateThemeIcons('auto');
-});
+// 每分钟检查时间切换（仅在 auto 模式下响应）
+setInterval(function() {
+  if (getTheme() === 'auto') applyTheme('auto');
+}, 60000);
 
 /* ===== 数据变量 ===== */
 let contentIndex = {};    // 内容索引: id → 分类 slug
