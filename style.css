@@ -80,6 +80,11 @@
   --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
 }
 
+/* 黑夜模式侧栏去掉网格 */
+[data-theme="dark"] nav#sidebar {
+  background-image: none;
+}
+
 /* 深紫 — 系统暗色模式自动检测 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
