@@ -1,6 +1,6 @@
 /* ============================================================
    园艺图鉴 — 月季与多肉
-   设计系统：🌤 白天蓝天 × 🌙 黑夜绿植 + CSS Variables 驱动
+   设计系统：☀ 暖金白昼 × 🌙 深紫黑夜 + CSS Variables 驱动
    颜色自动跟随日夜主题切换，无需手动选择
    ============================================================ */
 
@@ -24,92 +24,85 @@
   /* 过渡 */
   --theme-transition: background-color .3s ease, color .3s ease,
                        border-color .3s ease, box-shadow .3s ease;
-
-  /* 叶子脉络纹理（仅暗色绿植主题使用） */
-  --vein-pattern: none;
 }
 
 
 /* ============================================================
-   🔵 蓝天主题（默认 — 浅色 / 白天）
+   🍂 暖金主题（默认 — 浅色 / 白昼）
    ============================================================ */
 
-/* 蓝色 — 浅色模式 */
+/* 暖金 — 浅色模式 / 白昼 */
 :root {
-  --accent:           #5599cc;
-  --accent-light:     #6baed8;
-  --accent-soft:      rgba(85, 153, 204, .08);
-  --bg:               #f5f2ed;
-  --surface:          #ffffff;
-  --surface-hover:    #f5f7fa;
-  --sidebar-bg:       #0a111a;
-  --sidebar-text:     #9db2cc;
-  --sidebar-parent:   #b8c8dc;
-  --sidebar-hover:    rgba(255, 255, 255, .06);
-  --sidebar-active:   rgba(85, 153, 204, .28);
-  --text:             #2c2c2c;
-  --text-secondary:   #505866;
-  --text-muted:       #8090a0;
-  --border:           #d8dde4;
+  --accent:           #ff8e14;
+  --accent-light:     #ffa840;
+  --accent-soft:      rgba(255, 142, 20, .12);
+  --bg:               #eac790;
+  --surface:          #fdf5e6;
+  --surface-hover:    #f5e8d0;
+  --sidebar-bg:       #cda370;
+  --sidebar-text:     #4a3020;
+  --sidebar-parent:   #5a3a28;
+  --sidebar-hover:    rgba(0, 0, 0, .06);
+  --sidebar-active:   rgba(255, 142, 20, .2);
+  --text:             #2a1a08;
+  --text-secondary:   #5a4020;
+  --text-muted:       #8a7050;
+  --border:           #d4c0a0;
   --border-light:     rgba(0, 0, 0, .06);
 }
 
 
 /* ============================================================
-   🌿 绿植主题（暗色 / 黑夜）
+   💜 深紫主题（暗色 / 黑夜）
    ============================================================ */
 
 [data-theme="dark"] {
-  --accent:           #4d8540;
-  --accent-light:     #5ea054;
-  --accent-soft:      rgba(77, 133, 64, .12);
-  --bg:               #131313;
-  --surface:          #1e1e1e;
-  --surface-hover:    #242424;
-  --sidebar-bg:       #060d04;
-  --sidebar-text:     #789070;
-  --sidebar-parent:   #a0b898;
-  --sidebar-hover:    rgba(255, 255, 255, .04);
-  --sidebar-active:   rgba(77, 133, 64, .22);
-  --text:             #e0e0e0;
-  --text-secondary:   #999999;
-  --text-muted:       #666666;
-  --border:           #2a2a2a;
-  --border-light:     rgba(255, 255, 255, .06);
+  --accent:           #322040;
+  --accent-light:     #4a3060;
+  --accent-soft:      rgba(50, 32, 64, .15);
+  --bg:               #5f4e7e;
+  --surface:          #6a5a8a;
+  --surface-hover:    #756598;
+  --sidebar-bg:       #4a355f;
+  --sidebar-text:     #c0b0d8;
+  --sidebar-parent:   #d8cce8;
+  --sidebar-hover:    rgba(255, 255, 255, .06);
+  --sidebar-active:   rgba(160, 140, 200, .25);
+  --text:             #e8e0f0;
+  --text-secondary:   #c0b8d0;
+  --text-muted:       #9888a8;
+  --border:           #4a3a5a;
+  --border-light:     rgba(255, 255, 255, .08);
 
   --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
   --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
   --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
   --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
-
-  /* 暗色模式显示叶子脉络纹理 */
-  --vein-pattern: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgMCBRMjcgMTIgMjQgMjQgUTIxIDM2IDI0IDQ4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wOCkiIHN0cm9rZS13aWR0aD0iMC43Ii8+PHBhdGggZD0iTTI0LjUgOSBRMzIgMTEgMzkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDE4IFEzMyAyMCA0MCAxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDI3IFEzMyAyOSA0MCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDkgUTE2IDExIDkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDE4IFExNSAyMCA4IDE1IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzLjUgMjcgUTE1IDI5IDggMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=");
 }
 
-/* 绿植 — 系统暗色模式自动检测 */
+/* 深紫 — 系统暗色模式自动检测 */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --accent:           #4d8540;
-    --accent-light:     #5ea054;
-    --accent-soft:      rgba(77, 133, 64, .12);
-    --bg:               #131313;
-    --surface:          #1e1e1e;
-    --surface-hover:    #242424;
-    --sidebar-bg:       #060d04;
-    --sidebar-text:     #789070;
-    --sidebar-parent:   #a0b898;
-    --sidebar-hover:    rgba(255, 255, 255, .04);
-    --sidebar-active:   rgba(77, 133, 64, .22);
-    --text:             #e0e0e0;
-    --text-secondary:   #999999;
-    --text-muted:       #666666;
-    --border:           #2a2a2a;
-    --border-light:     rgba(255, 255, 255, .06);
+    --accent:           #322040;
+    --accent-light:     #4a3060;
+    --accent-soft:      rgba(50, 32, 64, .15);
+    --bg:               #5f4e7e;
+    --surface:          #6a5a8a;
+    --surface-hover:    #756598;
+    --sidebar-bg:       #4a355f;
+    --sidebar-text:     #c0b0d8;
+    --sidebar-parent:   #d8cce8;
+    --sidebar-hover:    rgba(255, 255, 255, .06);
+    --sidebar-active:   rgba(160, 140, 200, .25);
+    --text:             #e8e0f0;
+    --text-secondary:   #c0b8d0;
+    --text-muted:       #9888a8;
+    --border:           #4a3a5a;
+    --border-light:     rgba(255, 255, 255, .08);
     --shadow-sm:        0 1px 3px rgba(0, 0, 0, .3);
     --shadow-md:        0 4px 16px rgba(0, 0, 0, .4);
     --shadow-lg:        0 8px 32px rgba(0, 0, 0, .5);
     --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, .5);
-    --vein-pattern: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0OCIgaGVpZ2h0PSI0OCIgdmlld0JveD0iMCAwIDQ4IDQ4Ij48cGF0aCBkPSJNMjQgMCBRMjcgMTIgMjQgMjQgUTIxIDM2IDI0IDQ4IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wOCkiIHN0cm9rZS13aWR0aD0iMC43Ii8+PHBhdGggZD0iTTI0LjUgOSBRMzIgMTEgMzkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDE4IFEzMyAyMCA0MCAxNSIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yNC41IDI3IFEzMyAyOSA0MCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDQpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDkgUTE2IDExIDkgNyIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjAuNSIvPjxwYXRoIGQ9Ik0yMy41IDE4IFExNSAyMCA4IDE1IiBmaWxsPSJub25lIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMC41Ii8+PHBhdGggZD0iTTIzLjUgMjcgUTE1IDI5IDggMjQiIGZpbGw9Im5vbmUiIHN0cm9rZT0icmdiYSgyNTUsMjU1LDI1NSwwLjA0KSIgc3Ryb2tlLXdpZHRoPSIwLjUiLz48L3N2Zz4=");
   }
 }
 
@@ -125,7 +118,11 @@ html {
 
 body {
   font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(to right, var(--accent-soft) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--accent-soft) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -137,8 +134,10 @@ body {
 header {
   height: var(--header-h);
   background-color: var(--accent);
-  background-image: var(--vein-pattern);
-  background-blend-mode: overlay;
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: #fff;
   display: flex;
   align-items: center;
@@ -214,7 +213,11 @@ header input[type=search]:focus {
 /* ===== 左侧分类（桌面端） ===== */
 nav#sidebar {
   width: var(--sidebar-w);
-  background: var(--sidebar-bg);
+  background-color: var(--sidebar-bg);
+  background-image:
+    linear-gradient(to right, var(--sidebar-hover) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--sidebar-hover) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--sidebar-text);
   overflow-y: auto;
   flex-shrink: 0;
@@ -225,7 +228,8 @@ nav#sidebar h2 {
   font-size: 11px;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: #777;
+  color: var(--sidebar-parent);
+  opacity: .65;
   padding: 16px 18px 8px;
 }
 nav#sidebar .cat-item {
@@ -245,25 +249,26 @@ nav#sidebar .cat-item:hover {
 nav#sidebar .cat-item.active {
   background: var(--sidebar-active);
   border-left-color: var(--accent-light);
-  color: #eee;
+  color: var(--sidebar-parent);
 }
 nav#sidebar .cat-item .label { flex: 1; }
 nav#sidebar .cat-item .count {
   font-size: 11px;
-  background: rgba(255, 255, 255, .1);
+  background: currentColor;
+  opacity: .14;
   padding: 1px 7px;
   border-radius: 10px;
-  color: #aaa;
+  color: var(--sidebar-text);
 }
 nav#sidebar .cat-item.active .count {
-  background: rgba(255, 255, 255, .18);
-  color: #eee;
+  opacity: .22;
+  color: var(--sidebar-text);
 }
 
 /* 演化图谱入口 */
 nav#sidebar .evo-link {
   margin-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, .08);
+  border-top: 1px solid var(--border-light);
   padding-top: 12px;
   text-decoration: none;
   color: #4fc3a7;
@@ -282,7 +287,8 @@ nav#sidebar .evo-link:hover { background: rgba(79, 195, 167, .12); }
   width: 16px;
   text-align: center;
   transition: transform .2s;
-  color: #bbb;
+  color: var(--sidebar-text);
+  opacity: .55;
 }
 .leaf-item .label { padding-left: 4px; font-size: 13.5px; }
 .tree-indent { width: 20px; height: 1px; flex-shrink: 0; }
@@ -473,8 +479,6 @@ main#content {
   align-items: center;
   padding: 12px 20px;
   background-color: var(--accent);
-  background-image: var(--vein-pattern);
-  background-blend-mode: overlay;
   color: #fff;
   gap: 12px;
   flex-shrink: 0;
@@ -642,7 +646,7 @@ main#content {
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
+nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity: .2; }
 
 /* ============================================
    移动端响应式：≤768px
@@ -787,7 +791,8 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
   flex: 0 0 55%;
   max-width: 55%;
   position: relative;
-  background: #000;
+  background: var(--surface-hover);
+  border: 1px solid var(--border-light);
   border-radius: 12px;
   overflow: hidden;
   aspect-ratio: 4/3;
