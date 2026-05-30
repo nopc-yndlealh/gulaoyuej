@@ -726,7 +726,8 @@ function splitParagraphs(text) {
   if (text.includes('\n')) {
     return text.split(/\n+/).map(function(p) { return p.trim(); }).filter(Boolean);
   }
-  // 3. 无换行：按句号/感叹号/问号切分，每2句合并为一个段落
+  // 3. 无换行：按句号/感叹号/问号切分，每句独立成段
+  //    社交内容一句话就是一行，比硬凑更自然
   var sentences = [];
   var buf = '';
   for (var i = 0; i < text.length; i++) {
@@ -738,14 +739,7 @@ function splitParagraphs(text) {
     }
   }
   if (buf.trim()) sentences.push(buf.trim());
-  if (sentences.length === 0) return [text];
-
-  // 合并：每2句一组，避免段落太碎
-  var paragraphs = [];
-  for (var i = 0; i < sentences.length; i += 2) {
-    paragraphs.push(sentences.slice(i, i + 2).join(''));
-  }
-  return paragraphs;
+  return sentences.length > 0 ? sentences : [text];
 }
 
 /* 启动 */

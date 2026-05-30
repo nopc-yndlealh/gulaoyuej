@@ -555,7 +555,7 @@ main#content {
   font-size: 14.5px;
 }
 #detail-view .detail-body p {
-  margin: 0.8em 0;
+  margin: 0.6em 0 1.2em;
   text-indent: 2em;
   white-space: pre-line;
 }
@@ -847,7 +847,7 @@ nav#sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .12); }
 .social-text {
   font-size: 15px; line-height: 1.8;
   color: var(--text);
-  margin: 0.6em 0;
+  margin: 0.6em 0 1.2em;
   white-space: pre-wrap;
   word-break: break-word;
 }
