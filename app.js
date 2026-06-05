@@ -565,6 +565,16 @@ async function openModal(urlOrId, title) {
   const id = (typeof urlOrId === 'string' && urlOrId.startsWith('./detail.html'))
     ? urlOrId.replace('./detail.html?id=', '')
     : urlOrId;
+
+  // ── 特殊页面：独立 HTML 文件直接跳转 ──
+  const SPECIAL_PAGES = {
+    'sedum_evo_2019': './景天科演化图谱.html'
+  };
+  if (SPECIAL_PAGES[id]) {
+    window.open(SPECIAL_PAGES[id], '_blank');
+    return;
+  }
+
   document.getElementById('modal-title').textContent = title;
 
   const detailEl = document.getElementById('detail-view');
