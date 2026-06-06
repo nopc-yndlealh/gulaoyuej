@@ -544,7 +544,14 @@ function bindEvents() {
   document.getElementById('grid').addEventListener('click', e => {
     const card = e.target.closest('.card');
     if (!card) return;
-    openModal(card.dataset.id || card.dataset.url, card.dataset.title);
+    const id = card.dataset.id || card.dataset.url;
+    // ── 特殊页面：必须在同步上下文中打开，否则弹窗拦截器会阻止 ──
+    const SPECIAL_PAGES = { 'sedum_evo_2019': './景天科演化图谱.html' };
+    if (SPECIAL_PAGES[id]) {
+      window.open(SPECIAL_PAGES[id], '_blank');
+      return;
+    }
+    openModal(id, card.dataset.title);
   });
 
   // 关闭弹窗
@@ -565,15 +572,6 @@ async function openModal(urlOrId, title) {
   const id = (typeof urlOrId === 'string' && urlOrId.startsWith('./detail.html'))
     ? urlOrId.replace('./detail.html?id=', '')
     : urlOrId;
-
-  // ── 特殊页面：独立 HTML 文件直接跳转 ──
-  const SPECIAL_PAGES = {
-    'sedum_evo_2019': './景天科演化图谱.html'
-  };
-  if (SPECIAL_PAGES[id]) {
-    window.open(SPECIAL_PAGES[id], '_blank');
-    return;
-  }
 
   document.getElementById('modal-title').textContent = title;
 
