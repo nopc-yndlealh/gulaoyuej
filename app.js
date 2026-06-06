@@ -285,8 +285,10 @@ function renderSidebar() {
   // 演化图谱入口
   const evoLink = document.createElement('a');
   evoLink.href = '景天科演化图谱.html';
+  evoLink.target = '_blank';                 // 新标签页打开，避免当前页路由错乱
   evoLink.className = 'cat-item evo-link';
   evoLink.innerHTML = '<span class="label">🧬 景天科演化图谱 2019</span>';
+  evoLink.addEventListener('click', e => e.stopPropagation());  // 阻止 sidebar click handler 拦截
   container.appendChild(evoLink);
 }
 
@@ -315,8 +317,10 @@ function renderMobileNav() {
   // 演化图谱入口（移动端）
   const evoChip = document.createElement('a');
   evoChip.href = '景天科演化图谱.html';
+  evoChip.target = '_blank';
   evoChip.className = 'cat-chip evo-chip';
   evoChip.textContent = '🧬 演化图谱 2019';
+  evoChip.addEventListener('click', e => e.stopPropagation());
   scrollContainer.appendChild(evoChip);
 }
 
