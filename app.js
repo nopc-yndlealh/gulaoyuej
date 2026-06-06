@@ -284,7 +284,7 @@ function renderSidebar() {
 
   // 演化图谱入口
   const evoLink = document.createElement('a');
-  evoLink.href = '景天科演化图谱.html';
+  evoLink.href = '%E6%99%AF%E5%A4%A9%E7%A7%91%E6%BC%94%E5%8C%96%E5%9B%BE%E8%B0%B1.html';
   evoLink.target = '_blank';                 // 新标签页打开，避免当前页路由错乱
   evoLink.className = 'cat-item evo-link';
   evoLink.innerHTML = '<span class="label">🧬 景天科演化图谱 2019</span>';
@@ -316,7 +316,7 @@ function renderMobileNav() {
 
   // 演化图谱入口（移动端）
   const evoChip = document.createElement('a');
-  evoChip.href = '景天科演化图谱.html';
+  evoChip.href = '%E6%99%AF%E5%A4%A9%E7%A7%91%E6%BC%94%E5%8C%96%E5%9B%BE%E8%B0%B1.html';
   evoChip.target = '_blank';
   evoChip.className = 'cat-chip evo-chip';
   evoChip.textContent = '🧬 演化图谱 2019';
@@ -550,7 +550,7 @@ function bindEvents() {
     if (!card) return;
     const id = card.dataset.id || card.dataset.url;
     // ── 特殊页面：必须在同步上下文中打开，否则弹窗拦截器会阻止 ──
-    const SPECIAL_PAGES = { 'sedum_evo_2019': './景天科演化图谱.html' };
+    const SPECIAL_PAGES = { 'sedum_evo_2019': './%E6%99%AF%E5%A4%A9%E7%A7%91%E6%BC%94%E5%8C%96%E5%9B%BE%E8%B0%B1.html' };
     if (SPECIAL_PAGES[id]) {
       window.open(SPECIAL_PAGES[id], '_blank');
       return;
