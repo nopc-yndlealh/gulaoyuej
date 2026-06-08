@@ -551,6 +551,14 @@ main#content {
   font-size: 13px;
   color: var(--text-muted);
 }
+#detail-view .detail-weibo-link {
+  font-size: 13px;
+  color: var(--accent, #4a90d9);
+  text-decoration: none;
+}
+#detail-view .detail-weibo-link:hover {
+  text-decoration: underline;
+}
 #detail-view .detail-body {
   max-width: 720px;
   margin: 0 auto;

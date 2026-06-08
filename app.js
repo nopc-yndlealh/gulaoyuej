@@ -597,6 +597,7 @@ async function openModal(urlOrId, title) {
       const tagLabel = content.tag ? `#${escapeHtml(String(content.tag))}` : '';
       const authorObj = content.author || {};
       const authorName = typeof authorObj === 'string' ? authorObj : (authorObj.name || '');
+      const weiboUrl = content.weibo_url || '';
 
       let html;
       if (isSocial) {
@@ -605,7 +606,7 @@ async function openModal(urlOrId, title) {
         const totalImg = images.length;
         html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
         if (tagLabel || authorName) {
-          html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}</div>`;
+          html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}${weiboUrl ? `<a href="${weiboUrl}" target="_blank" class="detail-weibo-link">🔗 查看原帖</a>` : ''}</div>`;
         }
         html += '</div><div class="social-post">';
         // 左侧图片轮播
@@ -652,7 +653,7 @@ async function openModal(urlOrId, title) {
         // 原有布局：文字图片交错
         html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
         if (tagLabel || authorName) {
-          html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}</div>`;
+          html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}${weiboUrl ? `<a href="${weiboUrl}" target="_blank" class="detail-weibo-link">🔗 查看原帖</a>` : ''}</div>`;
         }
         html += '</div><div class="detail-body">';
         content.segments.forEach(seg => {
