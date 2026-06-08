@@ -158,7 +158,7 @@ const TREE_CONFIG = [
     '厚叶草属',
     'Prometheum',
     '瓦松属',
-    '小红书'
+    '综合日常'
   ] },
   { name: '古代园艺', children: [] },
   { name: '养花日常', children: [] }
