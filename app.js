@@ -148,7 +148,7 @@ const TREE_CONFIG = [
   },
   { name: '多肉', children: [
     '石莲花属',
-    '莲花掌属', 
+    '莲花掌属',
     '风车草属',
     '青锁龙属',
     '景天属',
@@ -159,7 +159,9 @@ const TREE_CONFIG = [
     'Prometheum',
     '瓦松属',
     '小红书'
-  ] }
+  ] },
+  { name: '古代园艺', children: [] },
+  { name: '养花日常', children: [] }
 ];
 
 /* 数据转换：扁平数组 → 树状分类结构 */
