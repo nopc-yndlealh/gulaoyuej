@@ -378,7 +378,7 @@ function renderFeatured() {
              onload="this.classList.add('loaded')">
          <div class="no-thumb" style="display:none;">无图</div>`
       : `<div class="no-thumb">无图</div>`;
-    const tagBadge = it.tag ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>` : '';
+    const tagBadge = (it.tag && !/^\d+$/.test(String(it.tag))) ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>` : '';
     return `<div class="card" data-id="${escapeHtml(it.id)}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
       <span class="card-cat">${safeCat}</span>
       ${tagBadge}
@@ -445,7 +445,7 @@ function renderGrid(catIdx, keyword = '') {
          <div class="no-thumb" style="display:none;">无图</div>`
       : `<div class="no-thumb">无图</div>`;
     const catBadge = isSearch ? `<span class="card-cat">${safeCat}</span>` : '';
-    const tagBadge = it.tag ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>` : '';
+    const tagBadge = (it.tag && !/^\d+$/.test(String(it.tag))) ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>` : '';
     return `<div class="card" data-id="${safeId}" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
       ${catBadge}
       ${tagBadge}
@@ -596,7 +596,7 @@ async function openModal(urlOrId, title) {
       const isSocial = content.type === '小红书' || content.type === '微博';
       const postTime = content.time || '';
 
-      const tagLabel = content.tag ? `#${escapeHtml(String(content.tag))}` : '';
+      const tagLabel = (content.tag && !/^\d+$/.test(String(content.tag))) ? `#${escapeHtml(String(content.tag))}` : '';
       const authorObj = content.author || {};
       const authorName = typeof authorObj === 'string' ? authorObj : (authorObj.name || '');
       const weiboUrl = content.weibo_url || '';
