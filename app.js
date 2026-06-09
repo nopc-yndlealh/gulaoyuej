@@ -74,9 +74,35 @@ let searchIndex = {};     // 搜索索引: id → {title, cat, text, thumb}
 let featuredIds = [];     // 首页推荐 ID 列表
 
 /* ===== 分页配置 ===== */
-const PAGE_SIZE = 30;     // 每页卡片数
+let pageSize = 30;        // 每页卡片数（动态计算）
 let currentPage = 1;      // 当前页码（从1开始）
 let currentKeyword = '';  // 当前搜索关键词
+
+/* 根据容器宽度动态计算每页数量，确保最后一行永远填满 */
+function calculatePageSize() {
+  const grid = document.getElementById('grid');
+  if (!grid) return 30;
+
+  const width = grid.clientWidth;
+  const vw = window.innerWidth;
+  let minCardWidth, gap, targetRows;
+
+  if (vw <= 420) {
+    // 手机固定2列
+    return Math.max(2, 2 * 4);
+  } else if (vw <= 768) {
+    minCardWidth = 140;
+    gap = 12;
+    targetRows = 4;
+  } else {
+    minCardWidth = 170;
+    gap = 16;
+    targetRows = 4;
+  }
+
+  const perRow = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
+  return perRow * targetRows;
+}
 
 /* 加载数据 */
 async function loadData() {
@@ -435,6 +461,9 @@ function renderGrid(catIdx, keyword = '') {
   document.getElementById('section-title').textContent = titleText;
   document.getElementById('total-count').textContent = `${items.length} 个`;
 
+  // 动态计算每页数量，保证每页最后一行填满
+  pageSize = calculatePageSize();
+
   if (!items.length) {
     grid.innerHTML = '<div class="empty">暂无匹配结果</div>';
     document.getElementById('pagination').innerHTML = '';
@@ -442,10 +471,10 @@ function renderGrid(catIdx, keyword = '') {
   }
 
   // 分页计算
-  const totalPages = Math.ceil(items.length / PAGE_SIZE);
+  const totalPages = Math.ceil(items.length / pageSize);
   currentPage = Math.max(1, Math.min(currentPage, totalPages));
-  const start = (currentPage - 1) * PAGE_SIZE;
-  const pageItems = items.slice(start, start + PAGE_SIZE);
+  const start = (currentPage - 1) * pageSize;
+  const pageItems = items.slice(start, start + pageSize);
 
   grid.innerHTML = pageItems.map(it => {
     const safeTitle = escapeHtml(it.title);
@@ -468,7 +497,7 @@ function renderGrid(catIdx, keyword = '') {
     </div>`;
   }).join('');
 
-  renderPagination(currentPage, totalPages, items.length, start + 1, Math.min(start + PAGE_SIZE, items.length));
+  renderPagination(currentPage, totalPages, items.length, start + 1, Math.min(start + pageSize, items.length));
 }
 
 /* 渲染分页控件 */
@@ -921,6 +950,19 @@ function showToast(msg) {
 
 /* 启动 */
 loadData();
+
+/* 窗口大小变化时重新计算每页数量并重绘 */
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const newSize = calculatePageSize();
+    if (newSize !== pageSize) {
+      pageSize = newSize;
+      renderGrid(activeCatIdx, currentKeyword);
+    }
+  }, 250);
+});
 
 /* 注册 Service Worker（PWA 离线支持） */
 if ('serviceWorker' in navigator) {
