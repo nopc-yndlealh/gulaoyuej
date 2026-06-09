@@ -66,6 +66,18 @@
 <!-- 图片灯箱 -->
 <div id="lightbox"></div>
 
+<!-- 分享二维码浮层 -->
+<div id="qr-overlay" onclick="closeQrPopup()">
+  <div id="qr-box" onclick="event.stopPropagation()">
+    <p id="qr-label">扫码分享</p>
+    <img id="qr-img" src="" alt="分享二维码">
+    <button id="qr-close" onclick="closeQrPopup()">×</button>
+  </div>
+</div>
+
+<!-- Toast 提示 -->
+<div id="toast"></div>
+
 <script src="./app.js"></script>
 </body>
 </html>

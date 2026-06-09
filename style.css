@@ -657,6 +657,128 @@ main#content {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity: .2; }
 
+/* ===== 分享栏 ===== */
+.share-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px 18px;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.share-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-hover);
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+  user-select: none;
+}
+.share-btn:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+.share-btn:active { transform: translateY(0); }
+.share-btn svg {
+  flex-shrink: 0;
+  opacity: .75;
+}
+
+/* ===== 二维码浮层 ===== */
+#qr-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .55);
+  z-index: 3000;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .2s ease;
+}
+#qr-overlay.active { display: flex; }
+#qr-box {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 20px 24px 16px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, .3);
+  animation: modalEnter .25s ease;
+  max-width: 90vw;
+}
+#qr-label {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+#qr-img {
+  display: block;
+  width: 180px;
+  height: 180px;
+  border-radius: 8px;
+  image-rendering: pixelated;
+}
+#qr-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 20px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s;
+}
+#qr-close:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+/* ===== Toast ===== */
+#toast {
+  position: fixed;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 22px;
+  border-radius: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s, transform .25s;
+  z-index: 4000;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(0,0,0,.2);
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
 /* ============================================
    移动端响应式：≤768px
    ============================================ */
@@ -876,4 +998,14 @@ nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity:
     aspect-ratio: 1/1;
   }
   .social-content { max-height: none; }
+  .share-bar {
+    padding: 10px 16px 14px;
+    gap: 6px;
+  }
+  .share-btn {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  .share-label { font-size: 12px; }
+  #qr-img { width: 160px; height: 160px; }
 }

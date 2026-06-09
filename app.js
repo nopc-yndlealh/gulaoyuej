@@ -642,6 +642,7 @@ async function openModal(urlOrId, title) {
         });
         html += '</div></div>';
 
+        html += buildShareBar(id, content.title || title);
         detailEl.innerHTML = html;
         // 绑定图片点击灯箱
         detailEl.querySelectorAll('.gallery-slide img').forEach(img => {
@@ -667,6 +668,7 @@ async function openModal(urlOrId, title) {
           }
         });
         html += '</div>';
+        html += buildShareBar(id, content.title || title);
         detailEl.innerHTML = html;
         // 绑定图片点击灯箱事件
         detailEl.querySelectorAll('.detail-body img').forEach(img => {
@@ -756,6 +758,91 @@ function splitParagraphs(text) {
   }
   if (buf.trim()) sentences.push(buf.trim());
   return sentences.length > 0 ? sentences : [text];
+}
+
+/* ===== 分享功能 ===== */
+
+function buildShareBar(id, title) {
+  const url = encodeURIComponent(location.origin + location.pathname + '?share=' + id);
+  const text = encodeURIComponent(title || '园艺图鉴');
+  return `
+  <div class="share-bar">
+    <span class="share-label">分享到</span>
+    <button class="share-btn" onclick="copyLink('${escapeHtml(id)}')" title="复制链接">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      复制链接
+    </button>
+    <button class="share-btn" onclick="showQrPopup('${escapeHtml(id)}')" title="微信扫码">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z"/></svg>
+      微信
+    </button>
+    <button class="share-btn" onclick="shareToQQ('${escapeHtml(id)}','${escapeHtml(title || '')}')" title="分享到QQ">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C7 2 4 5 4 8c0 2 1 3 2 4l-1 3 4-2c1 .5 2 .5 3 .5s2 0 3-.5l4 2-1-3c1-1 2-2 2-4 0-3-3-6-8-6z"/></svg>
+      QQ
+    </button>
+    <button class="share-btn" onclick="nativeShare('${escapeHtml(id)}','${escapeHtml(title || '')}')" title="更多">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      更多
+    </button>
+  </div>`;
+}
+
+function getShareUrl(id) {
+  return location.origin + location.pathname.replace(/\/?$/, '/') + 'detail.html?id=' + encodeURIComponent(id);
+}
+
+function copyLink(id) {
+  const url = getShareUrl(id);
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => showToast('链接已复制，去微信/小红书粘贴吧'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('链接已复制，去微信/小红书粘贴吧');
+  }
+}
+
+function shareToQQ(id, title) {
+  const url = getShareUrl(id);
+  const qqUrl = 'https://connect.qq.com/widget/shareqq/index.html?url=' + encodeURIComponent(url)
+    + '&title=' + encodeURIComponent(title || '园艺图鉴')
+    + '&summary=' + encodeURIComponent('来自园艺图鉴的精彩内容')
+    + '&pics=';
+  window.open(qqUrl, '_blank', 'width=600,height=500');
+}
+
+function showQrPopup(id) {
+  const url = getShareUrl(id);
+  const qrImg = document.getElementById('qr-img');
+  qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+  document.getElementById('qr-overlay').classList.add('active');
+}
+
+function closeQrPopup() {
+  document.getElementById('qr-overlay').classList.remove('active');
+}
+
+function nativeShare(id, title) {
+  const url = getShareUrl(id);
+  if (navigator.share) {
+    navigator.share({ title: title || '园艺图鉴', text: title || '园艺图鉴', url: url })
+      .catch(() => {});
+  } else {
+    copyLink(id);
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 /* 启动 */
