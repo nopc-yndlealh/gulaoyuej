@@ -73,6 +73,11 @@ let activeCatIdx = -1;    // 当前选中的分类索引
 let searchIndex = {};     // 搜索索引: id → {title, cat, text, thumb}
 let featuredIds = [];     // 首页推荐 ID 列表
 
+/* ===== 分页配置 ===== */
+const PAGE_SIZE = 30;     // 每页卡片数
+let currentPage = 1;      // 当前页码（从1开始）
+let currentKeyword = '';  // 当前搜索关键词
+
 /* 加载数据 */
 async function loadData() {
   try {
@@ -363,6 +368,7 @@ function renderFeatured() {
   setActiveCategory('-1');
 
   const grid = document.getElementById('grid');
+  document.getElementById('pagination').innerHTML = '';
   if (!items.length) {
     grid.innerHTML = '<div class="empty">暂无推荐内容</div>';
     return;
@@ -391,6 +397,7 @@ function renderFeatured() {
 /* 渲染右侧卡片网格 */
 function renderGrid(catIdx, keyword = '') {
   const grid = document.getElementById('grid');
+  currentKeyword = keyword;
   let items;
   let isSearch = false;
 
@@ -430,10 +437,17 @@ function renderGrid(catIdx, keyword = '') {
 
   if (!items.length) {
     grid.innerHTML = '<div class="empty">暂无匹配结果</div>';
+    document.getElementById('pagination').innerHTML = '';
     return;
   }
 
-  grid.innerHTML = items.map(it => {
+  // 分页计算
+  const totalPages = Math.ceil(items.length / PAGE_SIZE);
+  currentPage = Math.max(1, Math.min(currentPage, totalPages));
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = items.slice(start, start + PAGE_SIZE);
+
+  grid.innerHTML = pageItems.map(it => {
     const safeTitle = escapeHtml(it.title);
     const safeUrl = escapeHtml(it.file_url || '');
     const safeCat = escapeHtml(it.cat || '');
@@ -453,7 +467,63 @@ function renderGrid(catIdx, keyword = '') {
       <div class="card-title">${safeTitle}</div>
     </div>`;
   }).join('');
+
+  renderPagination(currentPage, totalPages, items.length, start + 1, Math.min(start + PAGE_SIZE, items.length));
 }
+
+/* 渲染分页控件 */
+function renderPagination(page, totalPages, total, from, to) {
+  const container = document.getElementById('pagination');
+  if (totalPages <= 1) {
+    container.innerHTML = `<div class="page-info">共 ${total} 个</div>`;
+    return;
+  }
+
+  let html = '<div class="page-inner">';
+
+  // 上一页
+  html += `<button class="page-btn" onclick="goToPage(${page - 1})" ${page <= 1 ? 'disabled' : ''}>‹</button>`;
+
+  // 页码按钮
+  const maxVisible = 5;
+  let startPage = Math.max(1, page - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  if (endPage - startPage < maxVisible - 1) {
+    startPage = Math.max(1, endPage - maxVisible + 1);
+  }
+
+  if (startPage > 1) {
+    html += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+    if (startPage > 2) html += `<span class="page-ellipsis">…</span>`;
+  }
+
+  for (let i = startPage; i <= endPage; i++) {
+    html += `<button class="page-btn${i === page ? ' active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+  }
+
+  if (endPage < totalPages) {
+    if (endPage < totalPages - 1) html += `<span class="page-ellipsis">…</span>`;
+    html += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+  }
+
+  // 下一页
+  html += `<button class="page-btn" onclick="goToPage(${page + 1})" ${page >= totalPages ? 'disabled' : ''}>›</button>`;
+
+  html += '</div>';
+  html += `<div class="page-info">${from}-${to} / 共 ${total} 个</div>`;
+
+  container.innerHTML = html;
+}
+
+/* 切换分页 */
+function goToPage(page) {
+  currentPage = page;
+  renderGrid(activeCatIdx, currentKeyword);
+  const content = document.getElementById('content');
+  if (content) content.scrollTo({ top: 0, behavior: 'smooth' });
+  else window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+window.goToPage = goToPage; // 暴露到全局供 onclick 调用
 
 /* 设置激活分类 */
 function setActiveCategory(idx) {
@@ -481,6 +551,7 @@ function debounceSearch(inputId, scrollTarget) {
   el.addEventListener('input', e => {
     clearTimeout(timer);
     timer = setTimeout(() => {
+      currentPage = 1;
       renderGrid(activeCatIdx, e.target.value.trim());
       if (scrollTarget === 'content') {
         document.getElementById('content').scrollTo(0, 0);
@@ -512,6 +583,7 @@ function bindEvents() {
       }
       // 点击父节点也显示该组全部内容
       setActiveCategory(item.dataset.idx);
+      currentPage = 1;
       renderGrid(item.dataset.idx, document.getElementById('search-input').value.trim());
       document.getElementById('content').scrollTo(0, 0);
       return;
@@ -519,6 +591,7 @@ function bindEvents() {
 
     const idx = item.dataset.idx;
     setActiveCategory(idx);
+    currentPage = 1;
     if (idx === '-1' && featuredIds.length > 0) {
       renderFeatured();
     } else {
@@ -533,6 +606,7 @@ function bindEvents() {
     if (!chip) return;
     const idx = chip.dataset.idx;
     setActiveCategory(idx);
+    currentPage = 1;
     if (idx === '-1' && featuredIds.length > 0) {
       renderFeatured();
     } else {

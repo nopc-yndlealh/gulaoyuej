@@ -647,6 +647,62 @@ main#content {
 @keyframes spin { to { transform: rotate(360deg); } }
 #loading p { color: var(--text-muted); font-size: 14px; }
 
+/* ===== 分页控件 ===== */
+.pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 0 24px;
+}
+.page-inner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.page-btn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.page-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.page-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.page-ellipsis {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 0 4px;
+  user-select: none;
+}
+.page-info {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 /* ===== 滚动条美化 ===== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -1008,4 +1064,10 @@ nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity:
   }
   .share-label { font-size: 12px; }
   #qr-img { width: 160px; height: 160px; }
+  .pagination { padding: 12px 0 20px; }
+  .page-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 13px;
+  }
 }
