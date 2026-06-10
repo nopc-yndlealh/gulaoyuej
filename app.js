@@ -78,12 +78,6 @@ let pageSize = 30;        // 每页卡片数（动态计算）
 let currentPage = 1;      // 当前页码（从1开始）
 let currentKeyword = '';  // 当前搜索关键词
 
-/* ===== 帖子编辑 ===== */
-let pendingEdits = {};    // 未保存的修改: id → {title, cat, thumb}
-let editMode = false;     // 当前是否处于编辑模式
-let editingId = null;     // 当前编辑的帖子ID
-let editingContent = null;// 当前编辑的帖子内容副本
-
 /* 根据容器宽度动态计算每页数量，确保最后一行永远填满 */
 function calculatePageSize() {
   const grid = document.getElementById('grid');
@@ -752,7 +746,6 @@ async function openModal(urlOrId, title) {
         });
         html += '</div></div>';
 
-        html += buildEditBar(id);
         html += buildShareBar(id, content.title || title);
         detailEl.innerHTML = html;
         // 绑定图片点击灯箱
@@ -779,7 +772,6 @@ async function openModal(urlOrId, title) {
           }
         });
         html += '</div>';
-        html += buildEditBar(id);
         html += buildShareBar(id, content.title || title);
         detailEl.innerHTML = html;
         // 绑定图片点击灯箱事件
@@ -788,10 +780,6 @@ async function openModal(urlOrId, title) {
           img.style.cursor = 'pointer';
         });
       }
-
-      // 记录当前编辑状态
-      editingId = id;
-      editingContent = JSON.parse(JSON.stringify(content));
     } else {
       detailEl.innerHTML = `
         <div class="detail-error">
@@ -817,221 +805,7 @@ function closeModal() {
   // 延迟清空内容，让关闭动画更平滑
   setTimeout(() => { detailEl.innerHTML = ''; }, 300);
   document.body.style.overflow = '';
-  editMode = false;
-  editingId = null;
-  editingContent = null;
 }
-
-/* ===== 帖子编辑功能 ===== */
-
-/* 获取所有叶子分类列表 */
-function getAllCategories() {
-  const cats = [];
-  TREE_CONFIG.forEach(g => {
-    if (g.children && g.children.length) {
-      g.children.forEach(c => {
-        const key = g.name === '多肉' ? g.name + '/' + c : c;
-        cats.push({ label: c, value: key, group: g.name });
-      });
-    } else {
-      cats.push({ label: g.name, value: g.name, group: g.name });
-    }
-  });
-  return cats;
-}
-
-/* 构建编辑按钮栏 */
-function buildEditBar(id) {
-  const hasEdits = Object.keys(pendingEdits).length > 0;
-  return `
-  <div class="edit-bar" id="edit-bar">
-    <button class="edit-btn primary" onclick="enterEditMode()">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      编辑帖子
-    </button>
-    ${hasEdits ? `<button class="edit-btn" onclick="exportEdits()">
-      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      导出修改 (${Object.keys(pendingEdits).length})
-    </button>` : ''}
-  </div>`;
-}
-
-/* 进入编辑模式 */
-function enterEditMode() {
-  if (!editingId || !editingContent) return;
-  editMode = true;
-  const detailEl = document.getElementById('detail-view');
-  const content = editingContent;
-  const cats = getAllCategories();
-  const currentCat = content.cat || '';
-
-  // 收集帖子内所有图片
-  const images = [];
-  if (content.segments) {
-    content.segments.forEach((seg, idx) => {
-      if (seg.i) images.push({ url: seg.i, idx: idx });
-    });
-  }
-
-  // 构建编辑表单
-  let html = `<div class="edit-form">`;
-
-  // 标题
-  html += `<div class="edit-field">
-    <label>标题</label>
-    <input type="text" id="edit-title" value="${escapeHtml(content.title || '')}" placeholder="帖子标题">
-  </div>`;
-
-  // 分类
-  html += `<div class="edit-field">
-    <label>分类</label>
-    <select id="edit-cat">`;
-  cats.forEach(c => {
-    const selected = c.value === currentCat ? ' selected' : '';
-    html += `<option value="${escapeHtml(c.value)}"${selected}>${escapeHtml(c.group)} / ${escapeHtml(c.label)}</option>`;
-  });
-  html += `</select></div>`;
-
-  // 封面选择
-  if (images.length > 0) {
-    html += `<div class="edit-field">
-      <label>封面图（点击选择）</label>
-      <div class="edit-thumb-grid">`;
-    images.forEach((img, i) => {
-      const isSelected = (content.thumb === img.url) ? ' selected' : '';
-      html += `<div class="edit-thumb-item${isSelected}" onclick="selectEditThumb(this, '${escapeHtml(img.url)}')">
-        <img src="${escapeHtml(img.url)}" loading="lazy">
-      </div>`;
-    });
-    html += `</div>
-      <input type="hidden" id="edit-thumb" value="${escapeHtml(content.thumb || '')}">
-    </div>`;
-  }
-
-  // 操作按钮
-  html += `<div class="edit-actions">
-    <button class="edit-btn primary" onclick="saveEdit()">保存</button>
-    <button class="edit-btn" onclick="cancelEdit()">取消</button>
-  </div>`;
-
-  html += `</div>`;
-
-  // 替换显示内容，保留分享栏
-  const shareBar = detailEl.querySelector('.share-bar');
-  const shareHtml = shareBar ? shareBar.outerHTML : '';
-  detailEl.innerHTML = html + shareHtml;
-}
-window.enterEditMode = enterEditMode;
-
-/* 选择封面 */
-function selectEditThumb(el, url) {
-  document.querySelectorAll('.edit-thumb-item').forEach(item => item.classList.remove('selected'));
-  el.classList.add('selected');
-  const input = document.getElementById('edit-thumb');
-  if (input) input.value = url;
-}
-window.selectEditThumb = selectEditThumb;
-
-/* 保存编辑 */
-function saveEdit() {
-  if (!editingId || !editingContent) return;
-
-  const newTitle = document.getElementById('edit-title').value.trim();
-  const newCat = document.getElementById('edit-cat').value;
-  const newThumb = document.getElementById('edit-thumb') ? document.getElementById('edit-thumb').value : '';
-
-  const oldTitle = editingContent.title || '';
-  const oldCat = editingContent.cat || '';
-  const oldThumb = editingContent.thumb || '';
-
-  const changes = {};
-  if (newTitle !== oldTitle) changes.title = newTitle;
-  if (newCat !== oldCat) changes.cat = newCat;
-  if (newThumb !== oldThumb) changes.thumb = newThumb;
-
-  if (Object.keys(changes).length === 0) {
-    cancelEdit();
-    return;
-  }
-
-  // 记录修改
-  pendingEdits[editingId] = { ...pendingEdits[editingId], ...changes };
-
-  // 更新内存中的内容
-  editingContent.title = newTitle;
-  editingContent.cat = newCat;
-  if (newThumb) editingContent.thumb = newThumb;
-
-  // 更新 contentCache
-  Object.keys(contentCache).forEach(slug => {
-    if (contentCache[slug] && contentCache[slug][editingId]) {
-      contentCache[slug][editingId].title = newTitle;
-      contentCache[slug][editingId].cat = newCat;
-      if (newThumb) contentCache[slug][editingId].thumb = newThumb;
-    }
-  });
-
-  // 更新 index.json 内存数据
-  if (window._indexData) {
-    window._indexData.forEach(item => {
-      if (item.id === editingId) {
-        item.title = newTitle;
-        item.cat = newCat;
-        if (newThumb) item.thumb = newThumb;
-      }
-    });
-  }
-
-  // 更新 searchIndex
-  if (searchIndex[editingId]) {
-    searchIndex[editingId].title = newTitle;
-    searchIndex[editingId].cat = newCat;
-    if (newThumb) searchIndex[editingId].thumb = newThumb;
-  }
-
-  // 如果分类变了，需要重新 transform 数据
-  if (changes.cat && allData && allData.raw) {
-    allData = transformData(allData.raw);
-    renderSidebar(allData.tree);
-  }
-
-  editMode = false;
-  showToast('修改已保存（未推送）');
-
-  // 重新渲染弹窗（只读模式）
-  openModal(editingId, newTitle);
-
-  // 重新渲染卡片网格
-  renderGrid(activeCatIdx, currentKeyword);
-}
-window.saveEdit = saveEdit;
-
-/* 取消编辑 */
-function cancelEdit() {
-  editMode = false;
-  if (editingId && editingContent) {
-    openModal(editingId, editingContent.title || '');
-  }
-}
-window.cancelEdit = cancelEdit;
-
-/* 导出修改 */
-function exportEdits() {
-  if (Object.keys(pendingEdits).length === 0) {
-    showToast('暂无修改');
-    return;
-  }
-  const payload = JSON.stringify(pendingEdits, null, 2);
-  const blob = new Blob([payload], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'pending-edits.json';
-  a.click();
-  URL.revokeObjectURL(url);
-  showToast('修改已导出，发给我即可批量应用');
-}
-window.exportEdits = exportEdits;
 
 /* 图片灯箱 */
 function showLightbox(src) {

@@ -718,15 +718,20 @@ main#content {
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity: .2; }
 
-/* ===== 分享栏 ===== */
+/* ===== 分享栏（浮动在弹窗底部） ===== */
 .share-bar {
+  position: sticky;
+  bottom: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px 18px;
+  padding: 10px 24px;
   border-top: 1px solid var(--border);
-  margin-top: 4px;
   flex-wrap: wrap;
+  background: var(--surface);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10;
 }
 .share-label {
   font-size: 13px;
@@ -757,110 +762,6 @@ nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity:
 .share-btn svg {
   flex-shrink: 0;
   opacity: .75;
-}
-
-/* ===== 编辑栏 ===== */
-.edit-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 24px 6px;
-  flex-wrap: wrap;
-}
-.edit-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface-hover);
-  color: var(--text-secondary);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background .15s, border-color .15s, transform .1s;
-  user-select: none;
-}
-.edit-btn:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--accent);
-  transform: translateY(-1px);
-}
-.edit-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.edit-btn.primary:hover {
-  background: var(--accent-hover, var(--accent));
-  opacity: .9;
-}
-
-/* ===== 编辑表单 ===== */
-.edit-form {
-  padding: 16px 24px;
-  border-top: 1px solid var(--border);
-}
-.edit-field {
-  margin-bottom: 14px;
-}
-.edit-field label {
-  display: block;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
-}
-.edit-field input[type="text"],
-.edit-field select {
-  width: 100%;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 14px;
-  box-sizing: border-box;
-  transition: border-color .15s;
-}
-.edit-field input[type="text"]:focus,
-.edit-field select:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-.edit-thumb-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.edit-thumb-item {
-  width: 72px;
-  height: 72px;
-  border-radius: 8px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: border-color .15s, transform .1s;
-  flex-shrink: 0;
-}
-.edit-thumb-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.edit-thumb-item:hover {
-  transform: scale(1.05);
-}
-.edit-thumb-item.selected {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
-}
-.edit-actions {
-  display: flex;
-  gap: 10px;
-  margin-top: 6px;
 }
 
 /* ===== 二维码浮层 ===== */
@@ -1185,7 +1086,4 @@ nav#sidebar::-webkit-scrollbar-thumb { background: var(--sidebar-text); opacity:
     height: 28px;
     font-size: 13px;
   }
-  .edit-bar { padding: 8px 16px 4px; }
-  .edit-form { padding: 12px 16px; }
-  .edit-thumb-item { width: 60px; height: 60px; }
 }
