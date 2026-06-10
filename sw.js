@@ -5,7 +5,7 @@
  *   - 数据 JSON（./data/*.json）：Network-First，失败回退缓存
  *   - CDN 图片（r2.dev）：Network-Only（跨域，不缓存）
  */
-const CACHE_NAME = 'feijibei-v2.7';
+const CACHE_NAME = 'feijibei-v2.5';
 const PRECACHE = [
   './index.html',
   './style.css',
