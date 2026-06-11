@@ -970,49 +970,47 @@ window.addEventListener('resize', () => {
 /* ===== 分类器模式 ===== */
 const CLASSIFY_MODE_KEY = 'feijibei-classify-mode';
 const CLASSIFY_MAP_KEY  = 'feijibei-classify-map';
+const CLASSIFY_CFG_KEY  = 'feijibei-classify-config';
+const CLASSIFY_DEL_KEY  = 'feijibei-classify-deletions';
 
-// 快捷键 → 分类名
-const CLASSIFY_KEYS = {
-  'q': '古老月季',
-  'w': '其他育种家',
-  'e': '种植分享',
-  'r': '古代园艺',
-  'd': '养花日常'
+// 可自定义的快捷键配置（localStorage 持久化）
+const DEFAULT_KEYS = {
+  'q': '玫昂',
+  'w': '育种相关',
+  'e': '',
+  'r': '',
+  'd': ''
 };
+const DEFAULT_COLORS = ['#e74c3c','#9b59b6','#27ae60','#e67e22','#3498db'];
 
-// 分类名 → 颜色
-const CLASSIFY_COLORS = {
-  '古老月季':   '#e74c3c',
-  '其他育种家': '#9b59b6',
-  '种植分享':   '#27ae60',
-  '古代园艺':   '#e67e22',
-  '养花日常':   '#3498db'
-};
+let classifyKeys = {};
+try { classifyKeys = JSON.parse(localStorage.getItem(CLASSIFY_CFG_KEY) || '{}'); } catch(e) {}
+if (!Object.keys(classifyKeys).length) classifyKeys = Object.assign({}, DEFAULT_KEYS);
+
+function saveClassifyKeys() {
+  localStorage.setItem(CLASSIFY_CFG_KEY, JSON.stringify(classifyKeys));
+}
 
 let classifyMode = false;
-let classifySelectedId = null;  // 当前选中卡片 ID
-let classifyMap = {};          // id → 分类名
+let classifySelectedId = null;
+let classifyMap = {};
+let classifyDeletions = [];
 
-// 从 localStorage 恢复
 try { classifyMap = JSON.parse(localStorage.getItem(CLASSIFY_MAP_KEY) || '{}'); } catch(e) { classifyMap = {}; }
+try { classifyDeletions = JSON.parse(localStorage.getItem(CLASSIFY_DEL_KEY) || '[]'); } catch(e) { classifyDeletions = []; }
 
 function toggleClassifyMode() {
   classifyMode = !classifyMode;
-  if (classifyMode) {
-    enterClassifyMode();
-  } else {
-    exitClassifyMode();
-  }
+  if (classifyMode) { enterClassifyMode(); }
+  else { exitClassifyMode(); }
 }
 window.toggleClassifyMode = toggleClassifyMode;
 
 function enterClassifyMode() {
   document.body.classList.add('classify-mode');
-  // 在 header / mobile-toolbar 中显示分类器工具栏
   renderClassifyToolbar();
-  // 给现有卡片添加分类标注 + 选中态
   applyClassifyLabels();
-  showToast('分类模式已开启 — 点击卡片，然后按 Q/W/E/R/D 分类');
+  showToast('分类模式 — 填入类别后按快捷键');
 }
 
 function exitClassifyMode() {
@@ -1024,26 +1022,48 @@ function exitClassifyMode() {
 }
 
 function renderClassifyToolbar() {
-  // 桌面端：在 section-header 旁边
   const sectionHeader = document.querySelector('.section-header');
-  if (sectionHeader && !document.getElementById('classify-toolbar')) {
-    const tb = document.createElement('div');
-    tb.id = 'classify-toolbar';
-    tb.className = 'classify-toolbar';
-    let html = '<span class="classify-toolbar-label">快捷键：</span>';
-    for (const [key, name] of Object.entries(CLASSIFY_KEYS)) {
-      html += `<span class="classify-key-hint" data-key="${key}" onclick="classifyByKey('${key}')">
-        <kbd>${key.toUpperCase()}</kbd>${name}
-      </span>`;
-    }
-    html += `<span class="classify-key-hint classify-undo" onclick="classifyUndo()">
-      <kbd>Z</kbd>撤销
+  if (!sectionHeader || document.getElementById('classify-toolbar')) return;
+
+  const tb = document.createElement('div');
+  tb.id = 'classify-toolbar';
+  tb.className = 'classify-toolbar';
+
+  const keyOrder = ['q','w','e','r','d'];
+  let html = '<span class="classify-toolbar-label">快捷键：</span>';
+
+  keyOrder.forEach(key => {
+    const name = classifyKeys[key] || '';
+    html += `<span class="classify-key-hint">
+      <kbd>${key.toUpperCase()}</kbd>
+      <input type="text" class="classify-key-input" data-key="${key}"
+             value="${escapeHtml(name)}" placeholder="分类名"
+             title="输入分类名，留空则禁用此键">
     </span>`;
-    html += `<button class="classify-export-btn" onclick="exportClassifyResult()">导出结果</button>`;
-    html += `<button class="classify-clear-btn" onclick="clearClassifyData()">清空</button>`;
-    tb.innerHTML = html;
-    sectionHeader.appendChild(tb);
-  }
+  });
+
+  html += `<span class="classify-key-hint classify-delete-hint">
+    <kbd>X</kbd>待删除
+  </span>`;
+  html += `<span class="classify-key-hint classify-undo">
+    <kbd>Z</kbd>撤销
+  </span>`;
+  html += `<button class="classify-export-btn" onclick="exportClassifyResult()">导出</button>`;
+  html += `<button class="classify-clear-btn" onclick="clearClassifyData()">清空</button>`;
+
+  tb.innerHTML = html;
+  sectionHeader.appendChild(tb);
+
+  // 绑定输入事件
+  tb.querySelectorAll('.classify-key-input').forEach(input => {
+    input.addEventListener('input', e => {
+      const key = e.target.dataset.key;
+      classifyKeys[key] = e.target.value.trim();
+      saveClassifyKeys();
+    });
+    // 阻止输入时触发快捷键
+    input.addEventListener('keydown', e => e.stopPropagation());
+  });
 }
 
 function removeClassifyToolbar() {
@@ -1055,14 +1075,18 @@ function applyClassifyLabels() {
   document.querySelectorAll('.card').forEach(card => {
     const id = card.dataset.id;
     if (!id) return;
-    // 已分类 → 添加标注
+    // 已分类
     if (classifyMap[id]) {
       addClassifyBadge(card, classifyMap[id]);
+    }
+    // 待删除
+    if (classifyDeletions.includes(id)) {
+      addDeleteBadge(card);
     }
   });
 }
 
-// 用事件委托处理分类模式下的卡片点击（不重复绑定）
+// 事件委托：分类模式下点击卡片选中
 document.addEventListener('click', e => {
   if (!classifyMode) return;
   const card = e.target.closest('.card');
@@ -1070,16 +1094,17 @@ document.addEventListener('click', e => {
   e.stopPropagation();
   const id = card.dataset.id;
   if (!id) return;
-  // 取消之前选中
   document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
-  // 选中新卡片
   card.classList.add('classify-selected');
   classifySelectedId = id;
 });
 
 function clearClassifyLabels() {
   document.querySelectorAll('.classify-badge').forEach(b => b.remove());
-  document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
+  document.querySelectorAll('.classify-delete-badge').forEach(b => b.remove());
+  document.querySelectorAll('.card.classify-selected,.card.classify-marked').forEach(c => {
+    c.classList.remove('classify-selected','classify-marked');
+  });
 }
 
 function classifyByKey(key) {
@@ -1087,35 +1112,72 @@ function classifyByKey(key) {
     if (classifyMode) showToast('请先点击一张卡片');
     return;
   }
-  const catName = CLASSIFY_KEYS[key];
-  if (!catName) return;
+  const catName = classifyKeys[key];
+  if (!catName) {
+    showToast('请先在工具栏填入该键对应的分类名');
+    return;
+  }
+
+  // 从待删除列表移除（重新分类 = 不删了）
+  const delIdx = classifyDeletions.indexOf(classifySelectedId);
+  if (delIdx >= 0) {
+    classifyDeletions.splice(delIdx, 1);
+    localStorage.setItem(CLASSIFY_DEL_KEY, JSON.stringify(classifyDeletions));
+  }
 
   classifyMap[classifySelectedId] = catName;
 
-  // 更新视觉
   const card = document.querySelector(`.card[data-id="${CSS.escape(classifySelectedId)}"]`);
   if (card) {
-    // 移除旧 badge
-    const oldBadge = card.querySelector('.classify-badge');
-    if (oldBadge) oldBadge.remove();
+    card.querySelector('.classify-delete-badge')?.remove();
+    card.classList.remove('classify-marked');
+    card.querySelector('.classify-badge')?.remove();
     addClassifyBadge(card, catName);
   }
 
-  // 自动跳到下一张卡片（同页内）
   autoSelectNext(classifySelectedId);
-
   localStorage.setItem(CLASSIFY_MAP_KEY, JSON.stringify(classifyMap));
 }
-
 window.classifyByKey = classifyByKey;
+
+function toggleDeleteMark() {
+  if (!classifyMode || !classifySelectedId) {
+    if (classifyMode) showToast('请先点击一张卡片');
+    return;
+  }
+  const id = classifySelectedId;
+  const idx = classifyDeletions.indexOf(id);
+  const card = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+
+  if (idx >= 0) {
+    // 取消删除标记
+    classifyDeletions.splice(idx, 1);
+    if (card) {
+      card.querySelector('.classify-delete-badge')?.remove();
+      card.classList.remove('classify-marked');
+    }
+    showToast('已取消删除标记');
+  } else {
+    // 标记删除
+    classifyDeletions.push(id);
+    if (card) {
+      addDeleteBadge(card);
+      card.classList.add('classify-marked');
+    }
+    autoSelectNext(id);
+    showToast('已标记为待删除');
+  }
+
+  localStorage.setItem(CLASSIFY_DEL_KEY, JSON.stringify(classifyDeletions));
+}
+window.toggleDeleteMark = toggleDeleteMark;
 
 function classifyUndo() {
   if (!classifyMode || !classifySelectedId) return;
   delete classifyMap[classifySelectedId];
   const card = document.querySelector(`.card[data-id="${CSS.escape(classifySelectedId)}"]`);
   if (card) {
-    const badge = card.querySelector('.classify-badge');
-    if (badge) badge.remove();
+    card.querySelector('.classify-badge')?.remove();
   }
   localStorage.setItem(CLASSIFY_MAP_KEY, JSON.stringify(classifyMap));
   showToast('已撤销');
@@ -1123,11 +1185,24 @@ function classifyUndo() {
 window.classifyUndo = classifyUndo;
 
 function addClassifyBadge(card, catName) {
-  if (card.querySelector('.classify-badge')) return; // 已有
+  if (card.querySelector('.classify-badge')) return;
+  const colors = ['#e74c3c','#9b59b6','#27ae60','#e67e22','#3498db','#1abc9c','#f39c12','#2980b9'];
+  const keyOrder = ['q','w','e','r','d'];
+  const idx = keyOrder.findIndex(k => classifyKeys[k] === catName);
+  const color = colors[idx] || '#666';
+
   const badge = document.createElement('span');
   badge.className = 'classify-badge';
   badge.textContent = catName;
-  badge.style.background = CLASSIFY_COLORS[catName] || '#666';
+  badge.style.background = color;
+  card.appendChild(badge);
+}
+
+function addDeleteBadge(card) {
+  if (card.querySelector('.classify-delete-badge')) return;
+  const badge = document.createElement('span');
+  badge.className = 'classify-delete-badge';
+  badge.textContent = '🗑 待删除';
   card.appendChild(badge);
 }
 
@@ -1144,35 +1219,31 @@ function autoSelectNext(currentId) {
 }
 
 function exportClassifyResult() {
-  const total = Object.keys(classifyMap).length;
-  if (total === 0) {
-    showToast('还没有分类数据');
+  const classifyCount = Object.keys(classifyMap).length;
+  const delCount = classifyDeletions.length;
+  if (classifyCount === 0 && delCount === 0) {
+    showToast('还没有分类或删除数据');
     return;
   }
 
   // 按 cat 分组统计
   const stats = {};
   for (const [id, cat] of Object.entries(classifyMap)) {
-    if (!stats[cat]) stats[cat] = [];
-    stats[cat].push(id);
-  }
-
-  // 生成 patch JSON（可直接更新 index.json）
-  const patch = {};
-  for (const [id, cat] of Object.entries(classifyMap)) {
-    patch[id] = cat;
+    if (!stats[cat]) stats[cat] = 0;
+    stats[cat]++;
   }
 
   const result = {
     _meta: {
-      description: '贴吧分类结果 — 可用于更新 index.json 的 cat 字段',
-      total: total,
-      stats: Object.fromEntries(Object.entries(stats).map(([k,v]) => [k, v.length]))
+      description: '分类结果 — patches 用于更新 index.json cat，_deletions 是需要删除的条目',
+      total_classified: classifyCount,
+      total_deletions: delCount,
+      stats: stats
     },
-    patches: patch
+    patches: Object.assign({}, classifyMap),
+    _deletions: classifyDeletions.slice()
   };
 
-  // 下载 JSON
   const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1181,41 +1252,49 @@ function exportClassifyResult() {
   a.click();
   URL.revokeObjectURL(url);
 
-  showToast(`已导出 ${total} 条分类结果`);
+  let msg = `已导出 ${classifyCount} 条分类`;
+  if (delCount > 0) msg += ` + ${delCount} 条待删除`;
+  showToast(msg);
 }
 window.exportClassifyResult = exportClassifyResult;
 
 function clearClassifyData() {
-  if (Object.keys(classifyMap).length === 0) {
-    showToast('没有分类数据需要清空');
+  if (Object.keys(classifyMap).length === 0 && classifyDeletions.length === 0) {
+    showToast('没有数据需要清空');
     return;
   }
   classifyMap = {};
+  classifyDeletions = [];
   classifySelectedId = null;
   localStorage.removeItem(CLASSIFY_MAP_KEY);
-  document.querySelectorAll('.classify-badge').forEach(b => b.remove());
-  document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
-  showToast('分类数据已清空');
+  localStorage.removeItem(CLASSIFY_DEL_KEY);
+  document.querySelectorAll('.classify-badge,.classify-delete-badge').forEach(b => b.remove());
+  document.querySelectorAll('.card.classify-selected,.card.classify-marked').forEach(c => {
+    c.classList.remove('classify-selected','classify-marked');
+  });
+  showToast('全部数据已清空');
 }
 window.clearClassifyData = clearClassifyData;
 
-// 全局键盘监听：分类模式下 Q/W/E/R/D 分类，Z 撤销
+// 全局键盘监听
 document.addEventListener('keydown', e => {
   if (!classifyMode) return;
-  // 不拦截搜索框内的输入
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
 
   const key = e.key.toLowerCase();
-  if (CLASSIFY_KEYS[key]) {
+  if (classifyKeys[key]) {
     e.preventDefault();
     classifyByKey(key);
+  } else if (key === 'x') {
+    e.preventDefault();
+    toggleDeleteMark();
   } else if (key === 'z') {
     e.preventDefault();
     classifyUndo();
   }
 });
 
-// MutationObserver：翻页/筛选后自动给新卡片打标注
+// MutationObserver：翻页后自动打标注
 let _classifyObserver = null;
 function startClassifyObserver() {
   if (_classifyObserver) return;
@@ -1227,9 +1306,7 @@ function startClassifyObserver() {
   });
   _classifyObserver.observe(grid, { childList: true });
 }
-// 页面加载后启动
 document.addEventListener('DOMContentLoaded', startClassifyObserver);
-// 如果 DOMContentLoaded 已过，立即启动
 if (document.readyState !== 'loading') startClassifyObserver();
 
 /* 注册 Service Worker（PWA 离线支持） */
