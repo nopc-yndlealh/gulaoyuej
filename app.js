@@ -652,6 +652,8 @@ function bindEvents() {
 
   // 卡片点击 → 弹窗（支持 data-id 直接打开, 或 data-url 兼容旧格式）
   document.getElementById('grid').addEventListener('click', e => {
+    // 分类模式下不打开详情
+    if (classifyMode) return;
     const card = e.target.closest('.card');
     if (!card) return;
     const id = card.dataset.id || card.dataset.url;
@@ -964,6 +966,271 @@ window.addEventListener('resize', () => {
     }
   }, 250);
 });
+
+/* ===== 分类器模式 ===== */
+const CLASSIFY_MODE_KEY = 'feijibei-classify-mode';
+const CLASSIFY_MAP_KEY  = 'feijibei-classify-map';
+
+// 快捷键 → 分类名
+const CLASSIFY_KEYS = {
+  'q': '古老月季',
+  'w': '其他育种家',
+  'e': '种植分享',
+  'r': '古代园艺',
+  'd': '养花日常'
+};
+
+// 分类名 → 颜色
+const CLASSIFY_COLORS = {
+  '古老月季':   '#e74c3c',
+  '其他育种家': '#9b59b6',
+  '种植分享':   '#27ae60',
+  '古代园艺':   '#e67e22',
+  '养花日常':   '#3498db'
+};
+
+let classifyMode = false;
+let classifySelectedId = null;  // 当前选中卡片 ID
+let classifyMap = {};          // id → 分类名
+
+// 从 localStorage 恢复
+try { classifyMap = JSON.parse(localStorage.getItem(CLASSIFY_MAP_KEY) || '{}'); } catch(e) { classifyMap = {}; }
+
+function toggleClassifyMode() {
+  classifyMode = !classifyMode;
+  if (classifyMode) {
+    enterClassifyMode();
+  } else {
+    exitClassifyMode();
+  }
+}
+window.toggleClassifyMode = toggleClassifyMode;
+
+function enterClassifyMode() {
+  document.body.classList.add('classify-mode');
+  // 在 header / mobile-toolbar 中显示分类器工具栏
+  renderClassifyToolbar();
+  // 给现有卡片添加分类标注 + 选中态
+  applyClassifyLabels();
+  showToast('分类模式已开启 — 点击卡片，然后按 Q/W/E/R/D 分类');
+}
+
+function exitClassifyMode() {
+  document.body.classList.remove('classify-mode');
+  classifySelectedId = null;
+  removeClassifyToolbar();
+  clearClassifyLabels();
+  showToast('分类模式已关闭');
+}
+
+function renderClassifyToolbar() {
+  // 桌面端：在 section-header 旁边
+  const sectionHeader = document.querySelector('.section-header');
+  if (sectionHeader && !document.getElementById('classify-toolbar')) {
+    const tb = document.createElement('div');
+    tb.id = 'classify-toolbar';
+    tb.className = 'classify-toolbar';
+    let html = '<span class="classify-toolbar-label">快捷键：</span>';
+    for (const [key, name] of Object.entries(CLASSIFY_KEYS)) {
+      html += `<span class="classify-key-hint" data-key="${key}" onclick="classifyByKey('${key}')">
+        <kbd>${key.toUpperCase()}</kbd>${name}
+      </span>`;
+    }
+    html += `<span class="classify-key-hint classify-undo" onclick="classifyUndo()">
+      <kbd>Z</kbd>撤销
+    </span>`;
+    html += `<button class="classify-export-btn" onclick="exportClassifyResult()">导出结果</button>`;
+    html += `<button class="classify-clear-btn" onclick="clearClassifyData()">清空</button>`;
+    tb.innerHTML = html;
+    sectionHeader.appendChild(tb);
+  }
+}
+
+function removeClassifyToolbar() {
+  const tb = document.getElementById('classify-toolbar');
+  if (tb) tb.remove();
+}
+
+function applyClassifyLabels() {
+  document.querySelectorAll('.card').forEach(card => {
+    const id = card.dataset.id;
+    if (!id) return;
+    // 已分类 → 添加标注
+    if (classifyMap[id]) {
+      addClassifyBadge(card, classifyMap[id]);
+    }
+  });
+}
+
+// 用事件委托处理分类模式下的卡片点击（不重复绑定）
+document.addEventListener('click', e => {
+  if (!classifyMode) return;
+  const card = e.target.closest('.card');
+  if (!card) return;
+  e.stopPropagation();
+  const id = card.dataset.id;
+  if (!id) return;
+  // 取消之前选中
+  document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
+  // 选中新卡片
+  card.classList.add('classify-selected');
+  classifySelectedId = id;
+});
+
+function clearClassifyLabels() {
+  document.querySelectorAll('.classify-badge').forEach(b => b.remove());
+  document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
+}
+
+function classifyByKey(key) {
+  if (!classifyMode || !classifySelectedId) {
+    if (classifyMode) showToast('请先点击一张卡片');
+    return;
+  }
+  const catName = CLASSIFY_KEYS[key];
+  if (!catName) return;
+
+  classifyMap[classifySelectedId] = catName;
+
+  // 更新视觉
+  const card = document.querySelector(`.card[data-id="${CSS.escape(classifySelectedId)}"]`);
+  if (card) {
+    // 移除旧 badge
+    const oldBadge = card.querySelector('.classify-badge');
+    if (oldBadge) oldBadge.remove();
+    addClassifyBadge(card, catName);
+  }
+
+  // 自动跳到下一张卡片（同页内）
+  autoSelectNext(classifySelectedId);
+
+  localStorage.setItem(CLASSIFY_MAP_KEY, JSON.stringify(classifyMap));
+}
+
+window.classifyByKey = classifyByKey;
+
+function classifyUndo() {
+  if (!classifyMode || !classifySelectedId) return;
+  delete classifyMap[classifySelectedId];
+  const card = document.querySelector(`.card[data-id="${CSS.escape(classifySelectedId)}"]`);
+  if (card) {
+    const badge = card.querySelector('.classify-badge');
+    if (badge) badge.remove();
+  }
+  localStorage.setItem(CLASSIFY_MAP_KEY, JSON.stringify(classifyMap));
+  showToast('已撤销');
+}
+window.classifyUndo = classifyUndo;
+
+function addClassifyBadge(card, catName) {
+  if (card.querySelector('.classify-badge')) return; // 已有
+  const badge = document.createElement('span');
+  badge.className = 'classify-badge';
+  badge.textContent = catName;
+  badge.style.background = CLASSIFY_COLORS[catName] || '#666';
+  card.appendChild(badge);
+}
+
+function autoSelectNext(currentId) {
+  const cards = Array.from(document.querySelectorAll('.card'));
+  const idx = cards.findIndex(c => c.dataset.id === currentId);
+  if (idx >= 0 && idx + 1 < cards.length) {
+    const nextCard = cards[idx + 1];
+    document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
+    nextCard.classList.add('classify-selected');
+    classifySelectedId = nextCard.dataset.id;
+    nextCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+function exportClassifyResult() {
+  const total = Object.keys(classifyMap).length;
+  if (total === 0) {
+    showToast('还没有分类数据');
+    return;
+  }
+
+  // 按 cat 分组统计
+  const stats = {};
+  for (const [id, cat] of Object.entries(classifyMap)) {
+    if (!stats[cat]) stats[cat] = [];
+    stats[cat].push(id);
+  }
+
+  // 生成 patch JSON（可直接更新 index.json）
+  const patch = {};
+  for (const [id, cat] of Object.entries(classifyMap)) {
+    patch[id] = cat;
+  }
+
+  const result = {
+    _meta: {
+      description: '贴吧分类结果 — 可用于更新 index.json 的 cat 字段',
+      total: total,
+      stats: Object.fromEntries(Object.entries(stats).map(([k,v]) => [k, v.length]))
+    },
+    patches: patch
+  };
+
+  // 下载 JSON
+  const blob = new Blob([JSON.stringify(result, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `classify-result-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast(`已导出 ${total} 条分类结果`);
+}
+window.exportClassifyResult = exportClassifyResult;
+
+function clearClassifyData() {
+  if (Object.keys(classifyMap).length === 0) {
+    showToast('没有分类数据需要清空');
+    return;
+  }
+  classifyMap = {};
+  classifySelectedId = null;
+  localStorage.removeItem(CLASSIFY_MAP_KEY);
+  document.querySelectorAll('.classify-badge').forEach(b => b.remove());
+  document.querySelectorAll('.card.classify-selected').forEach(c => c.classList.remove('classify-selected'));
+  showToast('分类数据已清空');
+}
+window.clearClassifyData = clearClassifyData;
+
+// 全局键盘监听：分类模式下 Q/W/E/R/D 分类，Z 撤销
+document.addEventListener('keydown', e => {
+  if (!classifyMode) return;
+  // 不拦截搜索框内的输入
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  const key = e.key.toLowerCase();
+  if (CLASSIFY_KEYS[key]) {
+    e.preventDefault();
+    classifyByKey(key);
+  } else if (key === 'z') {
+    e.preventDefault();
+    classifyUndo();
+  }
+});
+
+// MutationObserver：翻页/筛选后自动给新卡片打标注
+let _classifyObserver = null;
+function startClassifyObserver() {
+  if (_classifyObserver) return;
+  const grid = document.getElementById('grid');
+  if (!grid) return;
+  _classifyObserver = new MutationObserver(() => {
+    if (!classifyMode) return;
+    applyClassifyLabels();
+  });
+  _classifyObserver.observe(grid, { childList: true });
+}
+// 页面加载后启动
+document.addEventListener('DOMContentLoaded', startClassifyObserver);
+// 如果 DOMContentLoaded 已过，立即启动
+if (document.readyState !== 'loading') startClassifyObserver();
 
 /* 注册 Service Worker（PWA 离线支持） */
 if ('serviceWorker' in navigator) {
