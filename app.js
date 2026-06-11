@@ -1001,10 +1001,23 @@ try { classifyDeletions = JSON.parse(localStorage.getItem(CLASSIFY_DEL_KEY) || '
 
 function toggleClassifyMode() {
   classifyMode = !classifyMode;
-  if (classifyMode) { enterClassifyMode(); }
-  else { exitClassifyMode(); }
+  if (classifyMode) {
+    enterClassifyMode();
+    document.getElementById('classify-toggle').style.display = '';
+  } else {
+    exitClassifyMode();
+    document.getElementById('classify-toggle').style.display = 'none';
+  }
 }
 window.toggleClassifyMode = toggleClassifyMode;
+
+// Ctrl+Shift+C 快捷键切换分类模式
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+    e.preventDefault();
+    toggleClassifyMode();
+  }
+});
 
 function enterClassifyMode() {
   document.body.classList.add('classify-mode');
