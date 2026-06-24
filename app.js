@@ -347,6 +347,19 @@
       await renderGrid(-1);
     }
     bindEvents();
+    handleShareParam();
+  }
+
+  /* 处理 ?share=xxx URL 参数：自动打开对应详情 */
+  function handleShareParam() {
+    const params = new URLSearchParams(location.search);
+    const shareId = params.get('share');
+    if (shareId) {
+      // 从 indexData 查找标题
+      const entry = _indexData?.find((e) => e.id === shareId);
+      const title = entry?.title || shareId;
+      openModal(shareId, title);
+    }
   }
 
   /* 渲染桌面端左侧树状分类 */
@@ -458,7 +471,18 @@
   /* 首页推荐 */
   function renderFeatured() {
     const items = featuredIds
-      .map((id) => (searchIndex[id] ? { id, ...searchIndex[id], tag: '', author: '' } : null))
+      .map((id) => {
+        // 优先从 searchIndex 取（加载后可用，含 thumb 字段）
+        if (searchIndex[id]) {
+          return { id, ...searchIndex[id], tag: '', author: '' };
+        }
+        // searchIndex 未加载时从原始索引取
+        const entry = _indexData?.find((e) => e.id === id);
+        if (entry) {
+          return { id, title: entry.title, cat: entry.cat, thumb: entry.images?.[0] || '', file_url: '', tag: entry.tag || '', author: typeof entry.author === 'string' ? entry.author : '' };
+        }
+        return null;
+      })
       .filter(Boolean);
 
     document.getElementById('section-title').textContent = '精选推荐';
@@ -1095,7 +1119,7 @@
 
   /** @param {string} id @returns {string} */
   function getShareUrl(id) {
-    return `${location.origin + location.pathname.replace(/\/?$/, '/')}detail.html?id=${encodeURIComponent(id)}`;
+    return `${location.origin + location.pathname.replace(/\/?$/, '/')}?share=${encodeURIComponent(id)}`;
   }
 
   /** @param {string} id */
