@@ -19,26 +19,23 @@ const PRECACHE = [
 ];
 
 /* ========== Install：预缓存关键文件 ========== */
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE))
-  );
+self.addEventListener('install', (event) => {
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE)));
   self.skipWaiting();
 });
 
 /* ========== Activate：清理旧缓存 ========== */
-self.addEventListener('activate', event => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 /* ========== Fetch：按资源类型选择策略 ========== */
-self.addEventListener('fetch', event => {
+self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
@@ -69,7 +66,7 @@ async function cacheFirst(request) {
     const res = await fetch(request);
     if (res.ok) {
       const clone = res.clone();
-      caches.open(CACHE_NAME).then(c => c.put(request, clone));
+      caches.open(CACHE_NAME).then((c) => c.put(request, clone));
     }
     return res;
   } catch {
@@ -82,20 +79,21 @@ async function networkFirst(request) {
     const res = await fetch(request);
     if (res.ok) {
       const clone = res.clone();
-      caches.open(CACHE_NAME).then(c => c.put(request, clone));
+      caches.open(CACHE_NAME).then((c) => c.put(request, clone));
     }
     return res;
   } catch {
     const cached = await caches.match(request);
-    return cached || new Response('{"error":"离线，暂无缓存数据"}', {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' }
-    });
+    return (
+      cached ||
+      new Response('{"error":"离线，暂无缓存数据"}', {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    );
   }
 }
 
 function isStaticAsset(pathname) {
-  return ['.html', '.css', '.js', '.svg', '.png', '.ico'].some(ext =>
-    pathname.endsWith(ext)
-  );
+  return ['.html', '.css', '.js', '.svg', '.png', '.ico'].some((ext) => pathname.endsWith(ext));
 }

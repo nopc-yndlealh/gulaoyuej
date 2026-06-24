@@ -3,45 +3,60 @@
 统一构建：正确生成 index.json + chunked content/ + content-index.json + search-index.json
 分类规则：贴吧/微博 → 月季；小红书 → 多肉/小红书
 """
-import json, os, csv, re, shutil, struct
+import json, os, csv, re, shutil, struct, sys, argparse
 from pathlib import Path
 from collections import defaultdict
 
 SCRIPT_DIR = Path(__file__).parent  # build_all.py 所在目录
 R2_PUBLIC = "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev"
 SITE_DATA = SCRIPT_DIR / "data"
-DATA_DIR = "C:/Users/吴子瑞/WorkBuddy/2026-05-27-17-57-56/output"  # 源数据目录，换电脑需修改
-MAPPING_CSV = "E:/WebP_Compressed/image_mapping_all.csv"  # 图片映射表，换电脑需修改
+DEFAULT_DATA_DIR = Path.home() / "WorkBuddy" / "2026-05-27-17-57-56" / "output"
+DEFAULT_MAPPING_CSV = Path("E:/WebP_Compressed/image_mapping_all.csv")
 IMG_DIR = SCRIPT_DIR / "images"
 MIN_IMG_DIM = 200  # 最小图片尺寸阈值（像素）
 
+def parse_args():
+    p = argparse.ArgumentParser(description="构建 feijibei.top 数据管道")
+    p.add_argument("--data-dir", type=Path, default=DEFAULT_DATA_DIR,
+                   help=f"源数据目录（默认: {DEFAULT_DATA_DIR}）")
+    p.add_argument("--mapping-csv", type=Path, default=DEFAULT_MAPPING_CSV,
+                   help=f"图片映射 CSV 路径（默认: {DEFAULT_MAPPING_CSV}）")
+    return p.parse_args()
+
+args = parse_args()
+DATA_DIR = args.data_dir
+MAPPING_CSV = args.mapping_csv
+
 # ── 备份现有（只备份原数据，不备份我们之前生成的） ──
 for fn in ["content-index.json", "search-index.json"]:
-    if os.path.exists(os.path.join(SITE_DATA, fn)):
-        shutil.copy2(os.path.join(SITE_DATA, fn), os.path.join(SITE_DATA, fn + ".bak_new"))
+    bak_path = SITE_DATA / (fn + ".bak_new")
+    src_path = SITE_DATA / fn
+    if src_path.exists():
+        shutil.copy2(src_path, bak_path)
 
 # ── 读取现有 index.json，保留原月季/多肉条目 ──
-with open(os.path.join(SITE_DATA, "index.json"), "r", encoding="utf-8") as f:
+with open(SITE_DATA / "index.json", "r", encoding="utf-8") as f:
     idx_all = json.load(f)
 original = [a for a in idx_all if a["id"].startswith(("rose_", "succ_"))]
 print(f"保留原有: {len(original)} 条")
 
 # ── 读取旧 content chunk data ──
 old_content = {}
-for cat_file in os.listdir(os.path.join(SITE_DATA, "content")):
-    if cat_file.endswith(".json") and cat_file != "content-index.json":
-        fp = os.path.join(SITE_DATA, "content", cat_file)
+content_dir = SITE_DATA / "content"
+for cat_file in content_dir.iterdir():
+    if cat_file.suffix == ".json" and cat_file.name != "content-index.json":
         try:
-            with open(fp, "r", encoding="utf-8") as f:
+            with open(cat_file, "r", encoding="utf-8") as f:
                 old_content.update(json.load(f))
-        except: pass
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"⚠️ 跳过损坏的 content 文件 {cat_file.name}: {e}")
 print(f"保留原有content: {len(old_content)} 条")
 
 # ── 预建 weibo 映射 ──
 # Step 1: 从 unified_posts.json 获取原始 JPG 路径
 stem_to_pid = {}  # original JPG stem → post_id
-unified_path = os.path.join(DATA_DIR, "unified_posts.json")
-if os.path.exists(unified_path):
+unified_path = DATA_DIR / "unified_posts.json"
+if unified_path.exists():
     with open(unified_path, "r", encoding="utf-8") as f:
         unified = json.load(f)
     for up in unified:
@@ -55,10 +70,13 @@ print(f"unified stem→pid: {len(stem_to_pid)}")
 
 # Step 2: CSV → stem → webp filename
 stem_to_webp = {}
-with open(MAPPING_CSV, encoding="utf-8-sig") as f:
-    for r in csv.DictReader(f):
-        if r["platform"] == "weibo":
-            stem_to_webp[Path(r["original"]).stem] = Path(r["webp_rel"]).name
+try:
+    with open(MAPPING_CSV, encoding="utf-8-sig") as f:
+        for r in csv.DictReader(f):
+            if r["platform"] == "weibo":
+                stem_to_webp[Path(r["original"]).stem] = Path(r["webp_rel"]).name
+except FileNotFoundError:
+    print(f"⚠️ 映射表未找到: {MAPPING_CSV}，跳过 CSV 桥接匹配")
 
 # Step 3: 直接 post ID 匹配（旧 weibo webp）
 pid_webps_direct = defaultdict(list)
@@ -101,8 +119,8 @@ def get_webp_size(filepath):
                 w = (bits & 0x3FFF) + 1
                 h = ((bits >> 14) & 0x3FFF) + 1
                 return w, h
-    except:
-        pass
+    except (OSError, struct.error) as e:
+        print(f"⚠️ 读取 WebP 尺寸失败 {filepath}: {e}")
     return None, None
 
 # 预扫描所有 webp 文件尺寸，构建小图黑名单
@@ -292,8 +310,8 @@ new_search = {}
 new_cidx = {}  # id → cat_slug
 
 # 保留原搜索索引
-si_path = os.path.join(SITE_DATA, "search-index.json")
-if os.path.exists(si_path):
+si_path = SITE_DATA / "search-index.json"
+if si_path.exists():
     with open(si_path, "r", encoding="utf-8") as f:
         new_search = json.load(f)
         # 只保留原有条目
@@ -303,13 +321,13 @@ for k, v in old_content.items():
     new_cidx[k] = v.get("_cat", "未知") if isinstance(v, dict) else "未知"  # 回头修正
 
 # 读取原始 content-index
-ci_path = os.path.join(SITE_DATA, "content", "content-index.json")
-if os.path.exists(ci_path):
+ci_path = SITE_DATA / "content" / "content-index.json"
+if ci_path.exists():
     with open(ci_path, "r", encoding="utf-8") as f:
         new_cidx = json.load(f)
 
 # 1. 贴吧 — cat=贴吧, index_type=月季, content_type=月季 (normal layout)
-tieba_posts = load_jsonl_or_json(os.path.join(DATA_DIR, "tieba_clean.json"))
+tieba_posts = load_jsonl_or_json(DATA_DIR / "tieba_clean.json")
 print(f"贴吧: {len(tieba_posts)} posts")
 ti_idx, ti_con, ti_srch = process_posts(tieba_posts, "tieba", "贴吧", "月季", "月季")
 new_idx.extend(ti_idx)
@@ -320,7 +338,7 @@ for pid in ti_con:
 print(f"  +{len(ti_idx)} entries")
 
 # 2. 微博 — cat=微博, index_type=月季, content_type=微博 (social layout)
-weibo_posts = load_jsonl_or_json(os.path.join(DATA_DIR, "weibo_clean.json"))
+weibo_posts = load_jsonl_or_json(DATA_DIR / "weibo_clean.json")
 print(f"微博: {len(weibo_posts)} posts")
 wb_idx, wb_con, wb_srch = process_posts(weibo_posts, "weibo", "微博", "月季", "微博")
 new_idx.extend(wb_idx)
@@ -331,7 +349,7 @@ for pid in wb_con:
 print(f"  +{len(wb_idx)} entries")
 
 # 3. 小红书 — cat=多肉/小红书, index_type=多肉, content_type=小红书 (social layout)
-xhs_posts = load_jsonl_or_json(os.path.join(DATA_DIR, "xhs_clean.json"))
+xhs_posts = load_jsonl_or_json(DATA_DIR / "xhs_clean.json")
 print(f"小红书: {len(xhs_posts)} posts")
 xhs_idx, xhs_con, xhs_srch = process_posts(xhs_posts, "xhs", "多肉/小红书", "多肉", "小红书")
 new_idx.extend(xhs_idx)
@@ -361,21 +379,17 @@ print(f"  +{len(SPECIAL_PAGES)} 特殊页面")
 
 # ── 写入文件 ──
 # index.json
-with open(os.path.join(SITE_DATA, "index.json"), "w", encoding="utf-8") as f:
+with open(SITE_DATA / "index.json", "w", encoding="utf-8") as f:
     json.dump(new_idx, f, ensure_ascii=False, indent=2)
-print(f"\nindex.json: {len(new_idx)} 条 ({os.path.getsize(os.path.join(SITE_DATA,'index.json'))/1024:.0f} KB)")
+print(f"\nindex.json: {len(new_idx)} 条 ({(SITE_DATA / 'index.json').stat().st_size / 1024:.0f} KB)")
 
 # content-index.json
 with open(ci_path, "w", encoding="utf-8") as f:
     json.dump(new_cidx, f, ensure_ascii=False, indent=2)
 print(f"content-index.json: {len(new_cidx)} mappings")
 
-# Chunked content files (按 cat 分块)
-content_dir = os.path.join(SITE_DATA, "content")
-for cat_file in os.listdir(content_dir):
-    if cat_file.endswith(".json") and cat_file != "content-index.json":
-        # 清除旧的分块（会被重新生成）
-        pass  # we'll just overwrite
+# Chunked content files (按 cat 分块，直接覆盖旧文件)
+content_dir = SITE_DATA / "content"
 
 # Group by cat
 cat_groups = defaultdict(dict)
@@ -385,13 +399,13 @@ for pid, data in new_content.items():
 
 for cat, items in cat_groups.items():
     fname = cat.replace("/", "-").replace(" ", "") + ".json"
-    fpath = os.path.join(content_dir, fname)
+    fpath = content_dir / fname
     with open(fpath, "w", encoding="utf-8") as f:
         json.dump(items, f, ensure_ascii=False, indent=2)
     print(f"  content/{fname}: {len(items)} 条")
 
 # search-index.json
-with open(os.path.join(SITE_DATA, "search-index.json"), "w", encoding="utf-8") as f:
+with open(SITE_DATA / "search-index.json", "w", encoding="utf-8") as f:
     json.dump(new_search, f, ensure_ascii=False, indent=2)
 print(f"search-index.json: {len(new_search)} 条")
 

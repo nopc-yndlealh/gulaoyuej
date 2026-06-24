@@ -3,5 +3,10 @@ __pycache__/
 parse_data.py
 images/
 *.bak
+*.bak_new
 data/.r2_upload_state.json
 data/*backup*
+images_tmp/
+images_test_tmp/
+node_modules/
+.eslintignore

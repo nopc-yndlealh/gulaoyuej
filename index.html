@@ -1,86 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff8e14">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040">
-<link rel="manifest" href="./manifest.json">
-<title>园艺图鉴 · 月季与多肉</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>">
-<link rel="stylesheet" href="./style.css">
-</head>
-<body>
-
-<div id="loading">
-  <div class="spinner"></div>
-  <p>正在加载图鉴数据…</p>
-</div>
-
-<!-- 桌面端顶栏 -->
-<header>
-  <h1>园艺图鉴</h1>
-  <div class="search-wrap">
-    <input type="search" id="search-input" placeholder="搜索月季 / 多肉…">
-    <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">🌙</button>
-    <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">🌙</button>
-    <button id="classify-toggle" title="分类器模式" aria-label="开启/关闭分类器模式" class="header-btn" onclick="toggleClassifyMode()" style="font-size:15px;display:none;">🏷️</button>
-  </div>
-</header>
-
-<!-- 移动端导航条 -->
-<div id="mobile-nav">
-  <div class="cat-scroll" id="mobile-cat-scroll"></div>
-  <div class="mobile-toolbar">
-    <input type="search" id="mobile-search-input" placeholder="搜索月季 / 多肉…">
-    <button id="mobile-theme-toggle" title="切换主题" aria-label="切换深色/浅色模式">🌙</button>
-  </div>
-</div>
-
-<!-- 主布局 -->
-<div class="layout">
-  <!-- 桌面端左侧分类 -->
-  <nav id="sidebar">
-    <h2>分　类</h2>
-    <div id="cat-list"></div>
-  </nav>
-  <!-- 右侧内容 -->
-  <main id="content">
-    <div class="section-header">
-      <h2 id="section-title">全部条目</h2>
-      <span class="total" id="total-count"></span>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff8e14" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>园艺图鉴 · 月季与多肉</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="loading">
+      <div class="spinner"></div>
+      <p>正在加载图鉴数据…</p>
     </div>
-    <div class="grid" id="grid"></div>
-    <div class="pagination" id="pagination"></div>
-  </main>
-</div>
 
-<!-- 弹窗 -->
-<div id="modal-overlay">
-  <div id="modal-box">
-    <div id="modal-header">
-      <span id="modal-title">详情</span>
-      <button id="modal-close">×</button>
+    <!-- 桌面端顶栏 -->
+    <header>
+      <h1>园艺图鉴</h1>
+      <div class="search-wrap">
+        <input type="search" id="search-input" placeholder="搜索月季 / 多肉…" />
+        <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">
+          🌙
+        </button>
+        <button
+          id="classify-toggle"
+          title="分类器模式"
+          aria-label="开启/关闭分类器模式"
+          class="header-btn"
+          style="font-size: 15px; display: none"
+        >
+          🏷️
+        </button>
+      </div>
+    </header>
+
+    <!-- 移动端导航条 -->
+    <div id="mobile-nav">
+      <div class="cat-scroll" id="mobile-cat-scroll"></div>
+      <div class="mobile-toolbar">
+        <input type="search" id="mobile-search-input" placeholder="搜索月季 / 多肉…" />
+        <button id="mobile-theme-toggle" title="切换主题" aria-label="切换深色/浅色模式">🌙</button>
+      </div>
     </div>
-    <div id="detail-view"></div>
-  </div>
-</div>
 
-<!-- 图片灯箱 -->
-<div id="lightbox"></div>
+    <!-- 主布局 -->
+    <div class="layout">
+      <!-- 桌面端左侧分类 -->
+      <nav id="sidebar">
+        <h2>分　类</h2>
+        <div id="cat-list"></div>
+      </nav>
+      <!-- 右侧内容 -->
+      <main id="content">
+        <div class="section-header">
+          <h2 id="section-title">全部条目</h2>
+          <span class="total" id="total-count"></span>
+        </div>
+        <div class="grid" id="grid"></div>
+        <div class="pagination" id="pagination"></div>
+      </main>
+    </div>
 
-<!-- 分享二维码浮层 -->
-<div id="qr-overlay" onclick="closeQrPopup()">
-  <div id="qr-box" onclick="event.stopPropagation()">
-    <p id="qr-label">扫码分享</p>
-    <img id="qr-img" src="" alt="分享二维码">
-    <button id="qr-close" onclick="closeQrPopup()">×</button>
-  </div>
-</div>
+    <!-- 弹窗 -->
+    <div id="modal-overlay">
+      <div id="modal-box">
+        <div id="modal-header">
+          <span id="modal-title">详情</span>
+          <button id="modal-close">×</button>
+        </div>
+        <div id="detail-view"></div>
+      </div>
+    </div>
 
-<!-- Toast 提示 -->
-<div id="toast"></div>
+    <!-- 图片灯箱 -->
+    <div id="lightbox"></div>
 
-<script src="./app.js"></script>
-</body>
+    <!-- 分享二维码浮层 -->
+    <div id="qr-overlay">
+      <div id="qr-box">
+        <p id="qr-label">扫码分享</p>
+        <img id="qr-img" src="" alt="分享二维码" />
+        <button id="qr-close">×</button>
+      </div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div id="toast"></div>
+
+    <script src="./app.js"></script>
+  </body>
 </html>
