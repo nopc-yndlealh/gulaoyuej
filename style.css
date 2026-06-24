@@ -926,6 +926,37 @@ nav#sidebar::-webkit-scrollbar-thumb {
   color: var(--text);
 }
 
+/* ===== 视频嵌入 ===== */
+.video-embed {
+  width: 100%;
+  margin: 12px 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 16 / 9;
+}
+.video-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+.video-slide .video-embed {
+  margin: 0;
+  border-radius: 0;
+  height: 100%;
+}
+.video-fallback {
+  display: inline-block;
+  padding: 8px 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 14px;
+}
+
 /* ===== Toast ===== */
 #toast {
   position: fixed;

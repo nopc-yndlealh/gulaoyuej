@@ -916,8 +916,8 @@
         let html;
         if (isSocial) {
           // 左图右文布局
-          const images = content.segments.filter((s) => s.i);
-          const totalImg = images.length;
+          const mediaSegs = content.segments.filter((s) => s.i || s.v);
+          const totalImg = mediaSegs.length;
           html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
           if (tagLabel || authorName) {
             html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}${weiboUrl ? `<a href="${weiboUrl}" target="_blank" class="detail-weibo-link">🔗 查看原帖</a>` : ''}</div>`;
@@ -927,11 +927,15 @@
           html += '<div class="social-gallery">';
           if (totalImg > 0) {
             html += '<div class="gallery-track" id="gallery-track">';
-            images.forEach((seg, idx) => {
-              html += `<div class="gallery-slide" data-idx="${idx}">
-              <img src="${escapeHtml(seg.i)}" alt="图片 ${idx + 1}" loading="lazy" decoding="async"
-                   onload="this.classList.add('loaded')">
-            </div>`;
+            mediaSegs.forEach((seg, idx) => {
+              if (seg.v) {
+                html += `<div class="gallery-slide video-slide" data-idx="${idx}">${renderVideoEmbed(seg.v)}</div>`;
+              } else {
+                html += `<div class="gallery-slide" data-idx="${idx}">
+                <img src="${escapeHtml(seg.i)}" alt="图片 ${idx + 1}" loading="lazy" decoding="async"
+                     onload="this.classList.add('loaded')">
+              </div>`;
+              }
             });
             html += '</div>';
             if (totalImg > 1) {
@@ -979,6 +983,8 @@
             } else if (seg.i) {
               html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
                           onload="this.classList.add('loaded')">`;
+            } else if (seg.v) {
+              html += renderVideoEmbed(seg.v);
             }
           });
           html += '</div>';
@@ -1087,6 +1093,46 @@
     }
     if (buf.trim()) sentences.push(buf.trim());
     return sentences.length > 0 ? sentences : [text];
+  }
+
+  /* ===== 视频嵌入 ===== */
+
+  /** 解析视频 URL，返回可嵌入的 iframe src 或 null
+   *  支持：YouTube (youtube.com/watch, youtu.be), Bilibili (b23.tv, bilibili.com)
+   *  @param {string} url @returns {string|null} */
+  function getEmbedUrl(url) {
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      // YouTube
+      if (u.hostname.includes('youtube.com') || u.hostname === 'youtu.be') {
+        let vid = u.searchParams.get('v');
+        if (!vid) vid = u.pathname.slice(1).split('/')[0];
+        if (vid) return `https://www.youtube.com/embed/${encodeURIComponent(vid)}`;
+      }
+      // Bilibili
+      if (u.hostname.includes('bilibili.com') || u.hostname === 'b23.tv') {
+        const bvMatch = u.pathname.match(/\/video\/(BV\w+)/i);
+        if (bvMatch) return `https://player.bilibili.com/player.html?bvid=${bvMatch[1]}&autoplay=0`;
+        // b23.tv 短链接需要展开
+        const bvShort = u.pathname.match(/^\/(BV\w+)/i);
+        if (bvShort) return `https://player.bilibili.com/player.html?bvid=${bvShort[1]}&autoplay=0`;
+      }
+    } catch { /* URL 不合法 */ }
+    return null;
+  }
+
+  /** 渲染视频嵌入 HTML
+   *  @param {string} url @returns {string} */
+  function renderVideoEmbed(url) {
+    const embedSrc = getEmbedUrl(url);
+    if (!embedSrc) return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="video-fallback">🔗 查看视频</a>`;
+    return `<div class="video-embed">
+      <iframe src="${escapeHtml(embedSrc)}" 
+        allowfullscreen loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        title="嵌入视频"></iframe>
+    </div>`;
   }
 
   /* ===== 分享功能 ===== */

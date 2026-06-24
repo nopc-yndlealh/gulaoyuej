@@ -14,10 +14,11 @@ export interface IndexEntry {
   author: string;
 }
 
-// ── content segment（图文段） ──
+// ── content segment（图文段 + 视频外链） ──
 export interface ContentSegment {
   i?: string; // 图片 URL
   t?: string; // 文本内容
+  v?: string; // 视频 URL（YouTube / Bilibili 等外链）
 }
 
 // ── content/{cat}.json 中的单条内容 ──
