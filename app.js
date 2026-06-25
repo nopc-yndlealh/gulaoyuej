@@ -48,12 +48,12 @@
     const icons = document.querySelectorAll('#theme-toggle, #mobile-theme-toggle');
     const effective = getEffectiveTheme();
     icons.forEach((btn) => {
-      if (mode === 'dark') {
+      if (mode === 'light') {
         btn.textContent = '☀️';
-      } else if (mode === 'light') {
+      } else if (mode === 'dark') {
         btn.textContent = '🌙';
       } else {
-        btn.textContent = effective === 'dark' ? '☀️' : '🌙';
+        btn.textContent = effective === 'light' ? '☀️' : '🌙';
       }
     });
   }
