@@ -324,7 +324,13 @@
 
         // 直接属于多肉（无子分类）的条目
         if (directItems.length > 0) {
-          node.children.push({ name: '其他', items: directItems, isLeaf: true });
+          if (Object.keys(subCats).length > 0) {
+            // 有子分类时显示为"其他"
+            node.children.push({ name: '其他', items: directItems, isLeaf: true });
+          } else {
+            // 没有子分类时（如古代园艺、养花日常），直接把条目挂在组上
+            node.groupItems = directItems;
+          }
           node.itemCount += directItems.length;
           totalItems += directItems.length;
         }
@@ -371,8 +377,18 @@
   </div>`;
 
     allData.tree.forEach((group, gIdx) => {
-      // 父节点（月季 / 多肉）
       const groupId = `group-${gIdx}`;
+
+      if (group.groupItems) {
+        // 无子分类的独立组（如古代园艺、养花日常）: 直接渲染为可点击项
+        html += `<div class="cat-item leaf-item" data-idx="${groupId}">
+        <span class="label">${escapeHtml(group.name)}</span>
+        <span class="count">${group.groupItems.length}</span>
+      </div>`;
+        return;
+      }
+
+      // 有子分类的父节点（月季 / 多肉）
       html += `<div class="tree-group" data-group="${groupId}">
       <div class="cat-item parent-item expanded" data-idx="${groupId}">
         <span class="tree-arrow">▼</span>
@@ -418,6 +434,15 @@
 
     // 各叶子分类
     allData.tree.forEach((group, gIdx) => {
+      if (group.groupItems) {
+        // 无子分类的独立组，直接渲染为 chip
+        const chip = document.createElement('div');
+        chip.className = 'cat-chip';
+        chip.dataset.idx = `group-${gIdx}`;
+        chip.textContent = `${group.name} (${group.groupItems.length})`;
+        scrollContainer.appendChild(chip);
+        return;
+      }
       group.children.forEach((child, cIdx) => {
         const chip = document.createElement('div');
         chip.className = 'cat-chip';
@@ -452,6 +477,7 @@
       const gIdx = parseInt(catIdx.match(/^group-(\d+)$/)[1]);
       const group = allData.tree[gIdx];
       if (group) {
+        if (group.groupItems) return group.groupItems;
         const result = [];
         group.children.forEach((c) => result.push(...c.items));
         return result;
