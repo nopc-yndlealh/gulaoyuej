@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>园艺图鉴 · 月季与多肉</title>
+<meta name="description" content="园艺图鉴 — 月季与多肉植物品种大全，收录丹陶、吉洛、奥斯汀、戴尔巴德、玫昂等育种家月季品种，以及石莲花、莲花掌等多肉植物，含品种特性、育种历史与种植分享。">
+<meta name="keywords" content="月季,多肉,石莲花,莲花掌,丹陶,吉洛,奥斯汀,戴尔巴德,玫昂,科尔德斯,古老月季,园艺图鉴,植物图鉴">
+<meta property="og:title" content="园艺图鉴 · 月季与多肉">
+<meta property="og:description" content="月季与多肉植物品种大全，含品种特性、育种历史与种植分享。">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="zh_CN">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>">
 <style>
   /* ===== 基础 Reset ===== */
@@ -19,7 +25,7 @@
     --sidebar-active: #5a1a1a;
     --card-bg: #fff;
     --text: #333;
-    --text-muted: #888;
+    --text-muted: #6b6b6b;
     --radius: 10px;
     --shadow: 0 2px 12px rgba(0,0,0,.10);
     --shadow-hover: 0 6px 24px rgba(0,0,0,.18);
@@ -125,6 +131,16 @@
     background: rgba(255,255,255,.22);
     color: #fff;
   }
+
+  /* 演化图谱入口 */
+  nav#sidebar .evo-link {
+    margin-top: 8px;
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding-top: 12px;
+    text-decoration: none;
+    color: #4fc3a7;
+  }
+  nav#sidebar .evo-link:hover { background: rgba(79,195,167,.12); }
 
   /* ===== 树状分类结构 ===== */
   .tree-group { }
@@ -322,9 +338,12 @@
     text-indent: 2em;
   }
   #detail-view .detail-body img {
-    max-width: 100%;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
     border-radius: 8px;
     margin: 8px 0;
+    background: #f5f5f5;
     box-shadow: 0 2px 8px rgba(0,0,0,.10);
     cursor: pointer;
     transition: transform .2s;
@@ -384,7 +403,7 @@
     animation: spin 1s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-  #loading p { color: #888; font-size: 14px; }
+  #loading p { color: #6b6b6b; font-size: 14px; }
 
   /* ===== 滚动条美化 ===== */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -446,6 +465,15 @@
     color: #fff;
     font-weight: 600;
   }
+  #mobile-nav .evo-chip {
+    color: #4fc3a7;
+    border-bottom: 2px solid transparent;
+    text-decoration: none;
+  }
+  #mobile-nav .evo-chip:hover {
+    background: rgba(79,195,167,.12);
+    color: #4fc3a7;
+  }
 
   /* 移动端搜索框 */
   #mobile-nav .search-bar {
@@ -506,7 +534,7 @@
 <header>
   <h1>园艺图鉴</h1>
   <div class="search-wrap">
-    <input type="search" id="search-input" placeholder="搜索月季 / 多肉…">
+    <input type="search" id="search-input" placeholder="搜索月季 / 多肉…" aria-label="搜索植物">
   </div>
 </header>
 
@@ -514,7 +542,7 @@
 <div id="mobile-nav">
   <div class="cat-scroll" id="mobile-cat-scroll"></div>
   <div class="search-bar">
-    <input type="search" id="mobile-search-input" placeholder="搜索月季 / 多肉…">
+    <input type="search" id="mobile-search-input" placeholder="搜索月季 / 多肉…" aria-label="搜索植物">
   </div>
 </div>
 
@@ -536,11 +564,11 @@
 </div>
 
 <!-- 弹窗 -->
-<div id="modal-overlay">
+<div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
   <div id="modal-box">
     <div id="modal-header">
       <span id="modal-title">详情</span>
-      <button id="modal-close">×</button>
+      <button id="modal-close" aria-label="关闭弹窗">×</button>
     </div>
     <div id="detail-view"></div>
   </div>
@@ -554,31 +582,50 @@
 (function() {
   'use strict';
 
-let allData = null;     // 树状分类数据 { tree, flatGroups, totalItems }
-let contentData = {};   // 详情内容数据（content.json）
-let activeCatIdx = -1;  // -1 = 全部，格式: "group-child" 如 "月季-丹陶" 或 "多肉"
+let allData = null;       // 树状分类数据 { tree, flatGroups, totalItems }
+let contentData = null;   // 详情内容数据（content.json），延迟加载
+let contentLoading = null; // content.json 的加载 Promise（避免重复请求）
+let activeCatIdx = -1;    // -1 = 全部，格式: "group-child" 如 "月季-丹陶" 或 "多肉"
+let lastFocused = null;   // 弹窗打开前的焦点元素
 
 /* 加载数据 */
 async function loadData() {
   try {
-    const [indexRes, contentRes] = await Promise.all([
-      fetch('./data/index.json'),
-      fetch('./data/content.json')
-    ]);
+    const indexRes = await fetch('./data/index.json');
     if (!indexRes.ok) throw new Error('data/index.json 未找到');
-    if (!contentRes.ok) throw new Error('data/content.json 未找到');
 
     const rawData = await indexRes.json();
-    contentData = await contentRes.json();
     allData = transformData(rawData);
     init();
   } catch (e) {
     document.getElementById('loading').innerHTML =
       `<p style="color:#c0392b;font-size:16px;">数据加载失败：${e.message}</p>
-       <p style="margin-top:8px;font-size:13px;color:#888;">
-         请确认 data/index.json 和 data/content.json 文件存在且格式正确。
+       <p style="margin-top:8px;font-size:13px;color:#6b6b6b;">
+         请确认 data/index.json 文件存在且格式正确。
        </p>`;
   }
+}
+
+/* 延迟加载 content.json（首次点击卡片时触发） */
+function ensureContentData() {
+  if (contentData) return Promise.resolve(contentData);
+  if (contentLoading) return contentLoading;
+
+  contentLoading = fetch('./data/content.json')
+    .then(res => {
+      if (!res.ok) throw new Error('content.json 加载失败');
+      return res.json();
+    })
+    .then(data => {
+      contentData = data;
+      return data;
+    })
+    .catch(err => {
+      contentLoading = null; // 允许重试
+      throw err;
+    });
+
+  return contentLoading;
 }
 
 /* 树状分类配置 */
@@ -615,8 +662,8 @@ function transformData(rawData) {
     if (!flatGroups[catName]) flatGroups[catName] = [];
     flatGroups[catName].push({
       title: item.title,
-      thumb: item.images && item.images.length > 0 ? item.images[0] : '',
-      file_url: `./detail.html?id=${item.id}`
+      thumb: item.thumb || '',
+      id: item.id
     });
   });
 
@@ -698,7 +745,7 @@ function renderSidebar() {
     // 父节点（月季 / 多肉）
     const groupId = `group-${gIdx}`;
     html += `<div class="tree-group" data-group="${groupId}">
-      <div class="cat-item parent-item expanded" data-idx="${groupId}">
+      <div class="cat-item parent-item expanded" data-idx="${groupId}" role="button" aria-expanded="true" tabindex="0">
         <span class="tree-arrow">▼</span>
         <span class="label">${escapeHtml(group.name)}</span>
         <span class="count">${group.itemCount}</span>
@@ -718,6 +765,13 @@ function renderSidebar() {
   });
 
   container.innerHTML = html;
+
+  // 演化图谱入口
+  const evoLink = document.createElement('a');
+  evoLink.href = '景天科演化图谱.html';
+  evoLink.className = 'cat-item evo-link';
+  evoLink.innerHTML = '<span class="label">🧬 景天科演化图谱 2019</span>';
+  container.appendChild(evoLink);
 }
 
 /* 渲染移动端横向分类条（扁平展示，带分组前缀） */
@@ -741,11 +795,18 @@ function renderMobileNav() {
       scrollContainer.appendChild(chip);
     });
   });
+
+  // 演化图谱入口（移动端）
+  const evoChip = document.createElement('a');
+  evoChip.href = '景天科演化图谱.html';
+  evoChip.className = 'cat-chip evo-chip';
+  evoChip.textContent = '🧬 演化图谱 2019';
+  scrollContainer.appendChild(evoChip);
 }
 
 /* 根据树节点索引获取要展示的条目 */
 function getItemsByIndex(catIdx) {
-  if (catIdx === -1) {
+  if (catIdx == -1) {
     // 全部：合并所有叶子
     let result = [];
     allData.tree.forEach(g => g.children.forEach(c => result.push(...c.items)));
@@ -794,29 +855,91 @@ function renderGrid(catIdx, keyword = '') {
   }
   grid.innerHTML = items.map(it => {
     const safeTitle = escapeHtml(it.title);
-    const safeUrl = escapeHtml(it.file_url || '');
-    const thumbHtml = it.thumb
-      ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle} 缩略图" loading="lazy"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
-         <div class="no-thumb" style="display:none;">无图</div>`
-      : `<div class="no-thumb">无图</div>`;
-    return `<div class="card" data-url="${safeUrl}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
-      ${thumbHtml}
+    const safeId = escapeHtml(it.id || '');
+    const thumb = it.thumb ? escapeHtml(it.thumb) : '';
+    // 卡片初始只渲染占位符，data-* 存储真实数据，IntersectionObserver 填充
+    return `<div class="card" data-id="${safeId}" data-title="${safeTitle}" data-thumb="${thumb}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
+      <div class="thumb-placeholder" style="width:100%;height:140px;background:#eee;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:14px;">加载中</div>
       <div class="card-title">${safeTitle}</div>
     </div>`;
   }).join('');
+
+  // 懒渲染：观察每个卡片的占位符
+  lazyRenderCards();
+}
+
+/* 懒渲染卡片：IntersectionObserver 只渲染可视区域内的卡片图片 */
+function lazyRenderCards() {
+  const placeholders = document.querySelectorAll('.card .thumb-placeholder');
+  if (!placeholders.length) return;
+
+  if (!('IntersectionObserver' in window)) {
+    // 不支持 IO 的浏览器：直接全部渲染
+    placeholders.forEach(p => fillCardThumb(p));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        fillCardThumb(entry.target);
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '200px' }); // 提前 200px 开始加载
+
+  placeholders.forEach(p => observer.observe(p));
+}
+
+/* 填充卡片缩略图 */
+function fillCardThumb(placeholder) {
+  const card = placeholder.closest('.card');
+  if (!card) return;
+  const thumb = card.dataset.thumb;
+  if (thumb) {
+    const img = document.createElement('img');
+    img.className = 'thumb';
+    img.src = thumb;
+    img.alt = (card.dataset.title || '') + ' 缩略图';
+    img.loading = 'lazy';
+    img.onerror = function() {
+      this.style.display = 'none';
+      const fallback = document.createElement('div');
+      fallback.className = 'no-thumb';
+      fallback.textContent = '无图';
+      this.parentNode.appendChild(fallback);
+    };
+    placeholder.replaceWith(img);
+  } else {
+    const fallback = document.createElement('div');
+    fallback.className = 'no-thumb';
+    fallback.textContent = '无图';
+    placeholder.replaceWith(fallback);
+  }
 }
 
 /* 设置激活分类 */
 function setActiveCategory(idx) {
-  activeCatIdx = idx;
+  activeCatIdx = String(idx);
   // 桌面端 sidebar
   document.querySelectorAll('#cat-list .cat-item').forEach(el => {
-    el.classList.toggle('active', el.dataset.idx === idx);
+    const isActive = el.dataset.idx === activeCatIdx;
+    el.classList.toggle('active', isActive);
+    if (isActive && !el.classList.contains('parent-item')) {
+      el.setAttribute('aria-current', 'page');
+    } else {
+      el.removeAttribute('aria-current');
+    }
   });
   // 移动端 chips
   document.querySelectorAll('#mobile-cat-scroll .cat-chip').forEach(el => {
-    el.classList.toggle('active', el.dataset.idx === idx);
+    const isActive = el.dataset.idx === activeCatIdx;
+    el.classList.toggle('active', isActive);
+    if (isActive) {
+      el.setAttribute('aria-current', 'page');
+    } else {
+      el.removeAttribute('aria-current');
+    }
   });
   // 移动端滚动到激活项
   const activeChip = document.querySelector('#mobile-cat-scroll .cat-chip.active');
@@ -860,6 +983,7 @@ function bindEvents() {
           const isOpen = item.classList.contains('expanded');
           children.style.display = isOpen ? '' : 'none';
           item.querySelector('.tree-arrow').textContent = isOpen ? '▼' : '▶';
+          item.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
         }
       }
       // 点击父节点也显示该组全部内容
@@ -894,7 +1018,17 @@ function bindEvents() {
   document.getElementById('grid').addEventListener('click', e => {
     const card = e.target.closest('.card');
     if (!card) return;
-    openModal(card.dataset.url, card.dataset.title);
+    openModal(card.dataset.id, card.dataset.title);
+  });
+
+  // 卡片键盘支持（Enter/Space 打开详情）
+  document.getElementById('grid').addEventListener('keydown', e => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openModal(card.dataset.id, card.dataset.title);
+    }
   });
 
   // 关闭弹窗
@@ -908,32 +1042,70 @@ function bindEvents() {
       document.getElementById('lightbox').classList.remove('active');
     }
   });
+
+  // 弹窗焦点陷阱：Tab 键循环在弹窗内
+  document.getElementById('modal-overlay').addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const overlay = document.getElementById('modal-overlay');
+    const focusable = overlay.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
 }
 
-/* 打开弹窗 — 内联渲染详情 */
-function openModal(url, title) {
-  const id = url.replace('./detail.html?id=', '');
+/* 打开弹窗 — 异步加载详情 */
+async function openModal(id, title) {
   document.getElementById('modal-title').textContent = title;
+  // 记录触发元素，用于关闭后恢复焦点
+  lastFocused = document.activeElement;
 
   const detailEl = document.getElementById('detail-view');
 
+  // 显示加载状态
+  detailEl.innerHTML = `
+    <div class="detail-error">
+      <p>正在加载详情…</p>
+    </div>`;
+  detailEl.classList.add('active');
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
   try {
+    // 确保 content.json 已加载
+    if (!contentData) {
+      await ensureContentData();
+    }
+
     const content = contentData[id];
 
     if (content && Array.isArray(content.segments)) {
       let html = `<h2 class="detail-title">${escapeHtml(title)}</h2><div class="detail-body">`;
-      content.segments.forEach(seg => {
+      content.segments.forEach((seg, idx) => {
         if (seg.t) {
           // 文本段
           html += `<p>${escapeHtml(seg.t)}</p>`;
         } else if (seg.i) {
-          // 图片段
-          html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy">`;
+          // 图片段 — 用 title + 序号作为更有意义的 alt
+          html += `<img src="${escapeHtml(seg.i)}" alt="${escapeHtml(title)} - 图片 ${idx + 1}" loading="lazy">`;
         }
       });
       html += '</div>';
       detailEl.innerHTML = html;
-      // 绑定图片点击灯箱事件（替代内联 onclick）
+      // 绑定图片点击灯箱事件
       detailEl.querySelectorAll('.detail-body img').forEach(img => {
         img.addEventListener('click', () => showLightbox(img.src));
         img.style.cursor = 'pointer';
@@ -942,21 +1114,23 @@ function openModal(url, title) {
       detailEl.innerHTML = `
         <div class="detail-error">
           <p>暂无详情内容</p>
-          <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
+          <p style="font-size:12px;color:#999;margin-top:8px;">ID: ${escapeHtml(id)}</p>
         </div>`;
     }
   } catch (err) {
     console.error('[openModal] 渲染详情失败:', err);
     detailEl.innerHTML = `
       <div class="detail-error">
-        <p>内容渲染出错</p>
-        <p style="font-size:12px;color:#bbb;margin-top:8px;">请稍后重试</p>
+        <p>内容加载失败</p>
+        <p style="font-size:12px;color:#999;margin-top:8px;">请检查网络后重试</p>
       </div>`;
   }
 
-  detailEl.classList.add('active');
-  document.getElementById('modal-overlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  // 焦点移到弹窗关闭按钮
+  setTimeout(() => {
+    const closeBtn = document.getElementById('modal-close');
+    if (closeBtn) closeBtn.focus();
+  }, 100);
 }
 
 /* 关闭弹窗 */
@@ -967,6 +1141,11 @@ function closeModal() {
   // 延迟清空内容，让关闭动画更平滑
   setTimeout(() => { detailEl.innerHTML = ''; }, 300);
   document.body.style.overflow = '';
+  // 恢复焦点到触发元素
+  if (lastFocused && typeof lastFocused.focus === 'function') {
+    lastFocused.focus();
+    lastFocused = null;
+  }
 }
 
 /* 图片灯箱 */
