@@ -7,6 +7,12 @@
     <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040" />
     <link rel="manifest" href="./manifest.json" />
     <title>园艺图鉴 · 月季与多肉</title>
+    <meta name="description" content="园艺图鉴 — 月季与多肉植物品种大全，收录丹陶、吉洛、奥斯汀、戴尔巴德、玫昂等育种家月季品种，以及石莲花、莲花掌等多肉植物，含品种特性、育种历史与种植分享。">
+    <meta name="keywords" content="月季,多肉,石莲花,莲花掌,丹陶,吉洛,奥斯汀,戴尔巴德,玫昂,科尔德斯,古老月季,园艺图鉴,植物图鉴">
+    <meta property="og:title" content="园艺图鉴 · 月季与多肉">
+    <meta property="og:description" content="月季与多肉植物品种大全，含品种特性、育种历史与种植分享。">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="zh_CN">
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>"
@@ -23,7 +29,7 @@
     <header>
       <h1>园艺图鉴</h1>
       <div class="search-wrap">
-        <input type="search" id="search-input" placeholder="搜索月季 / 多肉…" />
+        <input type="search" id="search-input" placeholder="搜索月季 / 多肉…" aria-label="搜索植物" />
         <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">
           🌙
         </button>
@@ -43,7 +49,7 @@
     <div id="mobile-nav">
       <div class="cat-scroll" id="mobile-cat-scroll"></div>
       <div class="mobile-toolbar">
-        <input type="search" id="mobile-search-input" placeholder="搜索月季 / 多肉…" />
+        <input type="search" id="mobile-search-input" placeholder="搜索月季 / 多肉…" aria-label="搜索植物" />
         <button id="mobile-theme-toggle" title="切换主题" aria-label="切换深色/浅色模式">🌙</button>
       </div>
     </div>
@@ -67,11 +73,11 @@
     </div>
 
     <!-- 弹窗 -->
-    <div id="modal-overlay">
+    <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div id="modal-box">
         <div id="modal-header">
           <span id="modal-title">详情</span>
-          <button id="modal-close">×</button>
+          <button id="modal-close" aria-label="关闭弹窗">×</button>
         </div>
         <div id="detail-view"></div>
       </div>

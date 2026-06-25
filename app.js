@@ -270,7 +270,7 @@
       flatGroups[catName].push({
         id: item.id,
         title: item.title,
-        thumb: item.images && item.images.length > 0 ? item.images[0] : '',
+        thumb: item.thumb || '',
         file_url: `./detail.html?id=${item.id}`,
         tag: item.tag || '',
         author: item.author || '',
@@ -479,7 +479,7 @@
         // searchIndex 未加载时从原始索引取
         const entry = _indexData?.find((e) => e.id === id);
         if (entry) {
-          return { id, title: entry.title, cat: entry.cat, thumb: entry.images?.[0] || '', file_url: '', tag: entry.tag || '', author: typeof entry.author === 'string' ? entry.author : '' };
+          return { id, title: entry.title, cat: entry.cat, thumb: entry.thumb || '', file_url: '', tag: entry.tag || '', author: typeof entry.author === 'string' ? entry.author : '' };
         }
         return null;
       })
