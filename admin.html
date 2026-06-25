@@ -1,0 +1,1319 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>管理面板 — feijibei.top</title>
+    <style>
+      /* ===== Reset & Base ===== */
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html {
+        font-size: 15px;
+        scroll-behavior: smooth;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC',
+          sans-serif;
+        background: #f5f2ed;
+        color: #2c2c2c;
+        min-height: 100vh;
+        display: flex;
+      }
+
+      /* ===== CSS Variables (matching existing style) ===== */
+      :root {
+        --accent: #5599cc;
+        --accent-hover: #4488bb;
+        --accent-soft: rgba(85, 153, 204, 0.08);
+        --bg: #f5f2ed;
+        --surface: #ffffff;
+        --sidebar-bg: #0a111a;
+        --sidebar-text: #9db2cc;
+        --sidebar-hover: rgba(255, 255, 255, 0.06);
+        --sidebar-active: rgba(85, 153, 204, 0.28);
+        --text: #2c2c2c;
+        --text-secondary: #505866;
+        --text-muted: #8090a0;
+        --border: #d8dde4;
+        --border-light: rgba(0, 0, 0, 0.06);
+        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+        --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+        --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+        --radius: 12px;
+        --radius-sm: 8px;
+      }
+
+      /* ===== Layout ===== */
+      .sidebar {
+        width: 280px;
+        min-width: 280px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        background: var(--sidebar-bg);
+        color: var(--sidebar-text);
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        z-index: 10;
+      }
+      .sidebar-header {
+        padding: 20px 20px 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .sidebar-header h1 {
+        font-size: 1.15rem;
+        color: #e8ecf2;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+      .sidebar-header p {
+        font-size: 0.75rem;
+        color: var(--sidebar-text);
+        margin-top: 4px;
+        opacity: 0.7;
+      }
+
+      .main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        max-height: 100vh;
+        overflow-y: auto;
+      }
+
+      /* ===== Platform Tabs ===== */
+      .platform-tabs {
+        display: flex;
+        padding: 12px 20px;
+        gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .platform-tab {
+        flex: 1;
+        padding: 8px 4px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: transparent;
+        color: var(--sidebar-text);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        text-align: center;
+        transition: all 0.2s;
+        font-weight: 500;
+      }
+      .platform-tab:hover {
+        background: var(--sidebar-hover);
+        color: #d0dae8;
+      }
+      .platform-tab.active {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .platform-tab .count {
+        display: block;
+        font-size: 0.68rem;
+        opacity: 0.7;
+        margin-top: 2px;
+      }
+
+      /* ===== Search ===== */
+      .search-box {
+        padding: 12px 20px;
+      }
+      .search-box input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.05);
+        color: #d0dae8;
+        font-size: 0.82rem;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      .search-box input::placeholder {
+        color: rgba(157, 178, 204, 0.5);
+      }
+      .search-box input:focus {
+        border-color: var(--accent);
+      }
+
+      /* ===== Author List ===== */
+      .author-section {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 0 12px;
+      }
+      .author-section-header {
+        padding: 8px 20px;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(157, 178, 204, 0.5);
+        display: flex;
+        justify-content: space-between;
+      }
+      .author-list {
+        list-style: none;
+      }
+      .author-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 20px;
+        cursor: pointer;
+        font-size: 0.82rem;
+        transition: background 0.15s;
+        border-left: 3px solid transparent;
+      }
+      .author-item:hover {
+        background: var(--sidebar-hover);
+      }
+      .author-item.active {
+        background: var(--sidebar-active);
+        border-left-color: var(--accent);
+        color: #d0dae8;
+      }
+      .author-item .name {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .author-item .badge {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(157, 178, 204, 0.8);
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        min-width: 28px;
+        text-align: center;
+      }
+      .author-item.active .badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+
+      /* ===== Content Header ===== */
+      .content-header {
+        padding: 16px 28px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .content-header .stats {
+        display: flex;
+        gap: 24px;
+      }
+      .content-header .stat {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+      }
+      .content-header .stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .content-header .stat-label {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+      .content-header .active-filters {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: var(--accent-soft);
+        border: 1px solid rgba(85, 153, 204, 0.25);
+        border-radius: 14px;
+        font-size: 0.75rem;
+        color: var(--accent);
+        cursor: pointer;
+      }
+      .filter-chip:hover {
+        background: rgba(85, 153, 204, 0.16);
+      }
+      .filter-chip::after {
+        content: '×';
+        font-weight: 700;
+        margin-left: 2px;
+      }
+
+      /* ===== Card Grid ===== */
+      .card-grid {
+        padding: 20px 28px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+        align-content: start;
+      }
+      .card {
+        position: relative;
+        background: var(--surface);
+        border-radius: var(--radius);
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border-light);
+      }
+      .card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+      }
+      .card.selected {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-soft);
+      }
+      .card-thumb {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        background: #e8ecf2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-muted);
+        font-size: 0.78rem;
+      }
+      .card-body {
+        padding: 12px 14px;
+      }
+      .card-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        color: var(--text);
+        margin-bottom: 6px;
+      }
+      .card-meta {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+      .card-meta .tag {
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 1px 7px;
+        border-radius: 4px;
+        font-weight: 500;
+        font-size: 0.7rem;
+      }
+      .card-meta .author-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      /* ===== Manage Mode ===== */
+      .card-check {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        z-index: 5;
+        display: none;
+        width: 22px;
+        height: 22px;
+        accent-color: var(--accent);
+        cursor: pointer;
+      }
+      body.manage-mode .card-check {
+        display: block;
+      }
+      body.manage-mode .card {
+        cursor: pointer;
+      }
+      body.manage-mode .card:hover {
+        box-shadow: 0 0 0 2px var(--accent-soft);
+        transform: none;
+      }
+      body.manage-mode .card.removing {
+        opacity: 0;
+        transform: scale(0.8);
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+      .toolbar {
+        display: none;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 28px;
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        flex-wrap: wrap;
+      }
+      body.manage-mode .toolbar {
+        display: flex;
+      }
+      .toolbar button {
+        padding: 8px 16px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--surface);
+        cursor: pointer;
+        font-size: 0.82rem;
+        transition: all 0.15s;
+        color: var(--text-secondary);
+        font-weight: 500;
+      }
+      .toolbar button:hover {
+        background: var(--border-light);
+      }
+      .toolbar button.danger {
+        color: #c0392b;
+        border-color: #e0b4b4;
+        background: #fff5f5;
+      }
+      .toolbar button.danger:hover {
+        background: #ffe8e8;
+      }
+      .toolbar button.primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      .toolbar button.primary:hover {
+        background: var(--accent-hover);
+      }
+      .toolbar .hint {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        margin-left: 8px;
+      }
+      .mode-toggle {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      .mode-toggle input {
+        accent-color: var(--accent);
+        width: 16px;
+        height: 16px;
+        cursor: pointer;
+      }
+      .result-box {
+        display: none;
+        margin: 0 28px 16px;
+        padding: 12px;
+        background: #f8f8f8;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-family: monospace;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 200px;
+        overflow-y: auto;
+      }
+      body.manage-mode .result-box {
+        display: block;
+      }
+
+      /* ===== Empty State ===== */
+      .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+      }
+      .empty-state svg {
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+        opacity: 0.4;
+      }
+      .empty-state p {
+        font-size: 0.9rem;
+      }
+
+      /* ===== Loading ===== */
+      .loading {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+      }
+      .spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid var(--border);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 12px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ===== Modal ===== */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn 0.2s ease;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+      .modal {
+        background: var(--surface);
+        border-radius: var(--radius);
+        max-width: 900px;
+        width: 100%;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg);
+      }
+      .modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
+      .modal-header h2 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        flex: 1;
+        margin-right: 12px;
+      }
+      .modal-close {
+        width: 32px;
+        height: 32px;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 6px;
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+      }
+      .modal-close:hover {
+        background: var(--border-light);
+      }
+      .modal-body {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        min-height: 0;
+      }
+      .modal-gallery {
+        width: 50%;
+        min-width: 0;
+        background: #1a1a1a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .modal-gallery img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        transition: opacity 0.2s;
+      }
+      .modal-gallery .gallery-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 36px;
+        height: 36px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        cursor: pointer;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+        z-index: 2;
+      }
+      .modal-gallery .gallery-nav:hover {
+        background: rgba(0, 0, 0, 0.75);
+      }
+      .modal-gallery .gallery-nav.prev {
+        left: 8px;
+      }
+      .modal-gallery .gallery-nav.next {
+        right: 8px;
+      }
+      .modal-gallery .gallery-counter {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+        font-size: 0.72rem;
+        padding: 3px 10px;
+        border-radius: 10px;
+        z-index: 2;
+      }
+      .modal-content {
+        width: 50%;
+        padding: 20px;
+        overflow-y: auto;
+        font-size: 0.88rem;
+        line-height: 1.7;
+      }
+      .modal-content .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .modal-content .meta-author {
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .modal-content .meta-time {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+      }
+      .modal-content .meta-tag {
+        font-size: 0.7rem;
+        background: var(--accent-soft);
+        color: var(--accent);
+        padding: 2px 8px;
+        border-radius: 4px;
+      }
+      .modal-content .article-body p {
+        margin-bottom: 10px;
+      }
+
+      /* ===== Responsive ===== */
+      @media (max-width: 768px) {
+        body {
+          flex-direction: column;
+        }
+        .sidebar {
+          width: 100%;
+          min-width: 100%;
+          height: auto;
+          position: relative;
+          max-height: 45vh;
+        }
+        .main {
+          max-height: none;
+          overflow-y: visible;
+        }
+        .card-grid {
+          grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+          padding: 12px;
+          gap: 10px;
+        }
+        .card-thumb {
+          height: 140px;
+        }
+        .content-header {
+          padding: 12px;
+        }
+        .modal {
+          max-width: 100%;
+          border-radius: 0;
+          max-height: 100vh;
+        }
+        .modal-body {
+          flex-direction: column;
+        }
+        .modal-gallery {
+          width: 100%;
+          height: 50vh;
+        }
+        .modal-content {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>📋 管理面板</h1>
+        <p>feijibei.top 内容管理</p>
+      </div>
+
+      <div class="platform-tabs" id="platformTabs">
+        <button class="platform-tab active" data-platform="贴吧">贴吧<span class="count">—</span></button>
+        <button class="platform-tab" data-platform="微博">微博<span class="count">—</span></button>
+        <button class="platform-tab" data-platform="小红书">小红书<span class="count">—</span></button>
+      </div>
+
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 搜索标题关键词..." />
+      </div>
+
+      <div class="author-section">
+        <div class="author-section-header">
+          <span>作者</span>
+          <span id="authorCount">0</span>
+        </div>
+        <ul class="author-list" id="authorList"></ul>
+      </div>
+    </aside>
+
+    <!-- ===== Main Content ===== -->
+    <main class="main">
+      <div class="content-header">
+        <div class="stats">
+          <div class="stat">
+            <span class="stat-value" id="statTotal">0</span><span class="stat-label">总数</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="statFiltered">0</span><span class="stat-label">当前</span>
+          </div>
+          <div class="stat" id="statSelectedWrap" style="display: none">
+            <span class="stat-value" id="statSelected">0</span><span class="stat-label">已标记删除</span>
+          </div>
+        </div>
+        <div class="active-filters" id="activeFilters"></div>
+        <label class="mode-toggle">
+          <input type="checkbox" id="manageToggle" onchange="toggleManageMode()" />
+          🗑 管理模式
+        </label>
+      </div>
+      <div class="toolbar" id="toolbar">
+        <button onclick="selectAll()">全选当前</button>
+        <button onclick="invertSelect()">反选</button>
+        <button class="danger" onclick="exportDeleteCmd()">⚡ 生成删除命令</button>
+        <span class="hint">💡 也可以直接点击图片快速标记</span>
+      </div>
+      <div class="result-box" id="resultBox"></div>
+      <div class="card-grid" id="cardGrid">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>加载中...</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===== Detail Modal ===== -->
+    <div class="modal-overlay" id="modalOverlay" style="display: none" hidden>
+      <div class="modal">
+        <div class="modal-header">
+          <h2 id="modalTitle"></h2>
+          <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-gallery" id="modalGallery">
+            <img id="modalImage" src="" alt="" />
+            <button class="gallery-nav prev" id="galleryPrev">&lsaquo;</button>
+            <button class="gallery-nav next" id="galleryNext">&rsaquo;</button>
+            <span class="gallery-counter" id="galleryCounter"></span>
+          </div>
+          <div class="modal-content" id="modalContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /* ============================================================
+   Admin Panel — feijibei.top
+   ============================================================ */
+
+      // ── Constants ──
+      const PLATFORM_CONFIG = {
+        贴吧: { cat: '贴吧', contentFile: './data/content/贴吧.json' },
+        微博: { cat: '微博', contentFile: './data/content/微博.json' },
+        小红书: { cat: '多肉/小红书', contentFile: './data/content/多肉-小红书.json' },
+      };
+
+      const PLACEHOLDER_SVG = `data:image/svg+xml,${encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="140" viewBox="0 0 200 140">' +
+          '<rect width="200" height="140" fill="#e8ecf2"/>' +
+          '<text x="100" y="75" text-anchor="middle" fill="#8090a0" font-size="14" font-family="sans-serif">无图片</text>' +
+          '</svg>'
+      )}`;
+
+      // ── State ──
+      const state = {
+        platform: '贴吧',
+        allPosts: [], // all posts for current platform (from index.json)
+        filteredPosts: [], // after author + search filter
+        selectedAuthor: null,
+        searchQuery: '',
+        contentCache: {}, // { postId: contentDetail }
+        currentDetail: null, // currently opened post
+        galleryIdx: 0, // current image index in modal
+        manageMode: false, // management checkbox mode
+        selectedIds: new Set(), // selected post IDs
+      };
+
+      // ── DOM refs ──
+      const $ = (sel) => document.querySelector(sel);
+      const $$ = (sel) => document.querySelectorAll(sel);
+
+      const dom = {
+        platformTabs: $('#platformTabs'),
+        searchInput: $('#searchInput'),
+        authorList: $('#authorList'),
+        authorCount: $('#authorCount'),
+        statTotal: $('#statTotal'),
+        statFiltered: $('#statFiltered'),
+        statSelectedWrap: $('#statSelectedWrap'),
+        statSelected: $('#statSelected'),
+        activeFilters: $('#activeFilters'),
+        cardGrid: $('#cardGrid'),
+        resultBox: $('#resultBox'),
+        manageToggle: $('#manageToggle'),
+        modalOverlay: $('#modalOverlay'),
+        modalTitle: $('#modalTitle'),
+        modalGallery: $('#modalGallery'),
+        modalImage: $('#modalImage'),
+        galleryPrev: $('#galleryPrev'),
+        galleryNext: $('#galleryNext'),
+        galleryCounter: $('#galleryCounter'),
+        modalContent: $('#modalContent'),
+        modalClose: $('#modalClose'),
+      };
+
+      // ── Utility ──
+      function cleanTitle(rawTitle) {
+        // Strip "#N AuthorName - " prefix
+        return rawTitle.replace(/^#\d+\s+\S+?\s*-\s*/, '');
+      }
+
+      function extractAuthor(rawTitle, fallback) {
+        const m = rawTitle.match(/^#\d+\s+(.+?)\s*-\s/);
+        return m ? m[1] : fallback || '未知';
+      }
+
+      function imgOnError(el) {
+        el.onerror = null;
+        el.src = PLACEHOLDER_SVG;
+      }
+
+      // ── Data Loading ──
+      async function loadIndex() {
+        const resp = await fetch('./data/index.json');
+        if (!resp.ok) throw new Error(`Failed to load index: ${resp.status}`);
+        return resp.json();
+      }
+
+      async function loadContent(platform) {
+        const cfg = PLATFORM_CONFIG[platform];
+        if (!cfg) return {};
+        const resp = await fetch(cfg.contentFile);
+        if (!resp.ok) throw new Error(`Failed to load content: ${resp.status}`);
+        return resp.json();
+      }
+
+      // ── Filtering ──
+      function filterPosts() {
+        let posts = state.allPosts;
+        if (state.selectedAuthor) {
+          posts = posts.filter((p) => p.author === state.selectedAuthor);
+        }
+        if (state.searchQuery.trim()) {
+          const q = state.searchQuery.trim().toLowerCase();
+          posts = posts.filter(
+            (p) => p.title.toLowerCase().includes(q) || cleanTitle(p.title).toLowerCase().includes(q)
+          );
+        }
+        state.filteredPosts = posts;
+      }
+
+      // ── Render ──
+      function renderAuthorList() {
+        const authorMap = {};
+        for (const p of state.allPosts) {
+          const a = p.author || '未知';
+          authorMap[a] = (authorMap[a] || 0) + 1;
+        }
+        const authors = Object.entries(authorMap).sort((a, b) => b[1] - a[1]);
+
+        dom.authorCount.textContent = authors.length;
+        let html = '';
+        // "全部" option
+        html += `<li class="author-item${state.selectedAuthor === null ? ' active' : ''}" data-author="">
+    <span class="name">全部作者</span><span class="badge">${state.allPosts.length}</span></li>`;
+        for (const [name, count] of authors) {
+          html += `<li class="author-item${state.selectedAuthor === name ? ' active' : ''}" data-author="${escapeHtml(name)}">
+      <span class="name">${escapeHtml(name)}</span><span class="badge">${count}</span></li>`;
+        }
+        dom.authorList.innerHTML = html;
+      }
+
+      function renderActiveFilters() {
+        const chips = [];
+        if (state.selectedAuthor) {
+          chips.push(
+            `<span class="filter-chip" data-action="clear-author">${escapeHtml(state.selectedAuthor)}</span>`
+          );
+        }
+        if (state.searchQuery.trim()) {
+          chips.push(
+            `<span class="filter-chip" data-action="clear-search">"${escapeHtml(state.searchQuery.trim())}"</span>`
+          );
+        }
+        dom.activeFilters.innerHTML = chips.join('');
+      }
+
+      function renderCards() {
+        if (state.filteredPosts.length === 0) {
+          dom.cardGrid.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="40" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><line x1="20" y1="28" x2="44" y2="28" stroke="currentColor" stroke-width="2"/><line x1="20" y1="36" x2="36" y2="36" stroke="currentColor" stroke-width="2"/></svg>
+      <p>没有匹配的内容</p>
+    </div>`;
+          return;
+        }
+
+        let html = '';
+        for (const p of state.filteredPosts) {
+          const thumb = p.images && p.images.length > 0 ? p.images[0] : PLACEHOLDER_SVG;
+          const title = cleanTitle(p.title);
+          const author = p.author || '未知';
+          const tag = p.tag || '';
+          const checked = state.selectedIds.has(p.id) ? ' checked' : '';
+          const selClass = state.selectedIds.has(p.id) ? ' selected' : '';
+          html += `<div class="card${selClass}" data-id="${escapeHtml(p.id)}">
+      <input type="checkbox" class="card-check" data-id="${escapeHtml(p.id)}"${checked} onclick="event.stopPropagation(); toggleCard(this)">
+      <img class="card-thumb" src="${escapeHtml(thumb)}" alt="" loading="lazy" onerror="imgOnError(this)">
+      <div class="card-body">
+        <div class="card-title">${escapeHtml(title)}</div>
+        <div class="card-meta">
+          <span class="author-name">${escapeHtml(author)}</span>
+          ${tag ? `<span class="tag">#${escapeHtml(tag)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+        }
+        dom.cardGrid.innerHTML = html;
+        if (state.manageMode) {
+          document.body.classList.add('manage-mode');
+        } else {
+          document.body.classList.remove('manage-mode');
+        }
+      }
+
+      function renderStats() {
+        dom.statTotal.textContent = state.allPosts.length;
+        dom.statFiltered.textContent = state.filteredPosts.length;
+      }
+
+      function renderAll() {
+        filterPosts();
+        renderStats();
+        renderAuthorList();
+        renderActiveFilters();
+        renderCards();
+        if (state.manageMode) {
+          dom.statSelectedWrap.style.display = '';
+          dom.statSelected.textContent = state.selectedIds.size;
+          dom.resultBox.style.display = '';
+        } else {
+          dom.statSelectedWrap.style.display = 'none';
+          dom.resultBox.style.display = 'none';
+        }
+      }
+
+      const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, (c) => ESCAPE_MAP[c]);
+      }
+
+      // ── Event: Platform switch ──
+      async function switchPlatform(platform) {
+        if (state.platform === platform) return;
+        state.platform = platform;
+        state.selectedAuthor = null;
+        state.searchQuery = '';
+        state.selectedIds = new Set();
+        dom.searchInput.value = '';
+        if (state.manageMode) {
+          state.manageMode = false;
+          document.body.classList.remove('manage-mode');
+          dom.manageToggle.checked = false;
+        }
+
+        // Update tab UI
+        $$('.platform-tab').forEach((t) => t.classList.toggle('active', t.dataset.platform === platform));
+
+        // Show loading
+        dom.cardGrid.innerHTML = '<div class="loading"><div class="spinner"></div><p>加载中...</p></div>';
+
+        try {
+          const allData = await loadIndex();
+          const cfg = PLATFORM_CONFIG[platform];
+          state.allPosts = allData.filter((p) => p.cat === cfg.cat);
+          state.contentCache = {}; // clear cache on platform switch
+          renderAll();
+        } catch (err) {
+          dom.cardGrid.innerHTML = `<div class="empty-state"><p>加载失败: ${escapeHtml(err.message)}</p></div>`;
+          console.error(err);
+        }
+      }
+
+      // ── Event: Author click ──
+      dom.authorList.addEventListener('click', (e) => {
+        const item = e.target.closest('.author-item');
+        if (!item) return;
+        const author = item.dataset.author;
+        state.selectedAuthor = author || null;
+        renderAll();
+      });
+
+      // ── Event: Search ──
+      let searchTimer = null;
+      dom.searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => {
+          state.searchQuery = dom.searchInput.value;
+          renderAll();
+        }, 250);
+      });
+
+      // ── Event: Filter chip clear ──
+      dom.activeFilters.addEventListener('click', (e) => {
+        const chip = e.target.closest('.filter-chip');
+        if (!chip) return;
+        const action = chip.dataset.action;
+        if (action === 'clear-author') {
+          state.selectedAuthor = null;
+        } else if (action === 'clear-search') {
+          state.searchQuery = '';
+          dom.searchInput.value = '';
+        }
+        renderAll();
+      });
+
+      // ── Event: Platform tabs ──
+      dom.platformTabs.addEventListener('click', (e) => {
+        const tab = e.target.closest('.platform-tab');
+        if (!tab) return;
+        switchPlatform(tab.dataset.platform);
+      });
+
+      // ── Event: Card click → open detail (normal) / mark delete (manage) ──
+      dom.cardGrid.addEventListener('click', async (e) => {
+        if (!state.manageMode) {
+          const card = e.target.closest('.card');
+          if (!card) return;
+          const postId = card.dataset.id;
+          await openDetail(postId);
+          return;
+        }
+        // 管理模式：点击缩略图或卡片 → 标记删除
+        const card = e.target.closest('.card');
+        if (!card) return;
+        if (e.target.tagName === 'INPUT') return; // checkbox 自己处理
+        const postId = card.dataset.id;
+        // Toggle: if already selected, unselect; otherwise select
+        if (state.selectedIds.has(postId)) {
+          state.selectedIds.delete(postId);
+          card.classList.remove('selected');
+        } else {
+          state.selectedIds.add(postId);
+          card.classList.add('selected');
+        }
+        // Update checkbox
+        const cb = card.querySelector('.card-check');
+        if (cb) cb.checked = state.selectedIds.has(postId);
+        dom.statSelected.textContent = state.selectedIds.size;
+        // Show brief animation
+        card.style.transform = 'scale(0.95)';
+        setTimeout(() => (card.style.transform = ''), 150);
+      });
+
+      // ── Detail Modal ──
+      async function openDetail(postId) {
+        // Find post in our filtered list
+        const post = state.filteredPosts.find((p) => p.id === postId);
+        if (!post) return;
+
+        // Load content if not cached
+        if (!state.contentCache[postId]) {
+          const content = await loadContent(state.platform);
+          state.contentCache = { ...state.contentCache, ...content };
+        }
+
+        const detail = state.contentCache[postId] || null;
+        state.currentDetail = { post, detail };
+        state.galleryIdx = 0;
+
+        // Title
+        const cleanT = cleanTitle(post.title);
+        dom.modalTitle.textContent = cleanT;
+
+        // Images
+        const images = detail ? detail.segments.filter((s) => s.i).map((s) => s.i) : post.images || [];
+
+        // Meta
+        const author = detail && detail.author ? detail.author.name || post.author : post.author || '未知';
+        const time = detail && detail.time ? detail.time : '';
+        const tag = detail && detail.tag ? detail.tag : post.tag || '';
+
+        let metaHtml = `<div class="meta-row">
+    <span class="meta-author">${escapeHtml(author)}</span>`;
+        if (time) metaHtml += `<span class="meta-time">${escapeHtml(time)}</span>`;
+        if (tag) metaHtml += `<span class="meta-tag">#${escapeHtml(tag)}</span>`;
+        metaHtml += `</div>`;
+
+        // Body text
+        let bodyHtml = '<div class="article-body">';
+        if (detail && detail.segments) {
+          for (const seg of detail.segments) {
+            if (seg.t) bodyHtml += `<p>${escapeHtml(seg.t)}</p>`;
+          }
+        }
+        if (!detail || !detail.segments || detail.segments.every((s) => !s.t)) {
+          bodyHtml += `<p style="color:var(--text-muted)">暂无正文内容</p>`;
+        }
+        bodyHtml += '</div>';
+
+        dom.modalContent.innerHTML = metaHtml + bodyHtml;
+
+        // Gallery
+        renderGallery(images);
+
+        // Show modal
+        dom.modalOverlay.hidden = false;
+        dom.modalOverlay.style.display = '';
+        document.body.style.overflow = 'hidden';
+      }
+
+      function renderGallery(images) {
+        if (images.length === 0) {
+          dom.modalImage.src = PLACEHOLDER_SVG;
+          dom.galleryCounter.textContent = '0 / 0';
+          dom.galleryPrev.style.display = 'none';
+          dom.galleryNext.style.display = 'none';
+          return;
+        }
+        dom.modalImage.src = images[state.galleryIdx];
+        dom.modalImage.onerror = function () {
+          imgOnError(this);
+        };
+        dom.galleryCounter.textContent = `${state.galleryIdx + 1} / ${images.length}`;
+        dom.galleryPrev.style.display = images.length > 1 ? '' : 'none';
+        dom.galleryNext.style.display = images.length > 1 ? '' : 'none';
+
+        // Store images for navigation
+        dom.modalGallery._images = images;
+      }
+
+      dom.galleryPrev.addEventListener('click', () => {
+        const images = dom.modalGallery._images || [];
+        if (images.length === 0) return;
+        state.galleryIdx = (state.galleryIdx - 1 + images.length) % images.length;
+        dom.modalImage.src = images[state.galleryIdx];
+        dom.modalImage.onerror = function () {
+          imgOnError(this);
+        };
+        dom.galleryCounter.textContent = `${state.galleryIdx + 1} / ${images.length}`;
+      });
+
+      dom.galleryNext.addEventListener('click', () => {
+        const images = dom.modalGallery._images || [];
+        if (images.length === 0) return;
+        state.galleryIdx = (state.galleryIdx + 1) % images.length;
+        dom.modalImage.src = images[state.galleryIdx];
+        dom.modalImage.onerror = function () {
+          imgOnError(this);
+        };
+        dom.galleryCounter.textContent = `${state.galleryIdx + 1} / ${images.length}`;
+      });
+
+      // Keyboard nav in modal
+      document.addEventListener('keydown', (e) => {
+        if (dom.modalOverlay.hidden) return;
+        if (e.key === 'Escape') closeDetail();
+        if (e.key === 'ArrowLeft') dom.galleryPrev.click();
+        if (e.key === 'ArrowRight') dom.galleryNext.click();
+      });
+
+      function closeDetail() {
+        dom.modalOverlay.hidden = true;
+        dom.modalOverlay.style.display = 'none';
+        document.body.style.overflow = '';
+        state.currentDetail = null;
+      }
+
+      dom.modalClose.addEventListener('click', closeDetail);
+      dom.modalOverlay.addEventListener('click', (e) => {
+        if (e.target === dom.modalOverlay) closeDetail();
+      });
+
+      // ── Manage Mode ──
+      function toggleManageMode() {
+        state.manageMode = dom.manageToggle.checked;
+        state.selectedIds = new Set();
+        if (state.manageMode) {
+          document.body.classList.add('manage-mode');
+        } else {
+          document.body.classList.remove('manage-mode');
+        }
+        renderAll();
+      }
+
+      function toggleCard(checkbox) {
+        const id = checkbox.dataset.id;
+        if (checkbox.checked) {
+          state.selectedIds.add(id);
+        } else {
+          state.selectedIds.delete(id);
+        }
+        // Update card visual
+        const card = checkbox.closest('.card');
+        if (card) card.classList.toggle('selected', checkbox.checked);
+        dom.statSelected.textContent = state.selectedIds.size;
+      }
+
+      function selectAll() {
+        for (const p of state.filteredPosts) state.selectedIds.add(p.id);
+        renderAll();
+      }
+
+      function invertSelect() {
+        const newSet = new Set();
+        for (const p of state.filteredPosts) {
+          if (!state.selectedIds.has(p.id)) newSet.add(p.id);
+        }
+        state.selectedIds = newSet;
+        renderAll();
+      }
+
+      function exportDeleteList() {
+        const ids = [...state.selectedIds].sort();
+        dom.resultBox.textContent =
+          ids.length === 0
+            ? '未选中任何帖子'
+            : `选中 ${ids.length} 个帖子：\n${JSON.stringify(ids, null, 2)}`;
+      }
+
+      function exportDeleteCmd() {
+        const ids = [...state.selectedIds].sort();
+        if (ids.length === 0) {
+          dom.resultBox.textContent = '⚠️ 未选中任何帖子，请先勾选或点击图片标记';
+          return;
+        }
+        const idList = ids.map((id) => `"${id}"`).join(',\n    ');
+        const cf =
+          state.platform === '贴吧'
+            ? '贴吧.json'
+            : state.platform === '微博'
+              ? '微博.json'
+              : '多肉-小红书.json';
+        const sitePath = document.location.href.replace(/\/admin\.html.*$/, '').replace(/^file:\/\//, '');
+        const cmd = `python -c "
+import json, os
+
+SITE = r'${sitePath}'
+delete_ids = [
+    ${idList}
+]
+
+# 1. index.json
+ip = f'{SITE}/data/index.json'
+with open(ip, 'r', encoding='utf-8') as f: idx = json.load(f)
+before = len(idx); idx = [e for e in idx if e['id'] not in delete_ids]
+with open(ip, 'w', encoding='utf-8') as f: json.dump(idx, f, ensure_ascii=False, indent=2)
+print(f'index.json: {before} → {len(idx)}')
+
+# 2. content
+cp = f'{SITE}/data/content/${cf}'
+if os.path.exists(cp):
+    with open(cp, 'r', encoding='utf-8') as f: ct = json.load(f)
+    for did in delete_ids: ct.pop(did, None)
+    with open(cp, 'w', encoding='utf-8') as f: json.dump(ct, f, ensure_ascii=False, indent=2)
+
+# 3. content-index
+cip = f'{SITE}/data/content/content-index.json'
+with open(cip, 'r', encoding='utf-8') as f: ci = json.load(f)
+for did in delete_ids: ci.pop(did, None)
+with open(cip, 'w', encoding='utf-8') as f: json.dump(ci, f, ensure_ascii=False, indent=2)
+
+# 4. search-index
+sip = f'{SITE}/data/search-index.json'
+with open(sip, 'r', encoding='utf-8') as f: si = json.load(f)
+for did in delete_ids: si.pop(did, None)
+with open(sip, 'w', encoding='utf-8') as f: json.dump(si, f, ensure_ascii=False, indent=2)
+
+print(f'\\\\n已删除 {len(delete_ids)} 条，请运行 build_all.py 重建')
+"`;
+        dom.resultBox.innerHTML = `<div style="margin-bottom:8px;color:var(--text-secondary)"><strong>${ids.length} 个帖子已标记</strong> — 复制下方命令发给 AI 即可删除</div>
+    <div style="max-height:300px;overflow:auto;padding:8px;background:#e8e8e8;border-radius:4px;font-size:.72rem">${escapeHtml(cmd)}</div>
+    <button style="margin-top:8px;padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:4px;cursor:pointer" 
+            onclick="navigator.clipboard.writeText(this.parentElement.querySelector('div:nth-child(2)').textContent);this.textContent='✅ 已复制！';setTimeout(()=>this.textContent='📋 复制命令',2000)">📋 复制命令</button>`;
+      }
+
+      // ── Init ──
+      async function init() {
+        try {
+          const allData = await loadIndex();
+          // Count platform totals for tab labels
+          for (const [label, cfg] of Object.entries(PLATFORM_CONFIG)) {
+            const count = allData.filter((p) => p.cat === cfg.cat).length;
+            const tab = document.querySelector(`.platform-tab[data-platform="${label}"] .count`);
+            if (tab) tab.textContent = count;
+          }
+          // Set initial data
+          const cfg = PLATFORM_CONFIG[state.platform];
+          state.allPosts = allData.filter((p) => p.cat === cfg.cat);
+          renderAll();
+        } catch (err) {
+          dom.cardGrid.innerHTML = `<div class="empty-state"><p>初始化失败: ${escapeHtml(err.message)}<br><small>请确保通过 file:// 或本地服务器打开此页面</small></p></div>`;
+          console.error(err);
+        }
+      }
+
+      init();
+    </script>
+  </body>
+</html>

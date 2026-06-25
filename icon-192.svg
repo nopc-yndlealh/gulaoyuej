@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- 圆形背景 -->
+  <circle cx="96" cy="96" r="88" fill="#b8382e"/>
+  <!-- 月季花朵：5瓣简化 -->
+  <g transform="translate(96,88)">
+    <circle cx="0" cy="-30" r="18" fill="#f8a4b8" opacity=".9"/>
+    <circle cx="28" cy="-9" r="18" fill="#f3a0b5" opacity=".85"/>
+    <circle cx="17" cy="24" r="18" fill="#ee9db2" opacity=".8"/>
+    <circle cx="-17" cy="24" r="18" fill="#f3a0b5" opacity=".85"/>
+    <circle cx="-28" cy="-9" r="18" fill="#f8a4b8" opacity=".9"/>
+    <!-- 花心 -->
+    <circle cx="0" cy="0" r="11" fill="#f5e6c8"/>
+    <circle cx="0" cy="0" r="6" fill="#e8c94a"/>
+  </g>
+  <!-- 叶子 -->
+  <ellipse cx="60" cy="140" rx="28" ry="12" fill="#5a9e3a" transform="rotate(-20 60 140)" rx=".6"/>
+  <ellipse cx="132" cy="142" rx="28" ry="12" fill="#5a9e3a" transform="rotate(20 132 142)" rx=".6"/>
+</svg>

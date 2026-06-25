@@ -1,0 +1,22 @@
+{
+  "name": "feijibei-top",
+  "version": "3.0.0",
+  "description": "园艺图鉴 — 月季与多肉植物图鉴静态站",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint app.js admin.html --ext .js,.html",
+    "lint:fix": "eslint app.js admin.html --ext .js,.html --fix",
+    "format": "prettier --write \"**/*.{js,html,css,json}\"",
+    "format:check": "prettier --check \"**/*.{js,html,css,json}\"",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-plugin-html": "^8.0.0",
+    "globals": "^17.7.0",
+    "prettier": "^3.2.0",
+    "typescript": "^6.0.3"
+  }
+}
