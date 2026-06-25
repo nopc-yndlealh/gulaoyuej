@@ -165,7 +165,7 @@
     } catch (e) {
       document.getElementById('loading').innerHTML =
         `<p style="color:#c0392b;font-size:16px;">数据加载失败：${e.message}</p>
-       <p style="margin-top:8px;font-size:13px;color:#888;">
+       <p style="margin-top:8px;font-size:13px;color:#6b6b6b;">
          请确认 data/index.json 和 data/content/ 文件存在且格式正确。
        </p>`;
     }
