@@ -4,13 +4,15 @@
     "url": "https://garden.org/plants/genus/Rosa/",
     "desc": "全球最大的园艺数据库之一，收录海量月季品种的详细资料、图片与花友评价",
     "icon": "🌐",
-    "category": "品种数据库"
+    "category": "品种数据库",
+    "image": "https://www.google.com/s2/favicons?domain=garden.org&sz=128"
   },
   {
     "name": "京成バラ園 バラ図鑑 (Keisei Rose Encyclopedia)",
     "url": "https://www.keiseirose.co.jp/rose/",
     "desc": "日本知名月季育种机构京成玫瑰园官方品种图鉴，日本育种月季的权威参考资料",
     "icon": "🇯🇵",
-    "category": "育种机构"
+    "category": "育种机构",
+    "image": "https://www.google.com/s2/favicons?domain=www.keiseirose.co.jp&sz=128"
   }
 ]
