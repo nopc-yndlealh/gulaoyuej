@@ -252,12 +252,17 @@
     // 花友推荐
     if (extraData.authors) {
       extraData.authors.forEach((author, i) => {
+        // 优先用第一个视频的缩略图作为卡片图，B站头像可能有防盗链限制
+        const cardThumb =
+          (author.videos && author.videos.length > 0 && author.videos[0].thumbnail) ||
+          author.avatar ||
+          '';
         rawData.push({
           id: `author_${i}`,
           title: author.name,
           cat: '花友推荐',
           type: 'author',
-          thumb: author.avatar || '',
+          thumb: cardThumb,
           tag: author.platform || '',
           author: author.url, // 复用 author 字段存主页 URL
         });
