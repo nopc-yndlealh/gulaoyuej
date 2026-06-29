@@ -270,7 +270,7 @@
       flatGroups[catName].push({
         id: item.id,
         title: item.title,
-        thumb: item.images && item.images.length > 0 ? item.images[0] : '',
+        thumb: item.thumb || (item.images && item.images.length > 0 ? item.images[0] : ''),
         file_url: `./detail.html?id=${item.id}`,
         tag: item.tag || '',
         author: item.author || '',
