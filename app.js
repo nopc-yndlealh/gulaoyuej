@@ -160,6 +160,21 @@
         console.warn('推荐列表不可用:', e.message);
       }
 
+      // 加载园艺导航 & 花友推荐数据
+      try {
+        const [navRes, authorRes] = await Promise.all([
+          fetch('./data/nav-links.json'),
+          fetch('./data/authors.json'),
+        ]);
+        if (navRes.ok) extraData.navLinks = await navRes.json();
+        if (authorRes.ok) extraData.authors = await authorRes.json();
+      } catch (e) {
+        console.warn('导航/作者数据加载失败:', e.message);
+      }
+
+      // 注入虚拟条目到 rawData
+      injectExtraEntries(rawData);
+
       allData = transformData(rawData);
       init();
     } catch (e) {
@@ -216,6 +231,41 @@
     }
   }
 
+  /* 注入园艺导航/花友推荐虚拟条目 */
+  /** @param {IndexEntry[]} rawData */
+  function injectExtraEntries(rawData) {
+    // 园艺导航
+    if (extraData.navLinks) {
+      extraData.navLinks.forEach((link, i) => {
+        rawData.push({
+          id: `nav_${i}`,
+          title: link.name,
+          cat: '园艺导航',
+          type: 'nav',
+          thumb: '',
+          tag: link.category || '',
+          author: link.url, // 复用 author 字段存 URL
+        });
+        extraData[`nav_${i}`] = link;
+      });
+    }
+    // 花友推荐
+    if (extraData.authors) {
+      extraData.authors.forEach((author, i) => {
+        rawData.push({
+          id: `author_${i}`,
+          title: author.name,
+          cat: '花友推荐',
+          type: 'author',
+          thumb: author.avatar || '',
+          tag: author.platform || '',
+          author: author.url, // 复用 author 字段存主页 URL
+        });
+        extraData[`author_${i}`] = author;
+      });
+    }
+  }
+
   /* 树状分类配置 */
   /** @type {TreeConfigGroup[]} */
   const TREE_CONFIG = [
@@ -256,7 +306,11 @@
     },
     { name: '古代园艺', children: [] },
     { name: '养花日常', children: [] },
+    { name: '园艺导航', children: [] },
+    { name: '花友推荐', children: [] },
   ];
+  /** @type {Record<string, any[]>} 额外数据（导航链接/作者信息） */
+  let extraData = {};
 
   /* 数据转换：扁平数组 → 树状分类结构 */
   /** @param {IndexEntry[]} rawData @returns {TransformedData} */
@@ -390,22 +444,6 @@
     evoLink.innerHTML = '<span class="label">🧬 景天科演化图谱 2019</span>';
     evoLink.addEventListener('click', (e) => e.stopPropagation()); // 阻止 sidebar click handler 拦截
     container.appendChild(evoLink);
-
-    // 园艺导航入口
-    const navLink = document.createElement('a');
-    navLink.href = './nav.html';
-    navLink.className = 'cat-item evo-link';
-    navLink.innerHTML = '<span class="label">🧭 园艺导航</span>';
-    navLink.addEventListener('click', (e) => e.stopPropagation());
-    container.appendChild(navLink);
-
-    // 花友推荐入口
-    const authorLink = document.createElement('a');
-    authorLink.href = './authors.html';
-    authorLink.className = 'cat-item evo-link';
-    authorLink.innerHTML = '<span class="label">🎬 花友推荐</span>';
-    authorLink.addEventListener('click', (e) => e.stopPropagation());
-    container.appendChild(authorLink);
   }
 
   /* 渲染移动端横向分类条（扁平展示，带分组前缀） */
@@ -438,22 +476,6 @@
     evoChip.textContent = '🧬 演化图谱 2019';
     evoChip.addEventListener('click', (e) => e.stopPropagation());
     scrollContainer.appendChild(evoChip);
-
-    // 园艺导航入口（移动端）
-    const navChip = document.createElement('a');
-    navChip.href = './nav.html';
-    navChip.className = 'cat-chip evo-chip';
-    navChip.textContent = '🧭 园艺导航';
-    navChip.addEventListener('click', (e) => e.stopPropagation());
-    scrollContainer.appendChild(navChip);
-
-    // 花友推荐入口（移动端）
-    const authorChip = document.createElement('a');
-    authorChip.href = './authors.html';
-    authorChip.className = 'cat-chip evo-chip';
-    authorChip.textContent = '🎬 花友推荐';
-    authorChip.addEventListener('click', (e) => e.stopPropagation());
-    scrollContainer.appendChild(authorChip);
   }
 
   /* 根据树节点索引获取要展示的条目 */
@@ -832,6 +854,16 @@
         window.open(SPECIAL_PAGES[id], '_blank');
         return;
       }
+      // ── 园艺导航：打开外部链接 ──
+      if (id.startsWith('nav_') && extraData[id]) {
+        window.open(extraData[id].url, '_blank');
+        return;
+      }
+      // ── 花友推荐：打开作者详情弹窗 ──
+      if (id.startsWith('author_') && extraData[id]) {
+        openAuthorModal(id, extraData[id]);
+        return;
+      }
       openModal(id, card.dataset.title);
     });
 
@@ -1039,6 +1071,93 @@
       detailEl.innerHTML = '';
     }, 300);
     document.body.style.overflow = '';
+  }
+
+  /* 花友推荐弹窗 */
+  /** @param {string} id @param {object} author */
+  function openAuthorModal(id, author) {
+    const overlay = document.getElementById('modal-overlay');
+    const detailEl = document.getElementById('detail-view');
+    document.getElementById('modal-title').textContent = author.name || '作者详情';
+
+    const platformLabels = { bilibili: 'B站', youtube: 'YouTube', xiaohongshu: '小红书' };
+    const platformClass = {
+      bilibili: 'platform-bilibili',
+      youtube: 'platform-youtube',
+      xiaohongshu: 'platform-xiaohongshu',
+    };
+    const pLabel = platformLabels[author.platform] || author.platform || '';
+    const pClass = platformClass[author.platform] || '';
+
+    let videosHtml = '';
+    if (author.videos && author.videos.length > 0) {
+      videosHtml = '<div class="author-videos-section"><h4>推荐视频</h4>';
+      author.videos.forEach((v) => {
+        const isEmbeddable = v.platform === 'bilibili' && v.embedUrl;
+        if (isEmbeddable) {
+          const safeTitle = escapeHtml(v.title || '视频');
+          videosHtml +=
+            '<div class="author-video-wrap">' +
+            '<div class="video-embed" style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;background:#000;border-radius:8px;margin-bottom:8px;">' +
+            '<iframe src="' +
+            v.embedUrl +
+            '" style="position:absolute;inset:0;width:100%;height:100%;border:none;" allowfullscreen allow="autoplay;encrypted-media" title="' +
+            safeTitle +
+            '" loading="lazy"></iframe>' +
+            '</div>' +
+            '<p style="font-size:13px;color:var(--text-secondary);margin:0 0 12px;text-align:center;">' +
+            safeTitle +
+            '</p>' +
+            '</div>';
+        } else {
+          videosHtml +=
+            '<p style="font-size:13px;color:var(--text-muted);text-align:center;padding:12px;">📺 ' +
+            escapeHtml(v.title || '视频') +
+            ' — 需跳转 ' +
+            (platformLabels[v.platform] || v.platform) +
+            ' 观看</p>';
+        }
+      });
+      videosHtml += '</div>';
+    }
+
+    detailEl.innerHTML =
+      '<div class="author-detail" style="text-align:center;padding:8px 0;">' +
+      '<div style="margin-bottom:12px;">' +
+      (author.avatar
+        ? '<img src="' +
+          author.avatar +
+          '" alt="' +
+          escapeHtml(author.name) +
+          '" style="width:80px;height:80px;border-radius:50%;object-fit:cover;border:3px solid var(--accent);">'
+        : '<div style="width:80px;height:80px;border-radius:50%;background:var(--accent-soft);display:inline-flex;align-items:center;justify-content:center;font-size:36px;">👤</div>') +
+      '</div>' +
+      '<h3 style="margin:0 0 4px;font-size:20px;color:var(--text);display:flex;align-items:center;justify-content:center;gap:8px;">' +
+      escapeHtml(author.name) +
+      (pLabel
+        ? '<span style="display:inline-block;padding:2px 10px;border-radius:4px;font-size:11px;font-weight:600;' +
+          (author.platform === 'bilibili'
+            ? 'background:#fb7299;color:#fff;'
+            : author.platform === 'youtube'
+            ? 'background:#ff0000;color:#fff;'
+            : 'background:#fe2c55;color:#fff;') +
+          '">' +
+          pLabel +
+          '</span>'
+        : '') +
+      '</h3>' +
+      '<p style="color:var(--text-muted);font-size:14px;margin:4px 0 8px;">' +
+      escapeHtml(author.intro || '') +
+      '</p>' +
+      '<a href="' +
+      author.url +
+      '" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:4px;padding:8px 18px;background:var(--accent);color:#fff;border-radius:6px;text-decoration:none;font-size:13px;font-weight:500;margin-bottom:16px;">前往主页 ↗</a>' +
+      videosHtml +
+      '</div>';
+
+    overlay.classList.add('open');
+    detailEl.classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
 
   /* 图片灯箱 */
