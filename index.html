@@ -13,39 +13,24 @@
     <meta property="og:description" content="月季与多肉植物品种大全，含品种特性、育种历史与种植分享。">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="zh_CN">
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>"
-    />
+    <link rel="dns-prefetch" href="https://api.qrserver.com" />
+    <link rel="dns-prefetch" href="https://images.weserv.nl" />
+    <link rel="dns-prefetch" href="https://connect.qq.com" />
+    <link rel="preload" href="./style.css" as="style" />
+    <link rel="preload" href="./app.js" as="script" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>" />
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <div id="loading">
-      <div class="spinner"></div>
-      <p>正在加载图鉴数据…</p>
-    </div>
-
-    <!-- 桌面端顶栏 -->
+    <div id="loading"><div class="spinner"></div><p>正在加载图鉴数据…</p></div>
     <header>
       <h1>园艺图鉴</h1>
       <div class="search-wrap">
         <input type="search" id="search-input" placeholder="搜索月季 / 多肉…" aria-label="搜索植物" />
-        <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">
-          🌙
-        </button>
-        <button
-          id="classify-toggle"
-          title="分类器模式"
-          aria-label="开启/关闭分类器模式"
-          class="header-btn"
-          style="font-size: 15px; display: none"
-        >
-          🏷️
-        </button>
+        <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">🌙</button>
+        <button id="classify-toggle" title="分类器模式" aria-label="开启/关闭分类器模式" class="header-btn" style="font-size: 15px; display: none">🏷️</button>
       </div>
     </header>
-
-    <!-- 移动端导航条 -->
     <div id="mobile-nav">
       <div class="cat-scroll" id="mobile-cat-scroll"></div>
       <div class="mobile-toolbar">
@@ -53,51 +38,36 @@
         <button id="mobile-theme-toggle" title="切换主题" aria-label="切换深色/浅色模式">🌙</button>
       </div>
     </div>
-
-    <!-- 主布局 -->
     <div class="layout">
-      <!-- 桌面端左侧分类 -->
-      <nav id="sidebar">
-        <h2>分　类</h2>
-        <div id="cat-list"></div>
-      </nav>
-      <!-- 右侧内容 -->
+      <nav id="sidebar"><h2>分　类</h2><div id="cat-list"></div></nav>
       <main id="content">
-        <div class="section-header">
-          <h2 id="section-title">全部条目</h2>
-          <span class="total" id="total-count"></span>
-        </div>
+        <div class="section-header"><h2 id="section-title">全部条目</h2><span class="total" id="total-count"></span></div>
         <div class="grid" id="grid"></div>
         <div class="pagination" id="pagination"></div>
       </main>
     </div>
-
-    <!-- 弹窗 -->
     <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div id="modal-box">
-        <div id="modal-header">
-          <span id="modal-title">详情</span>
-          <button id="modal-close" aria-label="关闭弹窗">×</button>
-        </div>
+        <div id="modal-header"><span id="modal-title">详情</span><button id="modal-close" aria-label="关闭弹窗">×</button></div>
         <div id="detail-view"></div>
       </div>
     </div>
-
-    <!-- 图片灯箱 -->
     <div id="lightbox"></div>
-
-    <!-- 分享二维码浮层 -->
     <div id="qr-overlay">
-      <div id="qr-box">
-        <p id="qr-label">扫码分享</p>
-        <img id="qr-img" src="" alt="分享二维码" />
-        <button id="qr-close">×</button>
-      </div>
+      <div id="qr-box"><p id="qr-label">扫码分享</p><img id="qr-img" src="" alt="分享二维码" /><button id="qr-close">×</button></div>
     </div>
-
-    <!-- Toast 提示 -->
     <div id="toast"></div>
-
     <script src="./app.js"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('./sw.js').then(function(reg) {
+            console.log('SW registered:', reg.scope);
+          }).catch(function(err) {
+            console.log('SW registration failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
