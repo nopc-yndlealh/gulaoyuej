@@ -551,7 +551,7 @@
         const safeCat = escapeHtml(it.cat);
         const safeId = escapeHtml(it.id);
         const thumbHtml = it.thumb
-          ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle}" loading="lazy" decoding="async"
+          ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle}" loading="lazy" decoding="async" referrerpolicy="no-referrer"
              onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
              onload="this.classList.add('loaded')">
          <div class="no-thumb" style="display:none;">无图</div>`
