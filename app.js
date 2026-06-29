@@ -242,7 +242,7 @@
           title: link.name,
           cat: '园艺导航',
           type: 'nav',
-          thumb: '',
+          thumb: link.image || '',
           tag: link.category || '',
           author: link.url, // 复用 author 字段存 URL
         });
@@ -349,8 +349,7 @@
           totalItems += items.length;
         });
       } else {
-        // 无显式 children（多肉）：从 flatGroups 中自动发现子分类
-        // 匹配 "多肉/xxx" 格式的 key
+        // 无显式 children：从 flatGroups 中自动发现子分类
         const prefix = `${group.name}/`;
         const subCats = {};
         const directItems = [];
@@ -376,9 +375,14 @@
             });
         }
 
-        // 直接属于多肉（无子分类）的条目
+        // 直接属于此分类的条目：有子分类时放"其他"，没有时直接作为叶子
         if (directItems.length > 0) {
-          node.children.push({ name: '其他', items: directItems, isLeaf: true });
+          if (Object.keys(subCats).length > 0) {
+            node.children.push({ name: '其他', items: directItems, isLeaf: true });
+          } else {
+            // 无子分类 → 直接展示，不嵌套"其他"
+            node.children.push({ name: group.name, items: directItems, isLeaf: true });
+          }
           node.itemCount += directItems.length;
           totalItems += directItems.length;
         }
