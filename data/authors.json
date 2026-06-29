@@ -4,7 +4,7 @@
     "platform": "bilibili",
     "uid": "177381025",
     "url": "https://space.bilibili.com/177381025",
-    "avatar": "http://i1.hdslb.com/bfs/face/79e9a28dd1fbe922677818fa1f45b7bd9bf9d2fb.jpg",
+    "avatar": "https://i1.hdslb.com/bfs/face/79e9a28dd1fbe922677818fa1f45b7bd9bf9d2fb.jpg",
     "intro": "月季品种考据与园艺植物科普，翻译海外月季资料",
     "videos": [
       {
@@ -12,7 +12,7 @@
         "platform": "bilibili",
         "bvid": "BV1eGRRYREi4",
         "embedUrl": "//player.bilibili.com/player.html?isOutside=true&bvid=BV1eGRRYREi4&cid=29246294627&p=1&high_quality=1&autoplay=0",
-        "thumbnail": "http://i2.hdslb.com/bfs/archive/282baf82656cb02f9a6adb257ec0f4f8d4601b55.jpg"
+        "thumbnail": "https://i2.hdslb.com/bfs/archive/282baf82656cb02f9a6adb257ec0f4f8d4601b55.jpg"
       }
     ]
   },
@@ -29,7 +29,7 @@
         "platform": "bilibili",
         "bvid": "BV1wo4y117yF",
         "embedUrl": "//player.bilibili.com/player.html?isOutside=true&bvid=BV1wo4y117yF&cid=340233622&p=1&high_quality=1&autoplay=0",
-        "thumbnail": "http://i1.hdslb.com/bfs/archive/0d9fcd4adcc6623c21fec2ae174e2ab65940e1bd.jpg"
+        "thumbnail": "https://i1.hdslb.com/bfs/archive/0d9fcd4adcc6623c21fec2ae174e2ab65940e1bd.jpg"
       }
     ]
   }
