@@ -252,11 +252,14 @@
     // 花友推荐
     if (extraData.authors) {
       extraData.authors.forEach((author, i) => {
-        // 优先用第一个视频的缩略图作为卡片图，B站头像可能有防盗链限制
-        const cardThumb =
+        // 用视频缩略图通过 weserv.nl 代理（B站防盗链）
+        const rawThumb =
           (author.videos && author.videos.length > 0 && author.videos[0].thumbnail) ||
           author.avatar ||
           '';
+        const cardThumb = rawThumb
+          ? `https://images.weserv.nl/?url=${encodeURIComponent(rawThumb.replace(/^https?:\/\//, ''))}&w=200&h=150&fit=cover&default=1`
+          : '';
         rawData.push({
           id: `author_${i}`,
           title: author.name,
