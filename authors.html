@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff8e14" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040" />
+    <title>花友推荐 · feijibei</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>"
+    />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./css/pages.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <a href="./index.html" class="page-back" aria-label="返回首页">← 返回</a>
+      <h1>花友推荐</h1>
+      <div class="header-actions">
+        <button
+          id="theme-toggle"
+          class="header-btn"
+          title="切换主题"
+          aria-label="切换深色/浅色模式"
+        >🌙</button>
+      </div>
+    </header>
+
+    <main class="page-main">
+      <div id="authors-content">
+        <div class="page-loading">
+          <div class="spinner"></div>
+          <span>加载作者数据…</span>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        'use strict';
+
+        /* ===== 主题切换（与主站共享 localStorage key） ===== */
+        var THEME_KEY = 'feijibei-theme';
+
+        function isDaytime() {
+          var hour = new Date().getHours();
+          return hour >= 8 && hour < 20;
+        }
+
+        function getTheme() {
+          var saved = localStorage.getItem(THEME_KEY);
+          if (saved === 'dark' || saved === 'light') return saved;
+          return 'auto';
+        }
+
+        function getEffectiveTheme() {
+          var mode = getTheme();
+          if (mode === 'dark') return 'dark';
+          if (mode === 'light') return 'light';
+          return isDaytime() ? 'light' : 'dark';
+        }
+
+        function applyTheme() {
+          var effective = getEffectiveTheme();
+          document.documentElement.setAttribute('data-theme', effective);
+          updateToggleIcon();
+        }
+
+        function updateToggleIcon() {
+          var btn = document.getElementById('theme-toggle');
+          if (!btn) return;
+          var mode = getTheme();
+          if (mode === 'dark') btn.textContent = '☀️';
+          else if (mode === 'light') btn.textContent = '🌙';
+          else btn.textContent = getEffectiveTheme() === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+          var current = getTheme();
+          var next;
+          if (current === 'auto') next = 'dark';
+          else if (current === 'dark') next = 'light';
+          else next = 'auto';
+          localStorage.setItem(THEME_KEY, next);
+          applyTheme();
+        }
+
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        applyTheme();
+
+        /* ===== 平台信息 ===== */
+        var PLATFORM_INFO = {
+          bilibili: { name: 'B站', cssClass: 'platform-bilibili', embeddable: true },
+          youtube: { name: 'YouTube', cssClass: 'platform-youtube', embeddable: false },
+          xiaohongshu: { name: '小红书', cssClass: 'platform-xiaohongshu', embeddable: false },
+        };
+
+        /* ===== 渲染 ===== */
+        function renderAuthors(authors) {
+          var container = document.getElementById('authors-content');
+
+          if (!authors || authors.length === 0) {
+            container.innerHTML =
+              '<div class="page-empty">暂无推荐作者，请编辑 data/authors.json 添加。</div>';
+            return;
+          }
+
+          var html = '';
+          authors.forEach(function (author, idx) {
+            var platform = PLATFORM_INFO[author.platform] || {
+              name: author.platform,
+              cssClass: '',
+              embeddable: false,
+            };
+
+            html +=
+              '<article class="author-card" id="author-' + idx + '">';
+
+            /* 作者头部（点击跳转主页） */
+            html +=
+              '<a href="' +
+              author.url +
+              '" target="_blank" rel="noopener noreferrer" class="author-header">' +
+              '<div class="author-avatar">' +
+              (author.avatar
+                ? '<img src="' +
+                  author.avatar +
+                  '" alt="' +
+                  author.name +
+                  '" loading="lazy" />'
+                : '<span>' + (author.name ? author.name.charAt(0) : '👤') + '</span>') +
+              '</div>' +
+              '<div class="author-info">' +
+              '<div class="author-name">' +
+              author.name +
+              ' <span class="platform-badge ' +
+              platform.cssClass +
+              '">' +
+              platform.name +
+              '</span>' +
+              '</div>' +
+              '<div class="author-intro">' + (author.intro || '') + '</div>' +
+              '</div>' +
+              '<span class="author-link-icon" aria-hidden="true">↗</span>' +
+              '</a>';
+
+            /* 视频区域 */
+            if (author.videos && author.videos.length > 0) {
+              html += '<div class="author-videos">';
+              html += '<div class="video-list-title">视频</div>';
+
+              author.videos.forEach(function (video, vidx) {
+                var vPlatform = PLATFORM_INFO[video.platform] || platform;
+
+                if (vPlatform.embeddable && video.embedUrl) {
+                  /* 可嵌入视频：懒加载模式 */
+                  html +=
+                    '<div class="video-item" data-video-id="' +
+                    idx +
+                    '-' +
+                    vidx +
+                    '">' +
+                    '<div class="video-thumb" onclick="window.__loadVideo(this, \'' +
+                    video.embedUrl +
+                    "', '" +
+                    idx +
+                    '-' +
+                    vidx +
+                    '\')" role="button" tabindex="0" aria-label="播放：' +
+                    (video.title || '视频') +
+                    '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">' +
+                    (video.thumbnail
+                      ? '<img class="video-thumb-img" src="' +
+                        video.thumbnail +
+                        '" alt="" loading="lazy" />'
+                      : '<div class="video-thumb-placeholder"><span>🎬</span></div>') +
+                    '<div class="video-play-btn"><div class="video-play-circle"></div></div>' +
+                    '</div>' +
+                    '<div class="video-title">' +
+                    (video.title || '无标题') +
+                    '</div>' +
+                    '</div>';
+                } else {
+                  /* 不可嵌入（YT/小红书）：仅显示缩略图，点击跳转 */
+                  html +=
+                    '<div class="video-item">' +
+                    (video.thumbnail
+                      ? '<div class="video-thumb" style="cursor:default; opacity:0.7">' +
+                        '<img class="video-thumb-img" src="' +
+                        video.thumbnail +
+                        '" alt="" loading="lazy" />' +
+                        '</div>'
+                      : '<div class="video-empty">📺 请前往 ' +
+                        vPlatform.name +
+                        ' 观看</div>') +
+                    '<div class="video-title" style="opacity:0.6">' +
+                    (video.title || '无标题') +
+                    ' <span style="font-size:10px;color:var(--text-muted)">（需跳转 ' +
+                    vPlatform.name +
+                    ' 观看）</span>' +
+                    '</div>' +
+                    '</div>';
+                }
+              });
+
+              html += '</div>';
+            }
+
+            html += '</article>';
+          });
+
+          container.innerHTML = html;
+        }
+
+        /* ===== 视频懒加载 ===== */
+        window.__loadVideo = function (thumbEl, embedUrl, videoId) {
+          var videoItem = thumbEl.closest('.video-item');
+          if (!videoItem) return;
+
+          var videoTitle = videoItem.querySelector('.video-title');
+          var title = videoTitle ? videoTitle.textContent.trim() : '视频';
+
+          var embedHtml =
+            '<div class="video-embed" role="region" aria-label="视频播放器：' +
+            title +
+            '">' +
+            '<iframe src="' +
+            embedUrl +
+            '" allowfullscreen="true" allow="autoplay; encrypted-media" loading="lazy" title="' +
+            title +
+            '"></iframe>' +
+            '<button class="video-embed-close" onclick="window.__closeVideo(this)" aria-label="关闭视频">×</button>' +
+            '</div>';
+
+          videoItem.innerHTML = embedHtml + (videoTitle ? videoTitle.outerHTML : '');
+        };
+
+        window.__closeVideo = function (closeBtn) {
+          var embed = closeBtn.closest('.video-embed');
+          if (!embed) return;
+          var videoItem = embed.closest('.video-item');
+          if (!videoItem) return;
+
+          /* 恢复为缩略图状态 */
+          var videoId = videoItem.getAttribute('data-video-id') || '';
+          var parts = videoId.split('-');
+          var authorIdx = parseInt(parts[0], 10);
+          var videoIdx = parseInt(parts[1], 10);
+
+          /* 从原始数据重建缩略图 */
+          fetch('./data/authors.json')
+            .then(function (r) { return r.json(); })
+            .then(function (authors) {
+              var author = authors[authorIdx];
+              if (!author || !author.videos || !author.videos[videoIdx]) return;
+              var video = author.videos[videoIdx];
+
+              var thumbHtml =
+                '<div class="video-thumb" onclick="window.__loadVideo(this, \'' +
+                video.embedUrl +
+                "', '" +
+                videoId +
+                '\')" role="button" tabindex="0" aria-label="播放：' +
+                (video.title || '视频') +
+                '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click()}">' +
+                (video.thumbnail
+                  ? '<img class="video-thumb-img" src="' +
+                    video.thumbnail +
+                    '" alt="" loading="lazy" />'
+                  : '<div class="video-thumb-placeholder"><span>🎬</span></div>') +
+                '<div class="video-play-btn"><div class="video-play-circle"></div></div>' +
+                '</div>';
+
+              var titleEl = videoItem.querySelector('.video-title');
+              videoItem.innerHTML = thumbHtml + (titleEl ? titleEl.outerHTML : '');
+            })
+            .catch(function () {
+              videoItem.innerHTML =
+                '<div class="video-empty">视频加载失败，请刷新重试。</div>';
+            });
+        };
+
+        /* ===== 加载数据 ===== */
+        fetch('./data/authors.json')
+          .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(renderAuthors)
+          .catch(function () {
+            document.getElementById('authors-content').innerHTML =
+              '<div class="page-empty">加载作者数据失败，请刷新重试。</div>';
+          });
+      })();
+    </script>
+  </body>
+</html>
