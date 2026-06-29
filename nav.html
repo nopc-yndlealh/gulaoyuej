@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff8e14" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040" />
+    <title>园艺导航 · feijibei</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>"
+    />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="stylesheet" href="./css/pages.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <a href="./index.html" class="page-back" aria-label="返回首页">← 返回</a>
+      <h1>园艺导航</h1>
+      <div class="header-actions">
+        <button
+          id="theme-toggle"
+          class="header-btn"
+          title="切换主题"
+          aria-label="切换深色/浅色模式"
+        >🌙</button>
+      </div>
+    </header>
+
+    <main class="page-main">
+      <div id="nav-content">
+        <div class="page-loading">
+          <div class="spinner"></div>
+          <span>加载导航数据…</span>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      (function () {
+        'use strict';
+
+        /* ===== 主题切换（与主站共享 localStorage key） ===== */
+        const THEME_KEY = 'feijibei-theme';
+
+        function isDaytime() {
+          var hour = new Date().getHours();
+          return hour >= 8 && hour < 20;
+        }
+
+        function getTheme() {
+          var saved = localStorage.getItem(THEME_KEY);
+          if (saved === 'dark' || saved === 'light') return saved;
+          return 'auto';
+        }
+
+        function getEffectiveTheme() {
+          var mode = getTheme();
+          if (mode === 'dark') return 'dark';
+          if (mode === 'light') return 'light';
+          return isDaytime() ? 'light' : 'dark';
+        }
+
+        function applyTheme() {
+          var effective = getEffectiveTheme();
+          document.documentElement.setAttribute('data-theme', effective);
+          updateToggleIcon();
+        }
+
+        function updateToggleIcon() {
+          var btn = document.getElementById('theme-toggle');
+          if (!btn) return;
+          var mode = getTheme();
+          if (mode === 'dark') btn.textContent = '☀️';
+          else if (mode === 'light') btn.textContent = '🌙';
+          else btn.textContent = getEffectiveTheme() === 'dark' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+          var current = getTheme();
+          var next;
+          if (current === 'auto') next = 'dark';
+          else if (current === 'dark') next = 'light';
+          else next = 'auto';
+          localStorage.setItem(THEME_KEY, next);
+          applyTheme();
+        }
+
+        document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+        applyTheme();
+
+        /* ===== 加载导航数据 ===== */
+        function renderNav(links) {
+          if (!links || links.length === 0) {
+            document.getElementById('nav-content').innerHTML =
+              '<div class="page-empty">暂无导航站点，请编辑 data/nav-links.json 添加。</div>';
+            return;
+          }
+
+          var cats = {};
+          links.forEach(function (item) {
+            var cat = item.category || '未分类';
+            if (!cats[cat]) cats[cat] = [];
+            cats[cat].push(item);
+          });
+
+          var html = '';
+          Object.keys(cats).forEach(function (cat) {
+            var items = cats[cat];
+            html +=
+              '<div class="page-section"><h2 class="page-section-title">' +
+              cat +
+              ' <span class="badge">' +
+              items.length +
+              ' 个站点</span></h2><div class="nav-grid">';
+
+            items.forEach(function (item) {
+              html +=
+                '<a href="' +
+                item.url +
+                '" target="_blank" rel="noopener noreferrer" class="nav-card">' +
+                '<div class="nav-card-icon">' +
+                (item.icon || '🔗') +
+                '</div>' +
+                '<div class="nav-card-body">' +
+                '<div class="nav-card-name">' +
+                item.name +
+                '</div>' +
+                '<div class="nav-card-desc">' +
+                (item.desc || '') +
+                '</div>' +
+                '</div>' +
+                '<span class="nav-card-arrow" aria-hidden="true">↗</span>' +
+                '</a>';
+            });
+
+            html += '</div></div>';
+          });
+
+          document.getElementById('nav-content').innerHTML = html;
+        }
+
+        fetch('./data/nav-links.json')
+          .then(function (r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+          })
+          .then(renderNav)
+          .catch(function () {
+            document.getElementById('nav-content').innerHTML =
+              '<div class="page-empty">加载导航数据失败，请刷新重试。</div>';
+          });
+      })();
+    </script>
+  </body>
+</html>
