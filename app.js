@@ -489,8 +489,22 @@
 
   /* 首页推荐 */
   function renderFeatured() {
+    // 优先从 searchIndex 查找，缺失项从原始 _indexData 回退
+    const idMap = { ...searchIndex };
+    if (_indexData) {
+      _indexData.forEach((entry) => {
+        if (!idMap[entry.id]) {
+          idMap[entry.id] = {
+            title: entry.title,
+            cat: entry.cat || '',
+            text: '',
+            thumb: entry.thumb || (entry.images && entry.images[0]) || '',
+          };
+        }
+      });
+    }
     const items = featuredIds
-      .map((id) => (searchIndex[id] ? { id, ...searchIndex[id], tag: '', author: '' } : null))
+      .map((id) => (idMap[id] ? { id, ...idMap[id], tag: '', author: '' } : null))
       .filter(Boolean);
 
     document.getElementById('section-title').textContent = '精选推荐';
