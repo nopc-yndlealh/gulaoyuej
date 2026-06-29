@@ -48,12 +48,12 @@
     const icons = document.querySelectorAll('#theme-toggle, #mobile-theme-toggle');
     const effective = getEffectiveTheme();
     icons.forEach((btn) => {
-      if (mode === 'light') {
+      if (mode === 'dark') {
         btn.textContent = '☀️';
-      } else if (mode === 'dark') {
+      } else if (mode === 'light') {
         btn.textContent = '🌙';
       } else {
-        btn.textContent = effective === 'light' ? '☀️' : '🌙';
+        btn.textContent = effective === 'dark' ? '☀️' : '🌙';
       }
     });
   }
@@ -165,7 +165,7 @@
     } catch (e) {
       document.getElementById('loading').innerHTML =
         `<p style="color:#c0392b;font-size:16px;">数据加载失败：${e.message}</p>
-       <p style="margin-top:8px;font-size:13px;color:#6b6b6b;">
+       <p style="margin-top:8px;font-size:13px;color:#888;">
          请确认 data/index.json 和 data/content/ 文件存在且格式正确。
        </p>`;
     }
@@ -270,7 +270,7 @@
       flatGroups[catName].push({
         id: item.id,
         title: item.title,
-        thumb: item.thumb || '',
+        thumb: item.images && item.images.length > 0 ? item.images[0] : '',
         file_url: `./detail.html?id=${item.id}`,
         tag: item.tag || '',
         author: item.author || '',
@@ -324,13 +324,7 @@
 
         // 直接属于多肉（无子分类）的条目
         if (directItems.length > 0) {
-          if (Object.keys(subCats).length > 0) {
-            // 有子分类时显示为"其他"
-            node.children.push({ name: '其他', items: directItems, isLeaf: true });
-          } else {
-            // 没有子分类时（如古代园艺、养花日常），直接把条目挂在组上
-            node.groupItems = directItems;
-          }
+          node.children.push({ name: '其他', items: directItems, isLeaf: true });
           node.itemCount += directItems.length;
           totalItems += directItems.length;
         }
@@ -353,19 +347,6 @@
       await renderGrid(-1);
     }
     bindEvents();
-    handleShareParam();
-  }
-
-  /* 处理 ?share=xxx URL 参数：自动打开对应详情 */
-  function handleShareParam() {
-    const params = new URLSearchParams(location.search);
-    const shareId = params.get('share');
-    if (shareId) {
-      // 从 indexData 查找标题
-      const entry = _indexData?.find((e) => e.id === shareId);
-      const title = entry?.title || shareId;
-      openModal(shareId, title);
-    }
   }
 
   /* 渲染桌面端左侧树状分类 */
@@ -377,18 +358,8 @@
   </div>`;
 
     allData.tree.forEach((group, gIdx) => {
+      // 父节点（月季 / 多肉）
       const groupId = `group-${gIdx}`;
-
-      if (group.groupItems) {
-        // 无子分类的独立组（如古代园艺、养花日常）: 直接渲染为可点击项
-        html += `<div class="cat-item leaf-item" data-idx="${groupId}">
-        <span class="label">${escapeHtml(group.name)}</span>
-        <span class="count">${group.groupItems.length}</span>
-      </div>`;
-        return;
-      }
-
-      // 有子分类的父节点（月季 / 多肉）
       html += `<div class="tree-group" data-group="${groupId}">
       <div class="cat-item parent-item expanded" data-idx="${groupId}">
         <span class="tree-arrow">▼</span>
@@ -419,6 +390,22 @@
     evoLink.innerHTML = '<span class="label">🧬 景天科演化图谱 2019</span>';
     evoLink.addEventListener('click', (e) => e.stopPropagation()); // 阻止 sidebar click handler 拦截
     container.appendChild(evoLink);
+
+    // 园艺导航入口
+    const navLink = document.createElement('a');
+    navLink.href = './nav.html';
+    navLink.className = 'cat-item evo-link';
+    navLink.innerHTML = '<span class="label">🧭 园艺导航</span>';
+    navLink.addEventListener('click', (e) => e.stopPropagation());
+    container.appendChild(navLink);
+
+    // 花友推荐入口
+    const authorLink = document.createElement('a');
+    authorLink.href = './authors.html';
+    authorLink.className = 'cat-item evo-link';
+    authorLink.innerHTML = '<span class="label">🎬 花友推荐</span>';
+    authorLink.addEventListener('click', (e) => e.stopPropagation());
+    container.appendChild(authorLink);
   }
 
   /* 渲染移动端横向分类条（扁平展示，带分组前缀） */
@@ -434,15 +421,6 @@
 
     // 各叶子分类
     allData.tree.forEach((group, gIdx) => {
-      if (group.groupItems) {
-        // 无子分类的独立组，直接渲染为 chip
-        const chip = document.createElement('div');
-        chip.className = 'cat-chip';
-        chip.dataset.idx = `group-${gIdx}`;
-        chip.textContent = `${group.name} (${group.groupItems.length})`;
-        scrollContainer.appendChild(chip);
-        return;
-      }
       group.children.forEach((child, cIdx) => {
         const chip = document.createElement('div');
         chip.className = 'cat-chip';
@@ -460,6 +438,22 @@
     evoChip.textContent = '🧬 演化图谱 2019';
     evoChip.addEventListener('click', (e) => e.stopPropagation());
     scrollContainer.appendChild(evoChip);
+
+    // 园艺导航入口（移动端）
+    const navChip = document.createElement('a');
+    navChip.href = './nav.html';
+    navChip.className = 'cat-chip evo-chip';
+    navChip.textContent = '🧭 园艺导航';
+    navChip.addEventListener('click', (e) => e.stopPropagation());
+    scrollContainer.appendChild(navChip);
+
+    // 花友推荐入口（移动端）
+    const authorChip = document.createElement('a');
+    authorChip.href = './authors.html';
+    authorChip.className = 'cat-chip evo-chip';
+    authorChip.textContent = '🎬 花友推荐';
+    authorChip.addEventListener('click', (e) => e.stopPropagation());
+    scrollContainer.appendChild(authorChip);
   }
 
   /* 根据树节点索引获取要展示的条目 */
@@ -477,7 +471,6 @@
       const gIdx = parseInt(catIdx.match(/^group-(\d+)$/)[1]);
       const group = allData.tree[gIdx];
       if (group) {
-        if (group.groupItems) return group.groupItems;
         const result = [];
         group.children.forEach((c) => result.push(...c.items));
         return result;
@@ -497,18 +490,7 @@
   /* 首页推荐 */
   function renderFeatured() {
     const items = featuredIds
-      .map((id) => {
-        // 优先从 searchIndex 取（加载后可用，含 thumb 字段）
-        if (searchIndex[id]) {
-          return { id, ...searchIndex[id], tag: '', author: '' };
-        }
-        // searchIndex 未加载时从原始索引取
-        const entry = _indexData?.find((e) => e.id === id);
-        if (entry) {
-          return { id, title: entry.title, cat: entry.cat, thumb: entry.thumb || '', file_url: '', tag: entry.tag || '', author: typeof entry.author === 'string' ? entry.author : '' };
-        }
-        return null;
-      })
+      .map((id) => (searchIndex[id] ? { id, ...searchIndex[id], tag: '', author: '' } : null))
       .filter(Boolean);
 
     document.getElementById('section-title').textContent = '精选推荐';
@@ -942,8 +924,8 @@
         let html;
         if (isSocial) {
           // 左图右文布局
-          const mediaSegs = content.segments.filter((s) => s.i || s.v);
-          const totalImg = mediaSegs.length;
+          const images = content.segments.filter((s) => s.i);
+          const totalImg = images.length;
           html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
           if (tagLabel || authorName) {
             html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}${weiboUrl ? `<a href="${weiboUrl}" target="_blank" class="detail-weibo-link">🔗 查看原帖</a>` : ''}</div>`;
@@ -953,15 +935,11 @@
           html += '<div class="social-gallery">';
           if (totalImg > 0) {
             html += '<div class="gallery-track" id="gallery-track">';
-            mediaSegs.forEach((seg, idx) => {
-              if (seg.v) {
-                html += `<div class="gallery-slide video-slide" data-idx="${idx}">${renderVideoEmbed(seg.v)}</div>`;
-              } else {
-                html += `<div class="gallery-slide" data-idx="${idx}">
-                <img src="${escapeHtml(seg.i)}" alt="图片 ${idx + 1}" loading="lazy" decoding="async"
-                     onload="this.classList.add('loaded')">
-              </div>`;
-              }
+            images.forEach((seg, idx) => {
+              html += `<div class="gallery-slide" data-idx="${idx}">
+              <img src="${escapeHtml(seg.i)}" alt="图片 ${idx + 1}" loading="lazy" decoding="async"
+                   onload="this.classList.add('loaded')">
+            </div>`;
             });
             html += '</div>';
             if (totalImg > 1) {
@@ -1009,8 +987,6 @@
             } else if (seg.i) {
               html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
                           onload="this.classList.add('loaded')">`;
-            } else if (seg.v) {
-              html += renderVideoEmbed(seg.v);
             }
           });
           html += '</div>';
@@ -1121,46 +1097,6 @@
     return sentences.length > 0 ? sentences : [text];
   }
 
-  /* ===== 视频嵌入 ===== */
-
-  /** 解析视频 URL，返回可嵌入的 iframe src 或 null
-   *  支持：YouTube (youtube.com/watch, youtu.be), Bilibili (b23.tv, bilibili.com)
-   *  @param {string} url @returns {string|null} */
-  function getEmbedUrl(url) {
-    if (!url) return null;
-    try {
-      const u = new URL(url);
-      // YouTube
-      if (u.hostname.includes('youtube.com') || u.hostname === 'youtu.be') {
-        let vid = u.searchParams.get('v');
-        if (!vid) vid = u.pathname.slice(1).split('/')[0];
-        if (vid) return `https://www.youtube.com/embed/${encodeURIComponent(vid)}`;
-      }
-      // Bilibili
-      if (u.hostname.includes('bilibili.com') || u.hostname === 'b23.tv') {
-        const bvMatch = u.pathname.match(/\/video\/(BV\w+)/i);
-        if (bvMatch) return `https://player.bilibili.com/player.html?bvid=${bvMatch[1]}&autoplay=0`;
-        // b23.tv 短链接需要展开
-        const bvShort = u.pathname.match(/^\/(BV\w+)/i);
-        if (bvShort) return `https://player.bilibili.com/player.html?bvid=${bvShort[1]}&autoplay=0`;
-      }
-    } catch { /* URL 不合法 */ }
-    return null;
-  }
-
-  /** 渲染视频嵌入 HTML
-   *  @param {string} url @returns {string} */
-  function renderVideoEmbed(url) {
-    const embedSrc = getEmbedUrl(url);
-    if (!embedSrc) return `<a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="video-fallback">🔗 查看视频</a>`;
-    return `<div class="video-embed">
-      <iframe src="${escapeHtml(embedSrc)}" 
-        allowfullscreen loading="lazy"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        title="嵌入视频"></iframe>
-    </div>`;
-  }
-
   /* ===== 分享功能 ===== */
 
   /** @param {string} id @param {string} title @returns {string} */
@@ -1191,7 +1127,7 @@
 
   /** @param {string} id @returns {string} */
   function getShareUrl(id) {
-    return `${location.origin + location.pathname.replace(/\/?$/, '/')}?share=${encodeURIComponent(id)}`;
+    return `${location.origin + location.pathname.replace(/\/?$/, '/')}detail.html?id=${encodeURIComponent(id)}`;
   }
 
   /** @param {string} id */
