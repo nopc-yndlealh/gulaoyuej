@@ -8,7 +8,7 @@ from pathlib import Path
 from collections import defaultdict
 
 SCRIPT_DIR = Path(__file__).parent  # build_all.py 所在目录
-R2_PUBLIC = "https://pub-8b26014aee2c44c18d82a5187d985187.r2.dev"
+R2_PUBLIC = "https://img.feijibei.top"
 SITE_DATA = SCRIPT_DIR / "data"
 DEFAULT_DATA_DIR = Path.home() / "WorkBuddy" / "2026-05-27-17-57-56" / "output"
 DEFAULT_MAPPING_CSV = Path("E:/WebP_Compressed/image_mapping_all.csv")
