@@ -1,0 +1,8 @@
+# 此目录存放各平台登录 cookie（JSON 格式），例如：
+#   bilibili.json      ->  {"SESSDATA": "...", "bili_jct": "...", ...}
+#   xiaohongshu.json   ->  [{"name":"web_session","value":"...", ...}, ...]
+#
+# 注意：cookie 含登录凭证，已被 .gitignore 忽略，绝不提交到仓库！
+# 获取方式：
+#   - B站：浏览器登录后从 DevTools -> Application -> Cookies 复制，或用 SESSDATA
+#   - 小红书：浏览器登录后导出全部 cookie（可用 "Cookie-Editor" 插件导出为 JSON 数组）

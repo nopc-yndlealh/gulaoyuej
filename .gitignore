@@ -10,3 +10,9 @@ images_tmp/
 images_test_tmp/
 node_modules/
 .eslintignore
+
+# 花卉周报爬虫：登录 cookie 绝不入库
+daily/cookies/*.json
+daily/__pycache__/
+daily/crawlers/__pycache__/
+daily/probe_result.json
