@@ -27,3 +27,9 @@
   Cache-Control: public, max-age=31536000, immutable
 /manifest.json
   Cache-Control: public, max-age=86400
+
+# 数据 JSON：内容不常变，长效缓存 + 后台刷新，减少每次回源 RTT（直击首屏加载慢）
+/data/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+/data/content/*
+  Cache-Control: public, max-age=86400, stale-while-revalidate=604800

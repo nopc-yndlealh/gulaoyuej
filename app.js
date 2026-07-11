@@ -141,16 +141,8 @@
       const rawData = await indexRes.json();
       _indexData = rawData;
 
-      // 加载 content-index（小，~160KB，且详情页依赖它查 slug）
-      try {
-        const ciRes = await fetch('./data/content/content-index.json');
-        if (ciRes.ok) contentIndex = await ciRes.json();
-      } catch (e) {
-        console.warn('content-index 加载失败:', e.message);
-      }
-
       // search-index.json（~2.5MB）→ 延迟到首次搜索时按需加载
-      // content-index 依然在启动时加载，因为 getContent() 依赖它
+      // content-index.json（~160KB）→ 改为首次点开详情时懒加载（见 ensureContentIndex），减小首屏下载
 
       // 加载首页推荐列表
       try {
@@ -208,9 +200,27 @@
     return searchIndexLoading;
   }
 
+  /* 按需加载 content-index（仅首次查看详情时拉取，带缓存 Promise） */
+  let contentIndexLoading = null;
+  async function ensureContentIndex() {
+    if (contentIndexLoading) return contentIndexLoading;
+    if (Object.keys(contentIndex).length > 0) return;
+    contentIndexLoading = (async () => {
+      try {
+        const res = await fetch('./data/content/content-index.json');
+        if (res.ok) contentIndex = await res.json();
+        else console.warn('content-index 加载失败，详情不可用');
+      } catch (e) {
+        console.warn('content-index 不可用:', e.message);
+      }
+    })();
+    return contentIndexLoading;
+  }
+
   /* 按需加载分类内容（带缓存） */
   /** @param {string} id @returns {Promise<ContentEntry | null>} */
   async function getContent(id) {
+    await ensureContentIndex();
     const slug = contentIndex[id];
     if (!slug) return null;
 
