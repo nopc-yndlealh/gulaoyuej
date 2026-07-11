@@ -44,6 +44,14 @@
         <div class="section-header"><h2 id="section-title">全部条目</h2><span class="total" id="total-count"></span></div>
         <div class="grid" id="grid"></div>
         <div class="pagination" id="pagination"></div>
+        <section id="daily-report" aria-label="花卉周报" hidden>
+          <div class="daily-head">
+            <h2>🌸 花卉周报</h2>
+            <span class="daily-issue" id="daily-issue"></span>
+          </div>
+          <div class="daily-grid" id="daily-grid"></div>
+          <div class="daily-foot" id="daily-foot"></div>
+        </section>
       </main>
     </div>
     <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -57,7 +65,14 @@
       <div id="qr-box"><p id="qr-label">扫码分享</p><img id="qr-img" src="" alt="分享二维码" /><button id="qr-close">×</button></div>
     </div>
     <div id="toast"></div>
+    <div id="daily-modal" class="daily-modal-overlay" hidden>
+      <div class="daily-modal-box" role="dialog" aria-modal="true" aria-label="内容详情">
+        <button class="daily-modal-close" id="daily-modal-close" aria-label="关闭">×</button>
+        <div id="daily-modal-content"></div>
+      </div>
+    </div>
     <script src="./app.js"></script>
+    <script src="./daily-report.js"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {

@@ -1471,3 +1471,262 @@ body.classify-mode .card {
     font-size: 13px;
   }
 }
+
+/* ============================================================
+   花卉周报区块（纯外链聚合 · 卡片网格 + 点开弹层）
+   复用全局设计变量，跟随暖金/深紫主题
+   ============================================================ */
+#daily-report {
+  margin-top: 38px;
+  padding-top: 22px;
+  border-top: 1px dashed var(--border);
+}
+.daily-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--accent);
+}
+.daily-head h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.daily-issue {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.daily-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+.daily-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.daily-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-hover);
+  border-color: var(--accent-light);
+}
+.daily-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.daily-cover {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--accent-soft);
+  overflow: hidden;
+}
+.daily-cover .thumb,
+.daily-cover .no-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.daily-cover .thumb.loaded { opacity: 1; }
+.daily-cover .no-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  background: var(--accent-soft);
+  opacity: 1;
+}
+.daily-cover.no-cover::after {
+  content: "🌿";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  background: var(--accent-soft);
+}
+.daily-cover.no-cover .thumb { display: none; }
+.daily-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+}
+.daily-badge--bili { background: rgba(0, 161, 214, 0.92); }
+.daily-badge--xhs  { background: rgba(255, 70, 90, 0.92); }
+.daily-badge--def  { background: rgba(0, 0, 0, 0.5); }
+.daily-body {
+  padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.daily-title {
+  font-size: 13.5px;
+  line-height: 1.5;
+  font-weight: 600;
+  color: var(--text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.daily-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: auto;
+}
+.daily-likes { color: #e2556a; font-weight: 600; }
+.daily-author { color: var(--text-secondary); }
+.daily-date { color: var(--text-muted); }
+.daily-foot {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* ===== 周报弹层 ===== */
+.daily-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.55);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.daily-modal-overlay[hidden] { display: none; }
+.daily-modal-box {
+  position: relative;
+  width: min(620px, 100%);
+  max-height: 88vh;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  animation: dailyPop 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes dailyPop {
+  from { transform: translateY(16px) scale(0.98); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.daily-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.42);
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.daily-modal-close:hover { background: rgba(0, 0, 0, 0.62); }
+.daily-modal-cover-wrap { background: var(--accent-soft); }
+.daily-modal-cover {
+  width: 100%;
+  max-height: 46vh;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+.daily-modal-cover.loaded { opacity: 1; }
+.daily-modal-cover.no-thumb {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  opacity: 1;
+}
+.daily-modal-info { padding: 16px 18px 20px; }
+.daily-modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 10px 0 8px;
+  line-height: 1.4;
+}
+.daily-modal-meta {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.daily-modal-author-line {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+}
+.daily-modal-author {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+.daily-modal-author:hover { text-decoration: underline; }
+.daily-modal-summary {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  background: var(--accent-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.daily-modal-go {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 10px 18px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.daily-modal-go:hover {
+  transform: translateY(-2px);
+  background: var(--accent-light);
+}
+
+@media (max-width: 600px) {
+  .daily-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+}
