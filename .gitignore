@@ -16,3 +16,7 @@ daily/cookies/*.json
 daily/__pycache__/
 daily/crawlers/__pycache__/
 daily/probe_result.json
+
+# 工作区记忆目录 / 临时文件，不进站点仓库
+.workbuddy/
+data/index.json.remote
