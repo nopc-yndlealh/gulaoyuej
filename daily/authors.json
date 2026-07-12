@@ -11,6 +11,7 @@
         "园艺家交流"
       ],
       "notes": "但是有影视剪辑噪音 注意过滤",
+      "priority": true,
       "trust": "high"
     },
     {
@@ -84,6 +85,7 @@
         "国外花友分享",
         "国外流行品种比较多"
       ],
+      "priority": true,
       "trust": "high"
     },
     {
@@ -150,7 +152,6 @@
       "id": "5ad7ec934eacab59223e73ef",
       "name": "小耗子",
       "xsec_token": "ABFLtLeiPR0KgwFXThkZZQU4U_jDrudolv4ytQXimVmx8=",
-      "priority": true,
       "tags": [
         "月季",
         "月季极限测试"
@@ -169,6 +170,7 @@
         "月季界权威",
         "最新一手资料"
       ],
+      "priority": true,
       "trust": "high"
     },
     {
@@ -207,7 +209,6 @@
       "id": "5ca5d9fe0000000016002121",
       "name": "天狼月季",
       "xsec_token": "AByq7_qnchzFaaNbi4BqZZOUCEkj9nO6uNKnR0cEpmwZM=",
-      "priority": true,
       "tags": [
         "月季",
         "国内最大育种商"
