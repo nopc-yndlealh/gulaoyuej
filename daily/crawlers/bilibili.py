@@ -180,6 +180,25 @@ def crawl(keywords: list[str], whitelist_mids: list[int], search_per_keyword: in
     return items
 
 
+def crawl_authors(ids: list[int | str], ps: int = 10) -> list[dict]:
+    """按白名单 UP主(mid) 拉各自最新视频，标记 source=whitelist。"""
+    crawler = BilibiliCrawler()
+    items: list[dict] = []
+    try:
+        for mid in ids:
+            try:
+                its = crawler.space_latest(mid, ps=ps)
+                for it in its:
+                    it["source"] = "whitelist"
+                items.extend(its)
+                print(f"[bilibili] UP主 {mid} -> {len(its)} 条")
+            except Exception as e:
+                print(f"[bilibili] UP主 {mid} 最新列表失败: {e}")
+    finally:
+        crawler.close()
+    return items
+
+
 if __name__ == "__main__":
     sample = crawl(["月季", "多肉"], [], search_per_keyword=5)
     for s in sample[:5]:

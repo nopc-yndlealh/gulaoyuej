@@ -1,0 +1,224 @@
+{
+  "authors": [
+    {
+      "platform": "bilibili",
+      "id": "4305174",
+      "name": "",
+      "tags": [
+        "月季",
+        "花园",
+        "世界各地花园探访",
+        "园艺家交流"
+      ],
+      "notes": "但是有影视剪辑噪音 注意过滤",
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "177381025",
+      "name": "",
+      "tags": [
+        "月季",
+        "古代园艺",
+        "古老月季和古老花卉"
+      ],
+      "notes": "同时也有历史服饰噪声 注意过滤",
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "334356343",
+      "name": "",
+      "tags": [
+        "月季",
+        "国内育种家"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "1491631406",
+      "name": "",
+      "tags": [
+        "月季",
+        "玫昂月季",
+        "月季",
+        "最大的育种商"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "400736808",
+      "name": "",
+      "tags": [
+        "花园",
+        "花园探访"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "448973088",
+      "name": "",
+      "tags": [
+        "月季",
+        "月季花园造景"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "548432",
+      "name": "",
+      "tags": [
+        "阳台花园分享"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "bilibili",
+      "id": "1833003133",
+      "name": "",
+      "tags": [
+        "国外花友分享",
+        "国外流行品种比较多"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5bb8435c0c1a670001f4283e",
+      "name": "平瓯",
+      "tags": [
+        "古代园艺"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "61b3657c0000000010007aed",
+      "name": "全球植物新种追踪",
+      "tags": [
+        "全球新原生种速递"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5f1019c0000000000100159d",
+      "name": "阿拼和阿庞",
+      "tags": [
+        "月季",
+        "造园",
+        "种植分享"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "61474e0a000000000201bfd4",
+      "name": "砧声断续响斜阳",
+      "tags": [
+        "古老月季"
+      ],
+      "notes": "有日常噪音 注意过滤",
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "61582054000000000202361a",
+      "name": "六六大魔王",
+      "tags": [
+        "月季"
+      ],
+      "notes": "最适合状态下月季的美丽程度",
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "603d6cd6000000000101ddb7",
+      "name": "Meilland_玫昂",
+      "tags": [
+        "月季",
+        "最大的育种商"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5ad7ec934eacab59223e73ef",
+      "name": "小耗子",
+      "tags": [
+        "月季",
+        "月季极限测试"
+      ],
+      "notes": "有日常噪音 注意过滤",
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5ff60cf90000000001001958",
+      "name": "Eurosepedia",
+      "tags": [
+        "月季",
+        "月季国际比赛评委",
+        "发烧友",
+        "月季界权威",
+        "最新一手资料"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "6193e0f80000000010007650",
+      "name": "Season夏",
+      "tags": [
+        "月季",
+        "个人育种"
+      ],
+      "notes": "有日常噪音 注意过滤",
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5f144b19000000000101d81e",
+      "name": "贫穷育种家",
+      "tags": [
+        "月季",
+        "国内个人育种家"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "60141a7d000000000100994b",
+      "name": "沈家园月季",
+      "tags": [
+        "月季",
+        "国内个人育种家"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5ca5d9fe0000000016002121",
+      "name": "天狼月季",
+      "tags": [
+        "月季",
+        "国内最大育种商"
+      ],
+      "trust": "high"
+    },
+    {
+      "platform": "xiaohongshu",
+      "id": "5f0c1b2d00000000010007e7",
+      "name": "杨绍宗",
+      "tags": [
+        "月季",
+        "国内个人育种家"
+      ],
+      "trust": "high"
+    }
+  ]
+}

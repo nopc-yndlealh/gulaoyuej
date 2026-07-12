@@ -16,13 +16,20 @@ def passes_threshold(item: dict, cfg: dict) -> bool:
     return (item.get("likes", 0) or 0) >= min_likes
 
 
-def is_relevant(text: str, cfg: dict) -> tuple[bool, str]:
+def is_relevant(text: str, cfg: dict, mode: str = "full") -> tuple[bool, str]:
     rel = cfg.get("relevance", {})
     required = rel.get("required_any", [])
-    # 负向词（娱乐/音乐等）：标题含这些基本可判定为非园艺内容
+    # 负向词（娱乐/音乐/粉丝等）：标题含这些基本可判定为非园艺内容
     negative = rel.get("negative", [])
     if any(w.lower() in text.lower() for w in negative):
         return False, "entertainment_signal"
+    # 离题主导词（美妆/穿搭等）：家庭园艺站不应出现
+    offtopic = rel.get("offtopic_dominant", [])
+    if any(w in text for w in offtopic):
+        return False, "offtopic_dominant"
+    # 白名单(已审核)博主走 light 模式：只拦明显离题，不强制 required_any 硬匹配
+    if mode == "light":
+        return True, ""
     if not any(k in text for k in required):
         return False, "no_required_keyword"
     return True, ""
@@ -38,3 +45,11 @@ def is_safe(text: str, cfg: dict) -> tuple[bool, str]:
 def is_chinese(text: str) -> bool:
     """要求标题含中文，过滤纯外语文案。"""
     return has_cjk(text)
+
+
+def is_blocked_author(author: str, cfg: dict) -> bool:
+    """作者黑名单：命中即丢弃（用于拉黑无关/低质博主）。"""
+    black = cfg.get("author_blacklist", [])
+    if not black or not author:
+        return False
+    return author in black

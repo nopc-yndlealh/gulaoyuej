@@ -31,14 +31,14 @@ def main() -> None:
     items, stats = aggregate(cfg)
 
     if args.probe:
-        report = {"stats": stats, "samples": items[:15]}
+        report = {"stats": stats, "samples": items}
         out = Path(__file__).resolve().parent / "probe_result.json"
         out.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
         print("\n========== 探针结果 ==========")
         print(json.dumps(stats, ensure_ascii=False, indent=2))
-        print("\n--- 保留样本（前 15）---")
-        for s in items[:15]:
-            print(f"[{s['platform']}] {s['title']} | 赞 {s['likes']} | {s['url']}")
+        print(f"\n--- 保留全部 {len(items)} 条 ---")
+        for i, s in enumerate(items, 1):
+            print(f"{i:2}. [{s['platform']}/{s.get('source','?')}] {s['title']} | 赞 {s['likes']} | {s['url']}")
         print(f"\n探针完成：原始 {stats['total_raw']} 条 → 保留 {stats['kept']} 条。"
               f"完整结果见 daily/probe_result.json")
         return

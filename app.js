@@ -417,11 +417,7 @@
     document.getElementById('loading').classList.add('hidden');
     renderSidebar();
     renderMobileNav();
-    if (featuredIds.length > 0) {
-      renderFeatured();
-    } else {
-      await renderGrid(-1);
-    }
+    await renderGrid(-1);
     bindEvents();
   }
 
@@ -458,6 +454,13 @@
 
     container.innerHTML = html;
 
+    // 精选推荐入口（精选能力保留，但不占用首页，从侧边栏进入）
+    const featuredLink = document.createElement('div');
+    featuredLink.className = 'cat-item';
+    featuredLink.dataset.idx = 'featured';
+    featuredLink.innerHTML = '<span class="label">★ 精选推荐</span>';
+    container.appendChild(featuredLink);
+
     // 演化图谱入口
     const evoLink = document.createElement('a');
     evoLink.href = './sedum-evo-2019.html';
@@ -489,6 +492,13 @@
         scrollContainer.appendChild(chip);
       });
     });
+
+    // 精选推荐入口（移动端）
+    const featuredChip = document.createElement('div');
+    featuredChip.className = 'cat-chip';
+    featuredChip.dataset.idx = 'featured';
+    featuredChip.textContent = '★ 精选推荐';
+    scrollContainer.appendChild(featuredChip);
 
     // 演化图谱入口（移动端）
     const evoChip = document.createElement('a');
@@ -532,7 +542,7 @@
   }
 
   /* 首页推荐 */
-  function renderFeatured() {
+  function renderFeatured(catIdx) {
     // 优先从 searchIndex 查找，缺失项从原始 _indexData 回退
     const idMap = { ...searchIndex };
     if (_indexData) {
@@ -553,8 +563,8 @@
 
     document.getElementById('section-title').textContent = '精选推荐';
     document.getElementById('total-count').textContent = `${items.length} 篇`;
-    activeCatIdx = -1;
-    setActiveCategory('-1');
+    activeCatIdx = catIdx || '-1';
+    setActiveCategory(catIdx || '-1');
 
     const grid = document.getElementById('grid');
     document.getElementById('pagination').innerHTML = '';
@@ -827,10 +837,15 @@
       }
 
       const idx = item.dataset.idx;
-      setActiveCategory(idx);
       currentPage = 1;
-      if (idx === '-1' && featuredIds.length > 0) {
-        renderFeatured();
+      if (idx === 'featured') {
+        renderFeatured('featured');
+        document.getElementById('content').scrollTo(0, 0);
+        return;
+      }
+      setActiveCategory(idx);
+      if (idx === '-1') {
+        await renderGrid(-1, document.getElementById('search-input').value.trim());
       } else {
         await renderGrid(idx, document.getElementById('search-input').value.trim());
       }
@@ -842,10 +857,15 @@
       const chip = e.target.closest('.cat-chip');
       if (!chip) return;
       const idx = chip.dataset.idx;
-      setActiveCategory(idx);
       currentPage = 1;
-      if (idx === '-1' && featuredIds.length > 0) {
-        renderFeatured();
+      if (idx === 'featured') {
+        renderFeatured('featured');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+      setActiveCategory(idx);
+      if (idx === '-1') {
+        await renderGrid(-1, document.getElementById('mobile-search-input').value.trim());
       } else {
         const keyword = document.getElementById('mobile-search-input').value.trim();
         await renderGrid(idx, keyword);
