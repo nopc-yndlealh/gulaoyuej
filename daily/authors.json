@@ -149,6 +149,8 @@
       "platform": "xiaohongshu",
       "id": "5ad7ec934eacab59223e73ef",
       "name": "小耗子",
+      "xsec_token": "ABFLtLeiPR0KgwFXThkZZQU4U_jDrudolv4ytQXimVmx8=",
+      "priority": true,
       "tags": [
         "月季",
         "月季极限测试"
@@ -204,6 +206,8 @@
       "platform": "xiaohongshu",
       "id": "5ca5d9fe0000000016002121",
       "name": "天狼月季",
+      "xsec_token": "AByq7_qnchzFaaNbi4BqZZOUCEkj9nO6uNKnR0cEpmwZM=",
+      "priority": true,
       "tags": [
         "月季",
         "国内最大育种商"

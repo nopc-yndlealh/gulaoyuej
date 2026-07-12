@@ -33,6 +33,18 @@ def _load_authors() -> list[dict]:
         return []
 
 
+def _priority_set() -> set:
+    """返回 authors.json 中 priority=true 的作者集合，元素为 (platform, name)。"""
+    out: set = set()
+    try:
+        for a in _load_authors():
+            if a.get("priority"):
+                out.add((a.get("platform"), a.get("name")))
+    except Exception:
+        pass
+    return out
+
+
 def collect_raw(cfg: dict) -> list[dict]:
     raw: list[dict] = []
     per = cfg.get("search_per_keyword", 20)
@@ -138,16 +150,46 @@ def aggregate(cfg: dict, raw: list[dict] | None = None) -> tuple[list[dict], dic
             continue
         items.append(it)
 
-    # 混合排序：5 条最新（有发布时间的优先）+ 6 条随机（让老内容/小红书也有露出）
-    # 小红书 search_feeds 不返回时间，故小红书笔记全部进入随机池
+    # 混合排序：5 条最新（有发布时间的优先）+ 余下随机（让老内容/小红书也有露出）
+    # 小红书不返回时间，全部进入随机池；随机池按作者去重（每作者至多 1 条）提升多样性
     dated = [i for i in items if i.get("published_at")]
     undated = [i for i in items if not i.get("published_at")]
     dated.sort(key=lambda x: x.get("published_at", ""), reverse=True)
     top = dated[:5]
-    pool = dated[5:] + undated
+    # 随机池按作者去重，保留该作者点赞最高的一条
+    _best: dict = {}
+    for it in undated:
+        k = (it.get("platform"), it.get("author"))
+        if k not in _best or it.get("likes", 0) > _best[k].get("likes", 0):
+            _best[k] = it
+    # 优先级作者（priority:true）强制占一个槽位，保证每期稳定露出
+    prio_keys = {(a.get("platform"), a.get("name"))
+                 for a in _load_authors() if a.get("priority")}
+    forced = [v for k, v in _best.items() if k in prio_keys]
+    rest = [v for k, v in _best.items() if k not in prio_keys]
+    pool = dated[5:] + rest
     random.shuffle(pool)
-    n_random = max(0, cfg.get("max_items_per_issue", 11) - len(top))
-    items = top + pool[:n_random]
+    n_random = max(0, cfg.get("max_items_per_issue", 11) - len(top) - len(forced))
+    chosen = top + forced + pool[:n_random]
+
+    # 保证 priority 白名单作者（authors.json 中 priority=true）一定出现在本期周报
+    prio = _priority_set()
+    if prio:
+        chosen_ids = {c.get("id") for c in chosen}
+        for (pplat, pname) in prio:
+            if any(c.get("platform") == pplat and c.get("author") == pname for c in chosen):
+                continue
+            cand = next((i for i in items
+                        if i.get("platform") == pplat and i.get("author") == pname
+                        and i.get("id") not in chosen_ids), None)
+            if cand:
+                if len(chosen) >= cfg.get("max_items_per_issue", 11):
+                    chosen[-1] = cand
+                else:
+                    chosen.append(cand)
+                chosen_ids.add(cand.get("id"))
+
+    items = chosen
 
     stats = {
         "total_raw": len(raw),

@@ -189,9 +189,14 @@ def crawl(
 
 
 def crawl_authors(authors: list[dict], per: int = 10) -> list[dict]:
-    """按白名单博主(user_id + 昵称)拉笔记：搜索昵称 -> 过滤出该博主 -> 标 source=whitelist。
-    走 search_feeds 过滤，不需要 xsec_token；要求 authors 里带 name(昵称)。
-    小红书 MCP 偶发超时，对单个作者 search 失败自动重试（指数退避），无匹配则跳过重试。"""
+    """按白名单博主直拉笔记，稳定收录指定博主。
+
+    优先用 MCP 的 user_profile（按 user_id + xsec_token 直接拉该博主主页笔记），
+    不依赖昵称搜索——因为很多博主自己的笔记不含其昵称字面词，昵称搜索匹配不到本人
+    （例如「小耗子」的笔记是关于月季的，搜「小耗子」只会返回其他提到鼠类的笔记）。
+    authors 需带 id(user_id) 与 name(昵称)；有 xsec_token 走 user_profile，
+    无 token（或 user_profile 失败）退化为昵称 search_feeds + id 精确过滤兜底。
+    小红书 MCP 偶发超时，对单个作者失败自动重试（指数退避）。"""
     if not _mcp_available():
         print("[xiaohongshu_mcp] MCP 服务未启动（localhost:18060），跳过小红书作者模式。")
         return []
@@ -206,31 +211,52 @@ def crawl_authors(authors: list[dict], per: int = 10) -> list[dict]:
         for a in authors:
             uid = a.get("id") or ""
             name = (a.get("name") or "").strip()
-            if not name:
-                print(f"[xiaohongshu_mcp] 作者 {uid} 缺昵称(name)，跳过（请提供昵称）。")
+            token = a.get("xsec_token") or ""
+            if not uid:
+                print(f"[xiaohongshu_mcp] 作者 {name} 缺 user_id(id)，跳过。")
                 continue
             matched: list[dict] = []
-            for attempt in range(3):
-                try:
-                    resp = client.call("search_feeds", {"keyword": name})
-                    feeds = _extract_feeds(resp, per * 3)
-                    # 优先按 user_id 精确匹配；没有 id 时退化为昵称匹配
-                    if uid:
-                        matched = [f for f in feeds if f.get("author_id") == uid]
-                    else:
-                        matched = [f for f in feeds if f.get("author") == name]
-                    break  # 能正常返回即视为成功（无论是否匹配到），跳出重试
-                except Exception as e:
-                    if attempt < 2:
-                        time.sleep(2 ** attempt * 2)  # 2s, 4s 退避后重试
-                        continue
-                    print(f"[xiaohongshu_mcp] 作者 {name} 失败(重试耗尽): {e}")
+            mode_used = ""
+            # 优先 user_profile：按 id 直接拉该博主笔记（需 xsec_token）
+            if token:
+                for attempt in range(3):
+                    try:
+                        resp = client.call("user_profile", {"user_id": uid, "xsec_token": token})
+                        matched = _extract_feeds(resp, per)
+                        mode_used = "user_profile"
+                        break
+                    except Exception as e:
+                        if attempt < 2:
+                            time.sleep(2 ** attempt * 2)  # 2s, 4s 退避后重试
+                            continue
+                        print(f"[xiaohongshu_mcp] user_profile {name} 失败(重试耗尽): {e}")
+            # 退化：昵称搜索 + id 精确过滤（无 token 或 user_profile 失败时使用）
+            if not matched:
+                for attempt in range(3):
+                    try:
+                        kw = name or uid
+                        resp = client.call("search_feeds", {"keyword": kw})
+                        feeds = _extract_feeds(resp, per * 3)
+                        # 优先按 user_id 精确匹配；没有 id 时退化为昵称匹配
+                        if uid:
+                            matched = [f for f in feeds if f.get("author_id") == uid]
+                        else:
+                            matched = [f for f in feeds if f.get("author") == name]
+                        mode_used = "search"
+                        break  # 能正常返回即视为成功（无论是否匹配到），跳出重试
+                    except Exception as e:
+                        if attempt < 2:
+                            time.sleep(2 ** attempt * 2)
+                            continue
+                        print(f"[xiaohongshu_mcp] 作者 {name} 搜索失败(重试耗尽): {e}")
             for f in matched[:per]:
                 f["source"] = "whitelist"
-                if uid and not f.get("author_url"):
+                f["author_id"] = uid
+                f["author"] = name
+                if not f.get("author_url"):
                     f["author_url"] = f"https://www.xiaohongshu.com/user/profile/{uid}"
                 items.append(f)
-            print(f"[xiaohongshu_mcp] 作者 {name}({uid}) -> {len(matched[:per])} 条")
+            print(f"[xiaohongshu_mcp] 作者 {name}({uid}) -> {len(matched[:per])} 条 (mode={mode_used})")
     finally:
         client.close()
     return items
