@@ -48,13 +48,15 @@ def _parse_count(text: str) -> int:
 
 class _McpClient:
     def __init__(self):
+        # 每个实例持有独立 headers 副本，避免多线程共享模块级 HEADERS 造成 session-id 竞态
+        self._headers = dict(HEADERS)
         self._c = httpx.Client(timeout=30)
         self._init()
 
     def _init(self):
         r = self._c.post(
             MCP_URL,
-            headers=HEADERS,
+            headers=self._headers,
             json={
                 "jsonrpc": "2.0",
                 "id": 1,
@@ -68,17 +70,17 @@ class _McpClient:
         )
         sid = r.headers.get("mcp-session-id") or r.headers.get("Mcp-Session-Id")
         if sid:
-            HEADERS["mcp-session-id"] = sid
+            self._headers["mcp-session-id"] = sid
         self._c.post(
             MCP_URL,
-            headers=HEADERS,
+            headers=self._headers,
             json={"jsonrpc": "2.0", "method": "notifications/initialized"},
         )
 
     def call(self, name: str, arguments: dict) -> dict:
         r = self._c.post(
             MCP_URL,
-            headers=HEADERS,
+            headers=self._headers,
             json={
                 "jsonrpc": "2.0",
                 "id": 2,
@@ -188,6 +190,57 @@ def crawl(
     return items
 
 
+def _crawl_one_author(a: dict, per: int) -> list[dict]:
+    """单作者抓取（在独立线程中执行，使用独立 MCP 客户端）。返回该作者的笔记列表。"""
+    uid = a.get("id") or ""
+    name = (a.get("name") or "").strip()
+    token = a.get("xsec_token") or ""
+    if not uid:
+        print(f"[xiaohongshu_mcp] 作者 {name} 缺 user_id(id)，跳过。")
+        return []
+    matched: list[dict] = []
+    mode_used = ""
+    try:
+        client = _McpClient()
+    except Exception as e:
+        print(f"[xiaohongshu_mcp] 作者 {name} 连接 MCP 失败: {e}")
+        return []
+    try:
+        # 优先 user_profile：按 id 直接拉该博主笔记（需 xsec_token）
+        if token:
+            try:
+                resp = client.call("user_profile", {"user_id": uid, "xsec_token": token})
+                matched = _extract_feeds(resp, per)
+                mode_used = "user_profile"
+            except Exception as e:
+                print(f"[xiaohongshu_mcp] user_profile {name} 失败: {e}")
+        # 退化：昵称搜索 + id 精确过滤（无 token 或 user_profile 失败时使用）
+        if not matched:
+            try:
+                kw = name or uid
+                resp = client.call("search_feeds", {"keyword": kw})
+                feeds = _extract_feeds(resp, per * 3)
+                if uid:
+                    matched = [f for f in feeds if f.get("author_id") == uid]
+                else:
+                    matched = [f for f in feeds if f.get("author") == name]
+                mode_used = "search"
+            except Exception as e:
+                print(f"[xiaohongshu_mcp] 作者 {name} 搜索失败: {e}")
+    finally:
+        client.close()
+    out = []
+    for f in matched[:per]:
+        f["source"] = "whitelist"
+        f["author_id"] = uid
+        f["author"] = name
+        if not f.get("author_url"):
+            f["author_url"] = f"https://www.xiaohongshu.com/user/profile/{uid}"
+        out.append(f)
+    print(f"[xiaohongshu_mcp] 作者 {name}({uid}) -> {len(out)} 条 (mode={mode_used})")
+    return out
+
+
 def crawl_authors(authors: list[dict], per: int = 10) -> list[dict]:
     """按白名单博主直拉笔记，稳定收录指定博主。
 
@@ -196,69 +249,27 @@ def crawl_authors(authors: list[dict], per: int = 10) -> list[dict]:
     （例如「小耗子」的笔记是关于月季的，搜「小耗子」只会返回其他提到鼠类的笔记）。
     authors 需带 id(user_id) 与 name(昵称)；有 xsec_token 走 user_profile，
     无 token（或 user_profile 失败）退化为昵称 search_feeds + id 精确过滤兜底。
-    小红书 MCP 偶发超时，对单个作者失败自动重试（指数退避）。"""
+
+    每个作者在独立线程中使用独立 MCP 客户端抓取，单作者硬超时 PER_AUTHOR_TIMEOUT 秒，
+    超时即跳过该作者——避免个别作者 user_profile 调用挂起时拖垮整轮抓取（MCP 偶发变慢）。
+    """
     if not _mcp_available():
         print("[xiaohongshu_mcp] MCP 服务未启动（localhost:18060），跳过小红书作者模式。")
         return []
-    try:
-        client = _McpClient()
-    except Exception as e:
-        print(f"[xiaohongshu_mcp] 连接 MCP 失败: {e}，跳过。")
-        return []
-    import time
+    import concurrent.futures as _cf
+    PER_AUTHOR_TIMEOUT = 50
     items: list[dict] = []
-    try:
-        for a in authors:
-            uid = a.get("id") or ""
-            name = (a.get("name") or "").strip()
-            token = a.get("xsec_token") or ""
-            if not uid:
-                print(f"[xiaohongshu_mcp] 作者 {name} 缺 user_id(id)，跳过。")
-                continue
-            matched: list[dict] = []
-            mode_used = ""
-            # 优先 user_profile：按 id 直接拉该博主笔记（需 xsec_token）
-            if token:
-                for attempt in range(3):
-                    try:
-                        resp = client.call("user_profile", {"user_id": uid, "xsec_token": token})
-                        matched = _extract_feeds(resp, per)
-                        mode_used = "user_profile"
-                        break
-                    except Exception as e:
-                        if attempt < 2:
-                            time.sleep(2 ** attempt * 2)  # 2s, 4s 退避后重试
-                            continue
-                        print(f"[xiaohongshu_mcp] user_profile {name} 失败(重试耗尽): {e}")
-            # 退化：昵称搜索 + id 精确过滤（无 token 或 user_profile 失败时使用）
-            if not matched:
-                for attempt in range(3):
-                    try:
-                        kw = name or uid
-                        resp = client.call("search_feeds", {"keyword": kw})
-                        feeds = _extract_feeds(resp, per * 3)
-                        # 优先按 user_id 精确匹配；没有 id 时退化为昵称匹配
-                        if uid:
-                            matched = [f for f in feeds if f.get("author_id") == uid]
-                        else:
-                            matched = [f for f in feeds if f.get("author") == name]
-                        mode_used = "search"
-                        break  # 能正常返回即视为成功（无论是否匹配到），跳出重试
-                    except Exception as e:
-                        if attempt < 2:
-                            time.sleep(2 ** attempt * 2)
-                            continue
-                        print(f"[xiaohongshu_mcp] 作者 {name} 搜索失败(重试耗尽): {e}")
-            for f in matched[:per]:
-                f["source"] = "whitelist"
-                f["author_id"] = uid
-                f["author"] = name
-                if not f.get("author_url"):
-                    f["author_url"] = f"https://www.xiaohongshu.com/user/profile/{uid}"
-                items.append(f)
-            print(f"[xiaohongshu_mcp] 作者 {name}({uid}) -> {len(matched[:per])} 条 (mode={mode_used})")
-    finally:
-        client.close()
+    for a in authors:
+        if not a.get("id"):
+            continue
+        with _cf.ThreadPoolExecutor(max_workers=1) as ex:
+            fut = ex.submit(_crawl_one_author, a, per)
+            try:
+                items.extend(fut.result(timeout=PER_AUTHOR_TIMEOUT))
+            except _cf.TimeoutError:
+                print(f"[xiaohongshu_mcp] 作者 {a.get('name')} 抓取超时(>{PER_AUTHOR_TIMEOUT}s)，跳过本轮。")
+            except Exception as e:
+                print(f"[xiaohongshu_mcp] 作者 {a.get('name')} 异常: {e}")
     return items
 
 
