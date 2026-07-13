@@ -1499,8 +1499,8 @@ body.classify-mode .card {
   color: var(--text-muted);
 }
 .daily-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
 }
 .daily-card {
@@ -1514,6 +1514,9 @@ body.classify-mode .card {
   cursor: pointer;
   color: inherit;
   text-decoration: none;
+  flex: 1 1 170px;
+  min-width: 170px;
+  max-width: 100%;
   transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
               box-shadow 0.25s ease, border-color 0.25s ease;
 }
@@ -1736,7 +1739,6 @@ body.classify-mode .card {
 
 @media (max-width: 600px) {
   .daily-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 12px;
   }
 }

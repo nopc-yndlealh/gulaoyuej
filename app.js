@@ -90,8 +90,6 @@
   let activeCatIdx = -1;
   /** @type {Record<string, SearchEntry>} id → {title, cat, text, thumb} */
   let searchIndex = {};
-  /** @type {string[]} 首页推荐 ID 列表 */
-  let featuredIds = [];
   /** @type {IndexEntry[] | null} 原始索引数据（内部引用） */
   let _indexData = null;
   /** @type {number} 当前轮播图片总数 */
@@ -143,14 +141,6 @@
 
       // search-index.json（~2.5MB）→ 延迟到首次搜索时按需加载
       // content-index.json（~160KB）→ 改为首次点开详情时懒加载（见 ensureContentIndex），减小首屏下载
-
-      // 加载首页推荐列表
-      try {
-        const fRes = await fetch('./data/featured.json');
-        if (fRes.ok) featuredIds = await fRes.json();
-      } catch (e) {
-        console.warn('推荐列表不可用:', e.message);
-      }
 
       // 加载园艺导航 & 花友推荐数据
       try {
@@ -454,13 +444,6 @@
 
     container.innerHTML = html;
 
-    // 精选推荐入口（精选能力保留，但不占用首页，从侧边栏进入）
-    const featuredLink = document.createElement('div');
-    featuredLink.className = 'cat-item';
-    featuredLink.dataset.idx = 'featured';
-    featuredLink.innerHTML = '<span class="label">★ 精选推荐</span>';
-    container.appendChild(featuredLink);
-
     // 演化图谱入口
     const evoLink = document.createElement('a');
     evoLink.href = './sedum-evo-2019.html';
@@ -492,13 +475,6 @@
         scrollContainer.appendChild(chip);
       });
     });
-
-    // 精选推荐入口（移动端）
-    const featuredChip = document.createElement('div');
-    featuredChip.className = 'cat-chip';
-    featuredChip.dataset.idx = 'featured';
-    featuredChip.textContent = '★ 精选推荐';
-    scrollContainer.appendChild(featuredChip);
 
     // 演化图谱入口（移动端）
     const evoChip = document.createElement('a');
@@ -539,63 +515,6 @@
       if (group && group.children[cIdx]) return group.children[cIdx].items;
     }
     return [];
-  }
-
-  /* 首页推荐 */
-  function renderFeatured(catIdx) {
-    // 优先从 searchIndex 查找，缺失项从原始 _indexData 回退
-    const idMap = { ...searchIndex };
-    if (_indexData) {
-      _indexData.forEach((entry) => {
-        if (!idMap[entry.id]) {
-          idMap[entry.id] = {
-            title: entry.title,
-            cat: entry.cat || '',
-            text: '',
-            thumb: entry.thumb || (entry.images && entry.images[0]) || '',
-          };
-        }
-      });
-    }
-    const items = featuredIds
-      .map((id) => (idMap[id] ? { id, ...idMap[id], tag: '', author: '' } : null))
-      .filter(Boolean);
-
-    document.getElementById('section-title').textContent = '精选推荐';
-    document.getElementById('total-count').textContent = `${items.length} 篇`;
-    activeCatIdx = catIdx || '-1';
-    setActiveCategory(catIdx || '-1');
-
-    const grid = document.getElementById('grid');
-    document.getElementById('pagination').innerHTML = '';
-    if (!items.length) {
-      grid.innerHTML = '<div class="empty">暂无推荐内容</div>';
-      return;
-    }
-
-    grid.innerHTML = items
-      .map((it) => {
-        const safeTitle = escapeHtml(it.title);
-        const safeCat = escapeHtml(it.cat);
-        const safeId = escapeHtml(it.id);
-        const thumbHtml = it.thumb
-          ? `<img class="thumb" src="${escapeHtml(it.thumb)}" alt="${safeTitle}" loading="lazy" decoding="async"
-             onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-             onload="this.classList.add('loaded')">
-         <div class="no-thumb" style="display:none;">无图</div>`
-          : `<div class="no-thumb">无图</div>`;
-        const tagBadge =
-          it.tag && !/^\d+$/.test(String(it.tag))
-            ? `<span class="card-tag">#${escapeHtml(it.tag)}</span>`
-            : '';
-        return `<div class="card" data-id="${escapeHtml(it.id)}" data-title="${safeTitle}" role="button" tabindex="0" aria-label="查看详情：${safeTitle}">
-      <span class="card-cat">${safeCat}</span>
-      ${tagBadge}
-      ${thumbHtml}
-      <div class="card-title">${safeTitle}</div>
-    </div>`;
-      })
-      .join('');
   }
 
   /* 搜索/过滤条目 — 返回要展示的条目列表及是否为搜索模式 */
@@ -838,11 +757,6 @@
 
       const idx = item.dataset.idx;
       currentPage = 1;
-      if (idx === 'featured') {
-        renderFeatured('featured');
-        document.getElementById('content').scrollTo(0, 0);
-        return;
-      }
       setActiveCategory(idx);
       if (idx === '-1') {
         await renderGrid(-1, document.getElementById('search-input').value.trim());
@@ -858,11 +772,6 @@
       if (!chip) return;
       const idx = chip.dataset.idx;
       currentPage = 1;
-      if (idx === 'featured') {
-        renderFeatured('featured');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
       setActiveCategory(idx);
       if (idx === '-1') {
         await renderGrid(-1, document.getElementById('mobile-search-input').value.trim());
