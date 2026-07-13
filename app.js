@@ -445,6 +445,13 @@
 
     container.innerHTML = html;
 
+    // 花卉周报分类入口（独立聚合分类，点击切换，四字无 emoji）
+    const dailyLink = document.createElement('div');
+    dailyLink.className = 'cat-item';
+    dailyLink.dataset.idx = 'daily';
+    dailyLink.innerHTML = '<span class="label">花卉周报</span>';
+    container.appendChild(dailyLink);
+
     // 演化图谱入口
     const evoLink = document.createElement('a');
     evoLink.href = './sedum-evo-2019.html';
@@ -476,6 +483,13 @@
         scrollContainer.appendChild(chip);
       });
     });
+
+    // 花卉周报分类入口（移动端）
+    const dailyChip = document.createElement('div');
+    dailyChip.className = 'cat-chip';
+    dailyChip.dataset.idx = 'daily';
+    dailyChip.textContent = '花卉周报';
+    scrollContainer.appendChild(dailyChip);
 
     // 演化图谱入口（移动端）
     const evoChip = document.createElement('a');
@@ -703,10 +717,18 @@
     document.querySelectorAll('#mobile-cat-scroll .cat-chip').forEach((el) => {
       el.classList.toggle('active', el.dataset.idx === idx);
     });
-    // 花卉周报只在“全部植物”首页展示，进入具体分类时隐藏，避免用户误以为分类没切换
+    // 花卉周报作为独立分类：点击“花卉周报”显示周报区块并隐藏品种网格/标题/分页；
+    // 其它分类（含“全部植物”）则隐藏周报、恢复正常网格
     const dailyReport = document.getElementById('daily-report');
     if (dailyReport) {
-      dailyReport.hidden = !(idx === -1 || idx === '-1');
+      const isDaily = idx === 'daily';
+      dailyReport.hidden = !isDaily;
+      const grid = document.getElementById('grid');
+      const sectionHeader = document.querySelector('.section-header');
+      const pagination = document.getElementById('pagination');
+      if (grid) grid.style.display = isDaily ? 'none' : '';
+      if (sectionHeader) sectionHeader.style.display = isDaily ? 'none' : '';
+      if (pagination) pagination.style.display = isDaily ? 'none' : '';
     }
     // 移动端滚动到激活项
     const activeChip = document.querySelector('#mobile-cat-scroll .cat-chip.active');
@@ -764,6 +786,10 @@
       const idx = item.dataset.idx;
       currentPage = 1;
       setActiveCategory(idx);
+      if (idx === 'daily') {
+        document.getElementById('content').scrollTo(0, 0);
+        return;
+      }
       if (idx === '-1') {
         await renderGrid(-1, document.getElementById('search-input').value.trim());
       } else {
@@ -779,6 +805,10 @@
       const idx = chip.dataset.idx;
       currentPage = 1;
       setActiveCategory(idx);
+      if (idx === 'daily') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       if (idx === '-1') {
         await renderGrid(-1, document.getElementById('mobile-search-input').value.trim());
       } else {
