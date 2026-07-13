@@ -78,6 +78,13 @@ def collect_raw(cfg: dict) -> list[dict]:
                 raw += crawl_gnb_authors(gnb_authors, per=per_author)
             except Exception as e:
                 print(f"[aggregator] 果农邦抓取异常: {e}")
+        thx_authors = [a for a in authors if a.get("platform") == "tahuaxing"]
+        if thx_authors:
+            try:
+                from crawlers.tahuaxing import crawl_authors as crawl_thx_authors
+                raw += crawl_thx_authors(thx_authors, per=per_author)
+            except Exception as e:
+                print(f"[aggregator] 踏花行抓取异常: {e}")
 
     # ---- 关键词兜底（whitelist_primary / keyword）----
     if mode in ("whitelist_primary", "keyword"):
