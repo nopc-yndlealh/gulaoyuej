@@ -224,6 +224,17 @@
         "国内个人育种家"
       ],
       "trust": "high"
+    },
+    {
+      "platform": "guonongbang",
+      "fid": 379,
+      "name": "果农邦·水果版",
+      "tags": [
+        "果树",
+        "种植",
+        "果农"
+      ],
+      "trust": "high"
     }
   ]
 }

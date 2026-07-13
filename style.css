@@ -1578,6 +1578,7 @@ body.classify-mode .card {
 }
 .daily-badge--bili { background: rgba(0, 161, 214, 0.92); }
 .daily-badge--xhs  { background: rgba(255, 70, 90, 0.92); }
+.daily-badge--gnb  { background: rgba(124, 179, 66, 0.92); }
 .daily-badge--def  { background: rgba(0, 0, 0, 0.5); }
 .daily-body {
   padding: 10px 12px 12px;

@@ -71,6 +71,13 @@ def collect_raw(cfg: dict) -> list[dict]:
                 print("[aggregator] 小红书 MCP 适配器缺失，跳过小红书作者模式。")
             except Exception as e:
                 print(f"[aggregator] 小红书作者抓取异常: {e}")
+        gnb_authors = [a for a in authors if a.get("platform") == "guonongbang"]
+        if gnb_authors:
+            try:
+                from crawlers.guonongbang import crawl_authors as crawl_gnb_authors
+                raw += crawl_gnb_authors(gnb_authors, per=per_author)
+            except Exception as e:
+                print(f"[aggregator] 果农邦抓取异常: {e}")
 
     # ---- 关键词兜底（whitelist_primary / keyword）----
     if mode in ("whitelist_primary", "keyword"):

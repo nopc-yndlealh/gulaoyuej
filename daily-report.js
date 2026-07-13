@@ -17,7 +17,8 @@
 
   var PLAT = {
     bilibili:    { name: 'B站',   cls: 'bili' },
-    xiaohongshu: { name: '小红书', cls: 'xhs' }
+    xiaohongshu: { name: '小红书', cls: 'xhs' },
+    guonongbang: { name: '果农邦', cls: 'gnb' }
   };
 
   function escapeHtml(s) {
