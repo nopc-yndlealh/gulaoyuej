@@ -31,6 +31,8 @@ MIXIN_KEY_TABLE = [
 NAV_URL = "https://api.bilibili.com/x/web-interface/nav"
 SEARCH_URL = "https://api.bilibili.com/x/web-interface/wbi/search/type"
 SPACE_URL = "https://api.bilibili.com/x/space/wbi/arc/search"
+SUBTITLE_VIEW_URL = "https://api.bilibili.com/x/web-interface/wbi/view"
+SUBTITLE_PLAYER_URL = "https://api.bilibili.com/x/player/wbi/v2"
 
 COOKIE_PATH = Path(__file__).resolve().parent.parent / "cookies" / "bilibili.json"
 
@@ -158,6 +160,38 @@ class BilibiliCrawler:
 
     def close(self):
         self._client.close()
+
+    def fetch_subtitle_text(self, bvid: str, lang: str = "ai-zh") -> str:
+        """抓取视频字幕全文（默认中文 AI 字幕）。
+
+        流程：view 拿 cid -> player 带 cid 拿字幕列表 -> 下载字幕 json 拼接。
+        无字幕或失败返回空串。
+        """
+        try:
+            v = self._client.get(SUBTITLE_VIEW_URL, params=self._sign({"bvid": bvid}))
+            v.raise_for_status()
+            cid = v.json().get("data", {}).get("cid")
+            if not cid:
+                return ""
+            p = self._client.get(SUBTITLE_PLAYER_URL, params=self._sign({"bvid": bvid, "cid": cid}))
+            p.raise_for_status()
+            subs = p.json().get("data", {}).get("subtitle", {}).get("subtitles", [])
+            if not subs:
+                return ""
+            target = next((s for s in subs if s.get("lan") == lang), None) or subs[0]
+            url = target.get("subtitle_url", "")
+            if not url:
+                return ""
+            if url.startswith("//"):
+                url = "https:" + url
+            r = self._client.get(url)
+            r.raise_for_status()
+            body = r.json().get("body", [])
+            text = " ".join(b.get("content", "").strip() for b in body if b.get("content", "").strip())
+            return text
+        except Exception as e:
+            print(f"[bilibili] 字幕抓取 {bvid} 失败: {e}")
+            return ""
 
 
 def crawl(keywords: list[str], whitelist_mids: list[int], search_per_keyword: int = 20, space_ps: int = 10) -> list[dict]:
