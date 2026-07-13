@@ -26,12 +26,13 @@
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // 封面走 images.weserv.nl 代理：转 https、转 webp、限制宽度，统一图片源
+  // 封面图：原实现走 images.weserv.nl 代理做 https 转换 + 限宽，但该服务在国内被墙，
+  // 导致周报卡片封面全部加载失败、退化成纯文字块（看起来像“堆叠”）。
+  // 改为直接使用平台 CDN 直链，并把 http 升级为 https——B站(i*.hdslb.com) /
+  // 小红书(xhscdn.com) 的 CDN 均支持 https 且国内可达，https 站点也不会被混合内容拦截。
   function proxied(src, w) {
     if (!src) return '';
-    var u = String(src).trim().replace(/^https?:\/\//, '');
-    return 'https://images.weserv.nl/?url=' + encodeURIComponent(u) +
-           '&w=' + w + '&output=webp&ssl=1';
+    return String(src).trim().replace(/^http:\/\//i, 'https://');
   }
 
   function fmtDate(iso) {
