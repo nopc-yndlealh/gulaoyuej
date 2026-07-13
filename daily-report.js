@@ -180,7 +180,8 @@
       footEl.textContent = parts.join(' · ');
     }
 
-    section.hidden = false;
+    // 显示/隐藏由 app.js 的 setActiveCategory 统一控制：只在“全部植物”首页展示
+    // 这里不主动设置 section.hidden，避免覆盖分类切换状态
   }
 
   function load() {

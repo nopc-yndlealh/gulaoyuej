@@ -407,6 +407,7 @@
     document.getElementById('loading').classList.add('hidden');
     renderSidebar();
     renderMobileNav();
+    setActiveCategory(-1); // 初始化激活状态并同步花卉周报显示
     await renderGrid(-1);
     bindEvents();
   }
@@ -702,6 +703,11 @@
     document.querySelectorAll('#mobile-cat-scroll .cat-chip').forEach((el) => {
       el.classList.toggle('active', el.dataset.idx === idx);
     });
+    // 花卉周报只在“全部植物”首页展示，进入具体分类时隐藏，避免用户误以为分类没切换
+    const dailyReport = document.getElementById('daily-report');
+    if (dailyReport) {
+      dailyReport.hidden = !(idx === -1 || idx === '-1');
+    }
     // 移动端滚动到激活项
     const activeChip = document.querySelector('#mobile-cat-scroll .cat-chip.active');
     if (activeChip) {
