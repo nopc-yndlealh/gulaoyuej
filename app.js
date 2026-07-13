@@ -407,8 +407,7 @@
     document.getElementById('loading').classList.add('hidden');
     renderSidebar();
     renderMobileNav();
-    setActiveCategory(-1); // 初始化激活状态并同步花卉周报显示
-    await renderGrid(-1);
+    setActiveCategory('daily'); // 默认首页即显示花卉周报；其它分类点击时正常切换
     bindEvents();
   }
 
