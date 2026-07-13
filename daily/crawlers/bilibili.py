@@ -58,6 +58,24 @@ def _norm_cover(pic: str) -> str:
     return pic
 
 
+def _summarize_subtitle(full_text: str, max_sentences: int = 3, max_chars: int = 90) -> str:
+    """把字幕全文压缩成卡片简介（无 LLM 时的兜底策略）。
+
+    字幕是口语全文（一个视频几千字），按句末标点切分取前若干完整句，
+    通常能交代视频主题。截断到 max_chars 避免过长。
+    若将来环境配了 LLM，可把本函数替换为模型调用（接口保持一致即可）。
+    """
+    if not full_text:
+        return ""
+    pieces = re.split(r"(?<=[。！？!?])", full_text)
+    sentences = [p.strip() for p in pieces if p.strip()]
+    head = sentences[:max_sentences]
+    text = re.sub(r"\s+", " ", " ".join(head)).strip()
+    if len(text) > max_chars:
+        text = text[:max_chars].rstrip(" ，。、") + "…"
+    return text
+
+
 class BilibiliCrawler:
     def __init__(self, timeout: float = 15.0):
         self._client = httpx.Client(headers=HEADERS, timeout=timeout, follow_redirects=True)
@@ -144,6 +162,17 @@ class BilibiliCrawler:
             bvid = it.get("bvid")
             if not bvid:
                 continue
+            # summary：优先用 UP主自己写的简介(description)；为空时改用视频字幕自动生成
+            # （字幕是口语全文，取前几句作简介，无需模型）。小红书走 desc，不抓字幕。
+            desc = _strip_tags(it.get("description", "")).strip()
+            summary = desc[:100] if desc else ""
+            if not summary:
+                try:
+                    sub = self.fetch_subtitle_text(bvid)
+                    if sub:
+                        summary = _summarize_subtitle(sub)
+                except Exception as e:
+                    print(f"[bilibili] 字幕补全 {bvid} 失败: {e}")
             out.append({
                 "id": f"bili_{bvid}",
                 "platform": "bilibili",
@@ -154,7 +183,7 @@ class BilibiliCrawler:
                 "url": f"https://www.bilibili.com/video/{bvid}",
                 "likes": int(it.get("play") or 0),
                 "published_at": time.strftime("%Y-%m-%d", time.localtime(it["created"])) if it.get("created") else "",
-                "summary": _strip_tags(it.get("description", ""))[:100],
+                "summary": summary,
             })
         return out
 
