@@ -152,7 +152,7 @@ class BilibiliCrawler:
                 "url": f"https://www.bilibili.com/video/{bvid}",
                 "likes": int(it.get("play") or 0),
                 "published_at": time.strftime("%Y-%m-%d", time.localtime(it["created"])) if it.get("created") else "",
-                "summary": "",
+                "summary": _strip_tags(it.get("description", ""))[:100],
             })
         return out
 

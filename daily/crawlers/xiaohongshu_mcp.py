@@ -46,6 +46,14 @@ def _parse_count(text: str) -> int:
     return int(re.sub(r"\D", "", text) or 0)
 
 
+def _clean_summary(text: str, limit: int = 100) -> str:
+    """清洗笔记/视频简介：去 HTML 标签、压缩空白、截断到 limit 字（卡片预览用）。"""
+    s = re.sub(r"<[^>]+>", " ", text or "")
+    s = re.sub(r"[\u200b\u3000]+", " ", s)        # 去零宽空格 / 全角空格
+    s = re.sub(r"\s+", " ", s).strip()
+    return s[:limit]
+
+
 class _McpClient:
     def __init__(self):
         # 每个实例持有独立 headers 副本，避免多线程共享模块级 HEADERS 造成 session-id 竞态
@@ -140,6 +148,7 @@ def _extract_feeds(resp: dict, limit: int) -> list[dict]:
         xsec = f.get("xsecToken", "")
         if not note_id:
             continue
+        desc = _clean_summary(card.get("desc", ""))
         url = f"https://www.xiaohongshu.com/explore/{note_id}"
         if xsec:
             url += f"?xsec_token={urllib.parse.quote(xsec)}&xsec_source=pc_search"
@@ -156,7 +165,7 @@ def _extract_feeds(resp: dict, limit: int) -> list[dict]:
                 "url": url,
                 "likes": likes,
                 "published_at": "",
-                "summary": "",
+                "summary": desc,
             }
         )
     return out

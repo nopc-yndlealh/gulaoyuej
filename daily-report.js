@@ -75,6 +75,9 @@
         '</div>' +
         '<div class="daily-body">' +
           '<h3 class="daily-title">' + escapeHtml(it.title) + '</h3>' +
+          (it.summary
+            ? '<p class="daily-summary">' + escapeHtml(it.summary) + '</p>'
+            : '') +
           '<div class="daily-meta">' + likes +
             '<span class="daily-author">' + author + '</span>' + dateHtml +
           '</div>' +
