@@ -69,14 +69,26 @@ def norm_url(u: Optional[str]) -> Optional[str]:
 def download_bytes(url: str) -> bytes:
     """下载 URL 内容为字节，带 User-Agent / Referer 对抗防盗链。
 
+    Referer 按图片 URL 的 host 自适应（小红书 / B站 / 其他域名），避免写死
+    bilibili.com 导致 xhscdn / 踏花行 / 果农邦等防盗链返回 403。
     失败（网络错误、4xx/5xx）直接抛异常，由上层 cache_one 兜底。
     """
+    parts = urlsplit(url)
+    netloc = parts.netloc.lower()
+    if "xiaohongshu" in netloc or "xhscdn" in netloc:
+        referer = "https://www.xiaohongshu.com/"
+    elif "bilibili" in netloc or "hdslb" in netloc:
+        referer = "https://www.bilibili.com/"
+    elif parts.scheme and netloc:
+        referer = f"{parts.scheme}://{netloc}/"
+    else:
+        referer = "https://www.bilibili.com/"
     headers = {
         "User-Agent": (
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         ),
-        "Referer": "https://www.bilibili.com/",
+        "Referer": referer,
         "Accept": "image/avif,image/webp,image/png,image/*,*/*;q=0.8",
     }
     resp = httpx.get(url, headers=headers, follow_redirects=True, timeout=15)
