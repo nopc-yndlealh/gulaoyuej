@@ -17,6 +17,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from aggregator import load_config, aggregate  # noqa: E402
+from image_cache import cache_covers  # noqa: E402
 
 
 def main() -> None:
@@ -29,6 +30,9 @@ def main() -> None:
           f"B站 {len(cfg.get('whitelist', {}).get('bilibili', []))} / "
           f"小红书 {len(cfg.get('whitelist', {}).get('xiaohongshu', []))}）...")
     items, stats = aggregate(cfg)
+
+    # 发布前把第三方外链封面缓存到 R2，改写 cover 为永久 URL（probe 也走，便于验证）
+    items = cache_covers(items, cfg)
 
     if args.probe:
         report = {"stats": stats, "samples": items}

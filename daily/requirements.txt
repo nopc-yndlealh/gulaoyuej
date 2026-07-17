@@ -1,2 +1,4 @@
 httpx>=0.27
 playwright>=1.44
+boto3>=1.34
+Pillow>=10.0.0

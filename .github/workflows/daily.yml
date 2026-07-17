@@ -1,0 +1,46 @@
+name: 花卉周报每日聚合 (Daily)
+
+on:
+  schedule:
+    # 每周日 UTC 0 点运行（北京时间周一 08:00）
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+# 允许 Actions 自带的 GITHUB_TOKEN 推送回仓库（无需代理）
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    # R2 凭证通过 repo secrets 注入为环境变量（绝不出现在代码/日志明文之外）
+    env:
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r daily/requirements.txt
+
+      - name: Run pipeline (抓取 → 缓存封面到 R2 → 发布 daily.json)
+        run: python daily/run_pipeline.py
+
+      - name: Configure git
+        run: |
+          git config user.email "bot@feijibei.top"
+          git config user.name "daily-bot"
+
+      - name: Commit and push
+        run: |
+          git add data/daily.json
+          git commit -m "daily update" || echo "no changes"
+          git push
