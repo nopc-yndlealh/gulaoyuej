@@ -1,6 +1,6 @@
 {
-  "issue": "2026-W39",
-  "generated_at": "2026-09-27T02:52:12.899535+00:00",
+  "issue": "2026-W40",
+  "generated_at": "2026-10-04T03:37:58.729565+00:00",
   "frequency": "weekly",
   "source_counts": {
     "bilibili": 8
@@ -14,7 +14,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i2.hdslb.com/bfs/archive/68b43a048adf8c54e8d7f1ab92582838868b8cfb.jpg",
       "url": "https://www.bilibili.com/video/BV1yVYxzLEwA",
-      "likes": 1734,
+      "likes": 1746,
       "published_at": "2025-08-18",
       "summary": "",
       "source": "whitelist"
@@ -27,7 +27,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i2.hdslb.com/bfs/archive/282baf82656cb02f9a6adb257ec0f4f8d4601b55.jpg",
       "url": "https://www.bilibili.com/video/BV1eGRRYREi4",
-      "likes": 1874,
+      "likes": 1887,
       "published_at": "2025-04-05",
       "summary": "视频来源fb\"Bermuda Rose Society\"\n自译，看看大概就好",
       "source": "whitelist"
@@ -40,7 +40,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i0.hdslb.com/bfs/archive/26412c07e4e04e846e57284c9c8be3111212c0bf.jpg",
       "url": "https://www.bilibili.com/video/BV1wAQSY2Eon",
-      "likes": 2238,
+      "likes": 2245,
       "published_at": "2025-03-15",
       "summary": "关于帕氏淡黄香水月季的讨论",
       "source": "whitelist"
@@ -53,7 +53,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i2.hdslb.com/bfs/archive/db8070d80ff41e8e03540918e7a011ba6c879960.jpg",
       "url": "https://www.bilibili.com/video/BV1GFxbeoEeP",
-      "likes": 8777,
+      "likes": 8784,
       "published_at": "2024-09-30",
       "summary": "关于鸡冠花的一点探索",
       "source": "whitelist"
@@ -66,7 +66,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i1.hdslb.com/bfs/archive/ec7c5d975ddf57f6f7cc63dba65eb7e71cb553e2.jpg",
       "url": "https://www.bilibili.com/video/BV1hH4y1y7Ac",
-      "likes": 1883,
+      "likes": 1885,
       "published_at": "2023-12-09",
       "summary": "",
       "source": "whitelist"
@@ -79,7 +79,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i1.hdslb.com/bfs/archive/ecd5efe41084924261a89911ea7e0c1da09255ef.jpg",
       "url": "https://www.bilibili.com/video/BV1zw411T7n1",
-      "likes": 3301,
+      "likes": 3308,
       "published_at": "2023-11-12",
       "summary": "依次出现的是Rubens、屏东月季、Mrs. B. R. Cant。Rubens拍摄时间11月8日，其余拍摄时间为11月1日。想到啥再补充吧",
       "source": "whitelist"
@@ -92,7 +92,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i1.hdslb.com/bfs/archive/faa8e8c3ef68fa9ee0e4c931cfbbe5ce5496c2f8.jpg",
       "url": "https://www.bilibili.com/video/BV1eu4y1p7Fc",
-      "likes": 9010,
+      "likes": 9019,
       "published_at": "2023-10-19",
       "summary": "-",
       "source": "whitelist"
@@ -105,7 +105,7 @@
       "author_url": "https://space.bilibili.com/177381025",
       "cover": "http://i0.hdslb.com/bfs/archive/64533f080515056b6b62ccb30cce10b1a028f583.jpg",
       "url": "https://www.bilibili.com/video/BV1MH4y1m7fP",
-      "likes": 3594,
+      "likes": 3597,
       "published_at": "2023-11-25",
       "summary": "",
       "source": "whitelist"
