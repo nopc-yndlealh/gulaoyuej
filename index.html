@@ -15,10 +15,10 @@
     <meta property="og:locale" content="zh_CN">
     <link rel="dns-prefetch" href="https://api.qrserver.com" />
     <link rel="dns-prefetch" href="https://connect.qq.com" />
-    <link rel="preload" href="./style.css?v=20260718" as="style" />
-    <link rel="preload" href="./app.js?v=20260717" as="script" />
+    <link rel="preload" href="./style.css?v=20261014" as="style" />
+    <link rel="preload" href="./app.js?v=20261014" as="script" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>" />
-    <link rel="stylesheet" href="./style.css?v=20260718" />
+    <link rel="stylesheet" href="./style.css?v=20261014" />
   </head>
   <body>
     <div id="loading"><div class="spinner"></div><p>正在加载图鉴数据…</p></div>
@@ -40,14 +40,6 @@
     <div class="layout">
       <nav id="sidebar"><h2>分　类</h2><div id="cat-list"></div></nav>
         <main id="content">
-          <section id="daily-report" aria-label="花卉周报" hidden>
-            <div class="daily-head">
-              <h2>🌸 花卉周报</h2>
-              <span class="daily-issue" id="daily-issue"></span>
-            </div>
-            <div class="daily-grid" id="daily-grid"></div>
-            <div class="daily-foot" id="daily-foot"></div>
-          </section>
           <div class="section-header"><h2 id="section-title">全部条目</h2><span class="total" id="total-count"></span></div>
           <div class="grid" id="grid"></div>
           <div class="pagination" id="pagination"></div>
@@ -64,14 +56,7 @@
       <div id="qr-box"><p id="qr-label">扫码分享</p><img id="qr-img" src="" alt="分享二维码" /><button id="qr-close">×</button></div>
     </div>
     <div id="toast"></div>
-    <div id="daily-modal" class="daily-modal-overlay" hidden>
-      <div class="daily-modal-box" role="dialog" aria-modal="true" aria-label="内容详情">
-        <button class="daily-modal-close" id="daily-modal-close" aria-label="关闭">×</button>
-        <div id="daily-modal-content"></div>
-      </div>
-    </div>
-    <script src="./app.js?v=20260717"></script>
-    <script src="./daily-report.js?v=20260718"></script>
+    <script src="./app.js?v=20261014"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
