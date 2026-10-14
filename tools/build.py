@@ -432,8 +432,13 @@ def check_integrity(out):
         print(f"\n  ⚠️  内容质量问题 {len(data_issues)} 类 / {total} 条（不阻断构建，需人工决定）：")
         for _, label, items in data_issues:
             print(f"    - {label}：{len(items)} 条")
-        _write_report(data_issues)
-        print("    明细见 content/_build_report.md")
+    else:
+        print("\n  ✓ 内容质量问题：无")
+
+    # 报告每次都重写。之前只在「有问题」时才写，导致问题修完后旧报告残留在
+    # 仓库里，看着像还没修 —— 生成物一旦会过期，就必须每次覆盖。
+    _write_report(data_issues)
+    print("    报告见 content/_build_report.md")
 
     return ok
 
@@ -447,6 +452,12 @@ def _write_report(data_issues):
     L = ["# 内容体检报告\n", f"生成时间：{_now()}\n"]
     L.append("> 这里只列**内容质量**问题，不阻断构建。")
     L.append("> 结构问题（id 重复 / 孤儿 / 空壳 / 悬空映射）会直接让构建失败。\n")
+
+    if not data_issues:
+        L.append("## ✓ 当前没有问题\n")
+        L.append("published 的条目全部有正文，图片全部在 R2 域名上。\n")
+        (SRC / "_build_report.md").write_text("\n".join(L), encoding="utf-8")
+        return
 
     for kind, label, items in data_issues:
         L.append(f"## {label} — {len(items)} 条\n")
