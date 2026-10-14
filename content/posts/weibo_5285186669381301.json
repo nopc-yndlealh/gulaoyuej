@@ -9,6 +9,9 @@
   "author": "蘸盐",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__6e05a6daly8ibygak6129j20zk0k07bu.webp"
+    },
+    {
       "t": "所以，根系这么浅、这么容易倒的樱花树，在台风季等特殊情况下，算不算是会给人员生命财产带来威胁的公共安全隐患呢？"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/2794283127?launchid=10000360-page_H5"
   },
   "contentTag": "1",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__6e05a6daly8ibygak6129j20zk0k07bu.webp"
 }

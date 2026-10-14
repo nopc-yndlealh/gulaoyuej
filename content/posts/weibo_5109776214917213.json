@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__007Z0PSUgy1hwey6k5nlkj314v1fze81.webp"
+    },
+    {
       "t": "夹竹桃真是特别传统又很美的花。谢堃说看了夹竹桃而“回视江南草木，真傀儡耳”。就特别讨厌现在那股“夹竹桃有毒赶紧扔了，不要碰”的风气水仙也有毒啊，花是看的又不是吃的，应该宣传的是让这些成年人不要像三岁小孩一样看见东西就入口"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "215",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__007Z0PSUgy1hwey6k5nlkj314v1fze81.webp"
 }

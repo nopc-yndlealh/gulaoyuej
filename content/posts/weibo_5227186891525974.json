@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__005vnhZYgy1i6ru5dm1lhj60sq0g6thc02.webp"
+    },
+    {
       "t": "更可怕的是有人真拿“营养土”去改良菜地，一下子污染一片地。家庭用木箱、泡沫箱之类种植蔬菜，用普通黄土就完全可以，不要买这种所谓营养土"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "65",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__005vnhZYgy1i6ru5dm1lhj60sq0g6thc02.webp"
 }

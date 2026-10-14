@@ -35,3 +35,6 @@ cf-token.txt
 *.token
 .env
 .env.*
+
+# 恢复脚本的临时下载目录
+.recover-tmp/

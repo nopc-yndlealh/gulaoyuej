@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__006WKthjgy1h7ga1j6ul7j31ww2juhdx.webp"
+    },
+    {
       "t": "很有意义的蔷薇拟人，可以看到融合了蔷薇属中很多元素，不是毫无意义的组合"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "672",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__006WKthjgy1h7ga1j6ul7j31ww2juhdx.webp"
 }

@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__4e7c9fcfly1goo1z93fdoj20g15efqj3.webp"
+    },
+    {
       "t": "天狼月季做的科普并不算多。他是商家，主要还是卖货为主，当然要是把怎么养月季怎么修剪施肥也算作“科普”的话，那可以选他"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "1074",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__4e7c9fcfly1goo1z93fdoj20g15efqj3.webp"
 }

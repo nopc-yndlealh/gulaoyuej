@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1g5ppkxli6gj30k00zktbl.webp"
+    },
+    {
       "t": "粉红香水蔷薇/丽江之路果然发挥超大藤本优势，蹭蹭往上蹿，即使看叶子也很好看 朱玛交柯的微博视频"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "1553",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__007C5AOXly1g5ppkxli6gj30k00zktbl.webp"
 }

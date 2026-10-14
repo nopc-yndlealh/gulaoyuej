@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__ada7fbf7ly1h5uojokljnj20u01hcter.webp"
+    },
+    {
       "t": "有论文研究过。玫瑰的重复开花机制跟月季不同，不是依靠阻断KSN的成熟而重复开花，野生的玫瑰中有的个体就可以在生长期内重复开花。因此玫瑰杂交一代就重复开花也是正常的。但玫瑰长势不算好，且不抗锈病和黑斑"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "736",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__ada7fbf7ly1h5uojokljnj20u01hcter.webp"
 }

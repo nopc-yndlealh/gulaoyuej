@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__002TLsr9ly1hqb22c6u08j61uo11ikjm02.webp"
+    },
+    {
       "t": "球别再乱管理了，不止一个地方这样乱混//@余天一微博:真要命，博斯腾湖每年都种一大堆睡莲属园艺品种，和野生的雪白睡莲离得太近了，宣传词经常说“呈现出生态图卷”，但是这些园艺品种对于雪白睡莲野生种群来说就是生态灾难//@版纳花轮君:啊？红色的睡莲，看着不像国产种啊，有可能是园艺品种"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "380",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__002TLsr9ly1hqb22c6u08j61uo11ikjm02.webp"
 }

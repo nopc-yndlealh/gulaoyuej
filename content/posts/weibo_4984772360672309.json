@@ -9,6 +9,12 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__68d8c97fgy1hlbn7d1bnyj20tn136tgf.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__68d8c97fgy1hlbnuaj868j20u015qjxn.webp"
+    },
+    {
       "t": "中国花卉育种家王某杰，培育的月季新品种在瑞士国际竞赛上获得过银奖。在国内申请几个新品种权迟迟没结果，去询问，被领导回应：“我们不知道”"
     }
   ],
@@ -20,5 +26,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "498",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__68d8c97fgy1hlbn7d1bnyj20tn136tgf.webp"
 }

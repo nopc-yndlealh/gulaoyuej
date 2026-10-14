@@ -9,6 +9,9 @@
   "author": "朱玛交柯",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/weibo__939e7d15ly1i1s12g1hzaj21o0190wwk.webp"
+    },
+    {
       "t": "应该是黄蜀葵这个“秋葵”，不是现在吃的这种食用秋葵//@夜弓大君://@撷芳主人:转发微博"
     }
   ],
@@ -20,5 +23,6 @@
     "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
   },
   "contentTag": "136",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/weibo__939e7d15ly1i1s12g1hzaj21o0190wwk.webp"
 }
