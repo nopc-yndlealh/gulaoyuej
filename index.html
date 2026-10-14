@@ -15,10 +15,11 @@
     <meta property="og:locale" content="zh_CN">
     <link rel="dns-prefetch" href="https://api.qrserver.com" />
     <link rel="dns-prefetch" href="https://connect.qq.com" />
-    <link rel="preload" href="./style.css?v=20261014" as="style" />
-    <link rel="preload" href="./app.js?v=20261014" as="script" />
+    <link rel="preload" href="./style.css?v=20261014b" as="style" />
+    <link rel="preload" href="./site-common.js?v=20261014b" as="script" />
+    <link rel="preload" href="./app.js?v=20261014b" as="script" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>" />
-    <link rel="stylesheet" href="./style.css?v=20261014" />
+    <link rel="stylesheet" href="./style.css?v=20261014b" />
   </head>
   <body>
     <div id="loading"><div class="spinner"></div><p>正在加载图鉴数据…</p></div>
@@ -26,6 +27,7 @@
       <h1>园艺图鉴</h1>
       <div class="search-wrap">
         <input type="search" id="search-input" placeholder="搜索月季 / 多肉…" aria-label="搜索植物" />
+        <button id="openmode-toggle" type="button" title="卡片打开方式" aria-label="切换卡片打开方式" class="header-btn">🔀</button>
         <button id="theme-toggle" title="切换主题" aria-label="切换深色/浅色模式" class="header-btn">🌙</button>
         <button id="classify-toggle" title="分类器模式" aria-label="开启/关闭分类器模式" class="header-btn" style="font-size: 15px; display: none">🏷️</button>
       </div>
@@ -47,7 +49,13 @@
     </div>
     <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div id="modal-box">
-        <div id="modal-header"><span id="modal-title">详情</span><button id="modal-close" aria-label="关闭弹窗">×</button></div>
+        <div id="modal-header">
+          <span id="modal-title">详情</span>
+          <div class="modal-tools">
+            <button id="openmode-toggle-modal" type="button" class="omp-trigger-modal" title="卡片打开方式" aria-label="切换卡片打开方式">🔀</button>
+            <button id="modal-close" type="button" aria-label="关闭弹窗">×</button>
+          </div>
+        </div>
         <div id="detail-view"></div>
       </div>
     </div>
@@ -56,7 +64,29 @@
       <div id="qr-box"><p id="qr-label">扫码分享</p><img id="qr-img" src="" alt="分享二维码" /><button id="qr-close">×</button></div>
     </div>
     <div id="toast"></div>
-    <script src="./app.js?v=20261014"></script>
+
+    <!-- 卡片打开方式切换面板（顶栏按钮与详情弹窗按钮共用同一份） -->
+    <div id="omp" class="omp" role="dialog" aria-label="卡片打开方式">
+      <div class="omp-title">卡片点开方式</div>
+      <button class="mode-opt" type="button" data-mode="modal" role="menuitemradio" aria-checked="true">
+        <span class="mo-icon">🪟</span>
+        <span class="mo-text"><span class="mo-name">弹窗阅读</span><span class="mo-desc">点卡片就地展开详情，不离开列表</span></span>
+        <span class="mo-check">✓</span>
+      </button>
+      <button class="mode-opt" type="button" data-mode="tab" role="menuitemradio" aria-checked="false">
+        <span class="mo-icon">🗂️</span>
+        <span class="mo-text"><span class="mo-name">新标签页</span><span class="mo-desc">详情在新标签页打开，列表保持原样</span></span>
+        <span class="mo-check">✓</span>
+      </button>
+      <button class="omp-action" type="button" id="omp-open-current" hidden>↗ 用新标签页打开当前这条</button>
+      <div class="omp-foot">
+        <span>记住在这台电脑上</span>
+        <button type="button" id="omp-reset">恢复默认</button>
+      </div>
+    </div>
+
+    <script src="./site-common.js?v=20261014b"></script>
+    <script src="./app.js?v=20261014b"></script>
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {

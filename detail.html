@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff8e14" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>详情 · 园艺图鉴</title>
+    <meta name="description" content="园艺图鉴品种详情 — 月季与多肉品种特性、育种历史与种植分享。">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>" />
+    <link rel="preload" href="./style.css?v=20261014b" as="style" />
+    <link rel="stylesheet" href="./style.css?v=20261014b" />
+  </head>
+  <body class="detail-page">
+    <header class="dp-bar">
+      <button class="dp-back" id="dp-back" aria-label="返回列表">← 返回</button>
+      <span class="dp-brand">园艺图鉴</span>
+      <div class="dp-tools">
+        <a class="header-btn dp-home" href="./index.html" title="回到图鉴首页" aria-label="回到图鉴首页">🏠</a>
+        <button class="header-btn" id="theme-toggle" type="button" title="切换主题" aria-label="切换深色/浅色模式">🌙</button>
+      </div>
+    </header>
+
+    <main class="dp-main">
+      <article class="dp-article">
+        <div id="detail-view"><div class="detail-loading"><p>正在加载…</p></div></div>
+      </article>
+    </main>
+
+    <div id="lightbox"></div>
+    <div id="qr-overlay">
+      <div id="qr-box"><p id="qr-label">扫码分享</p><img id="qr-img" src="" alt="分享二维码" /><button id="qr-close" type="button" aria-label="关闭二维码">×</button></div>
+    </div>
+    <div id="toast"></div>
+
+    <script src="./site-common.js?v=20261014b"></script>
+    <script>
+      /* 独立详情页 — 由 ?id=xxx 驱动，渲染逻辑与首页弹窗共用 site-common.js */
+      (function () {
+        'use strict';
+        const SC = window.SiteCommon;
+        SC.initTheme();
+
+        const detailEl = document.getElementById('detail-view');
+        const lightboxEl = document.getElementById('lightbox');
+        const qrOverlay = document.getElementById('qr-overlay');
+
+        const id = SC.parseId(new URLSearchParams(location.search).get('id') || '');
+        let currentTitle = '';
+        let galleryTotal = 0;
+        let galleryIdx = 1;
+
+        function toast(msg) {
+          const t = document.getElementById('toast');
+          t.textContent = msg;
+          t.classList.add('show');
+          setTimeout(() => t.classList.remove('show'), 2200);
+        }
+
+        /* ===== 图片灯箱 ===== */
+        function showLightbox(src) {
+          lightboxEl.innerHTML = `<img src="${SC.escapeHtml(src)}" alt="预览" loading="lazy" decoding="async"
+                     onload="this.classList.add('loaded')">`;
+          lightboxEl.classList.add('active');
+        }
+
+        /* ===== 轮播（社交图文） ===== */
+        function slideGallery(dir) {
+          const track = document.getElementById('gallery-track');
+          if (!track || !galleryTotal) return;
+          galleryIdx = Math.max(1, Math.min(galleryTotal, galleryIdx + dir));
+          track.style.transform = `translateX(-${(galleryIdx - 1) * 100}%)`;
+          const counter = document.getElementById('gallery-idx');
+          if (counter) counter.textContent = String(galleryIdx);
+        }
+
+        /* ===== 分享 ===== */
+        function copyLink() {
+          const url = SC.getShareUrl(id);
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard
+              .writeText(url)
+              .then(() => toast('链接已复制，去微信/小红书粘贴吧'))
+              .catch(() => toast('复制失败，请手动复制地址栏链接'));
+          } else {
+            const ta = document.createElement('textarea');
+            ta.value = url;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            toast('链接已复制，去微信/小红书粘贴吧');
+          }
+        }
+
+        function showQrPopup() {
+          const url = SC.getShareUrl(id);
+          document.getElementById('qr-img').src =
+            'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(url);
+          qrOverlay.classList.add('active');
+        }
+
+        function shareToQQ() {
+          const url = SC.getShareUrl(id);
+          const qqUrl =
+            'https://connect.qq.com/widget/shareqq/index.html?url=' +
+            encodeURIComponent(url) +
+            '&title=' +
+            encodeURIComponent(currentTitle || '园艺图鉴') +
+            '&summary=' +
+            encodeURIComponent('来自园艺图鉴的精彩内容') +
+            '&pics=';
+          window.open(qqUrl, '_blank', 'width=600,height=500');
+        }
+
+        function nativeShare() {
+          const url = SC.getShareUrl(id);
+          if (navigator.share) {
+            navigator.share({ title: currentTitle || '园艺图鉴', text: currentTitle || '园艺图鉴', url }).catch(() => {});
+          } else {
+            copyLink();
+          }
+        }
+
+        /* ===== 事件 ===== */
+        detailEl.addEventListener('click', (e) => {
+          const arrow = e.target.closest('.gallery-arrow');
+          if (arrow) {
+            slideGallery(parseInt(arrow.dataset.dir, 10) || 1);
+            return;
+          }
+          const img = e.target.closest('.detail-body img, .gallery-slide img');
+          if (img) {
+            showLightbox(img.src);
+            return;
+          }
+          const shareBtn = e.target.closest('.share-btn');
+          if (shareBtn) {
+            const action = shareBtn.dataset.action;
+            if (action === 'copy') copyLink();
+            else if (action === 'qr') showQrPopup();
+            else if (action === 'qq') shareToQQ();
+            else if (action === 'native') nativeShare();
+          }
+        });
+
+        lightboxEl.addEventListener('click', () => lightboxEl.classList.remove('active'));
+
+        qrOverlay.addEventListener('click', (e) => {
+          if (e.target === qrOverlay || e.target.id === 'qr-close') qrOverlay.classList.remove('active');
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            lightboxEl.classList.remove('active');
+            qrOverlay.classList.remove('active');
+          }
+        });
+
+        // 返回：有来路就回上一条，否则回图鉴首页
+        document.getElementById('dp-back').addEventListener('click', () => {
+          if (history.length > 1) history.back();
+          else location.href = './index.html';
+        });
+
+        /* ===== 渲染 ===== */
+        async function load() {
+          if (!id) {
+            detailEl.innerHTML = SC.renderPlaceholder('', '缺少内容编号', true);
+            return;
+          }
+          const content = await SC.fetchContent(id);
+          if (!content || !Array.isArray(content.segments)) {
+            detailEl.innerHTML = SC.renderPlaceholder(id, '内容不存在或已下架', true);
+            return;
+          }
+          const result = SC.renderDetail(content, id, '');
+          detailEl.innerHTML = result.html;
+          galleryTotal = result.imageCount;
+          galleryIdx = 1;
+          currentTitle = content.title || '';
+          document.title = (currentTitle || '详情') + ' · 园艺图鉴';
+        }
+
+        load();
+      })();
+    </script>
+  </body>
+</html>

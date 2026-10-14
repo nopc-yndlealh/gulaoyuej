@@ -16,74 +16,23 @@
 (function () {
   'use strict';
 
-  /* ===== 主题切换 ===== */
-  const THEME_KEY = 'feijibei-theme';
-
-  function isDaytime() {
-    const hour = new Date().getHours();
-    return hour >= 8 && hour < 20;
+  /* ===== 站点公共模块（主题 / 转义 / 详情数据与渲染，实现见 site-common.js） ===== */
+  /** @type {any} */
+  const SC = /** @type {any} */ (window).SiteCommon;
+  if (!SC) {
+    const loadingEl = document.getElementById('loading');
+    if (loadingEl) {
+      loadingEl.innerHTML =
+        '<p style="color:#c0392b;font-size:16px;">资源加载失败：site-common.js 未就绪，请强制刷新（Ctrl+F5）。</p>';
+    }
+    return;
   }
+  const escapeHtml = SC.escapeHtml;
 
-  function getTheme() {
-    const saved = localStorage.getItem(THEME_KEY);
-    if (saved === 'dark' || saved === 'light') return saved;
-    return 'auto'; // 早8-晚8白天, 其余黑夜
-  }
-
-  function getEffectiveTheme() {
-    const mode = getTheme();
-    if (mode === 'dark') return 'dark';
-    if (mode === 'light') return 'light';
-    return isDaytime() ? 'light' : 'dark';
-  }
-
-  function applyTheme(mode) {
-    const html = document.documentElement;
-    const effective = mode === 'auto' ? (isDaytime() ? 'light' : 'dark') : mode;
-    html.setAttribute('data-theme', effective);
-    updateThemeIcons(mode);
-  }
-
-  function updateThemeIcons(mode) {
-    const icons = document.querySelectorAll('#theme-toggle, #mobile-theme-toggle');
-    const effective = getEffectiveTheme();
-    icons.forEach((btn) => {
-      if (mode === 'dark') {
-        btn.textContent = '☀️';
-      } else if (mode === 'light') {
-        btn.textContent = '🌙';
-      } else {
-        btn.textContent = effective === 'dark' ? '☀️' : '🌙';
-      }
-    });
-  }
-
-  function cycleTheme() {
-    const current = getTheme();
-    const next = current === 'light' ? 'dark' : current === 'dark' ? 'auto' : 'light';
-    localStorage.setItem(THEME_KEY, next);
-    applyTheme(next);
-  }
-
-  // 初始化主题
-  applyTheme(getTheme());
-
-  // 绑定按钮
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('theme-toggle').addEventListener('click', cycleTheme);
-    document.getElementById('mobile-theme-toggle').addEventListener('click', cycleTheme);
-  });
-
-  // 每分钟检查时间切换（仅在 auto 模式下响应）
-  setInterval(() => {
-    if (getTheme() === 'auto') applyTheme('auto');
-  }, 60000);
+  /* ===== 主题切换（实现见 site-common.js，首页与详情页共用） ===== */
+  SC.initTheme();
 
   /* ===== 数据变量 ===== */
-  /** @type {Record<string, string>} id → 分类 slug */
-  let contentIndex = {};
-  /** @type {Record<string, Record<string, ContentEntry>>} slug → {id: content} */
-  const contentCache = {};
   /** @type {TransformedData | null} */
   let allData = null;
   /** @type {number|string} 当前选中的分类索引 */
@@ -140,7 +89,7 @@
       _indexData = rawData;
 
       // search-index.json（~2.5MB）→ 延迟到首次搜索时按需加载
-      // content-index.json（~160KB）→ 改为首次点开详情时懒加载（见 ensureContentIndex），减小首屏下载
+      // content-index.json（~160KB）→ 首次点开详情时才加载（见 site-common.js），减小首屏下载
 
       // 加载园艺导航 & 花友推荐数据
       try {
@@ -190,46 +139,8 @@
     return searchIndexLoading;
   }
 
-  /* 按需加载 content-index（仅首次查看详情时拉取，带缓存 Promise） */
-  let contentIndexLoading = null;
-  async function ensureContentIndex() {
-    if (contentIndexLoading) return contentIndexLoading;
-    if (Object.keys(contentIndex).length > 0) return;
-    contentIndexLoading = (async () => {
-      try {
-        const res = await fetch('./data/content/content-index.json');
-        if (res.ok) contentIndex = await res.json();
-        else console.warn('content-index 加载失败，详情不可用');
-      } catch (e) {
-        console.warn('content-index 不可用:', e.message);
-      }
-    })();
-    return contentIndexLoading;
-  }
-
-  /* 按需加载分类内容（带缓存） */
-  /** @param {string} id @returns {Promise<ContentEntry | null>} */
-  async function getContent(id) {
-    await ensureContentIndex();
-    const slug = contentIndex[id];
-    if (!slug) return null;
-
-    // 缓存命中
-    if (contentCache[slug]) {
-      return contentCache[slug][id] || null;
-    }
-
-    // 加载分类文件
-    try {
-      const res = await fetch(`./data/content/${slug}.json`);
-      if (!res.ok) throw new Error(`content/${slug}.json 加载失败`);
-      contentCache[slug] = await res.json();
-      return contentCache[slug][id] || null;
-    } catch (e) {
-      console.error('[getContent]', e);
-      return null;
-    }
-  }
+  /* 详情内容按需加载与渲染统一在 site-common.js：
+     SC.fetchContent(id) 取内容，SC.renderDetail(content, id, title) 生成 HTML */
 
   /* 注入园艺导航/花友推荐虚拟条目 */
   /** @param {IndexEntry[]} rawData */
@@ -817,7 +728,7 @@
         openAuthorModal(id, extraData[id]);
         return;
       }
-      openModal(id, card.dataset.title);
+      openDetail(id, card.dataset.title);
     });
 
     // 关闭弹窗
@@ -828,6 +739,7 @@
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeModal();
+        closeOpenModePanel();
         document.getElementById('lightbox').classList.remove('active');
         document.getElementById('qr-overlay').classList.remove('active');
       }
@@ -887,15 +799,163 @@
         if (e.target === qrOverlay || e.target.id === 'qr-close') closeQrPopup();
       });
     }
+
+    // ── 卡片打开方式（顶栏按钮 + 详情弹窗内按钮共用同一面板）──
+    renderOpenModeUI();
+    bindOpenMode();
   }
 
-  /* 打开弹窗 — 内联渲染详情（按需加载内容） */
-  /** @param {string} urlOrId @param {string} title */
+  /* ============================================================
+     卡片打开方式：弹窗阅读 / 新标签页
+     选择结果记在本机（localStorage['feijibei_open_mode']），
+     换浏览器或清缓存才复位。小屏始终走弹窗 —— 手机上新开标签页体验差。
+     ============================================================ */
+  const OPEN_MODE_KEY = 'feijibei_open_mode';
+  const OPEN_MODES = {
+    modal: { name: '弹窗阅读', toast: '已切换：详情在弹窗内展开' },
+    tab: { name: '新标签页', toast: '已切换：详情在新标签页打开' },
+  };
+  /** 弹窗当前展示的条目 id（供「用新标签页打开这条」使用） */
+  let currentModalId = '';
+
+  /** @returns {'modal'|'tab'} */
+  function getOpenMode() {
+    let saved = '';
+    try {
+      saved = localStorage.getItem(OPEN_MODE_KEY) || '';
+    } catch {
+      // 隐私模式下 localStorage 不可用，退回默认
+    }
+    return OPEN_MODES[saved] ? saved : 'modal';
+  }
+
+  /** @param {'modal'|'tab'} mode */
+  function setOpenMode(mode) {
+    if (!OPEN_MODES[mode]) return;
+    try {
+      localStorage.setItem(OPEN_MODE_KEY, mode);
+    } catch {
+      // 同上，存储不可用时本次会话内仍按所选模式走（见 renderOpenModeUI）
+    }
+    renderOpenModeUI();
+  }
+
+  /** 小屏（≤768px）不提供新标签页模式 @returns {boolean} */
+  function isSmallScreen() {
+    return window.matchMedia('(max-width: 768px)').matches;
+  }
+
+  /** 实际生效的模式（小屏强制定为弹窗） @returns {'modal'|'tab'} */
+  function effectiveOpenMode() {
+    return isSmallScreen() ? 'modal' : getOpenMode();
+  }
+
+  /** 按当前模式打开一条详情 @param {string} id @param {string} title */
+  function openDetail(id, title) {
+    if (effectiveOpenMode() === 'tab') {
+      window.open(SC.getDetailUrl(id), '_blank', 'noopener');
+    } else {
+      openModal(id, title);
+    }
+  }
+
+  /** 同步面板选中态与顶栏按钮状态 */
+  function renderOpenModeUI() {
+    const mode = getOpenMode();
+    document.querySelectorAll('#omp .mode-opt').forEach((btn) => {
+      const on = btn.dataset.mode === mode;
+      btn.classList.toggle('selected', on);
+      btn.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    const toggle = document.getElementById('openmode-toggle');
+    if (toggle) {
+      toggle.title = `卡片打开方式：${OPEN_MODES[mode].name}`;
+      toggle.classList.toggle('alt', mode === 'tab');
+    }
+  }
+
+  /**
+   * 展开切换面板并锚定到触发按钮下方
+   * @param {HTMLElement} anchor 触发按钮
+   * @param {boolean} withCurrent 是否显示「用新标签页打开这条」
+   */
+  function openModePanel(anchor, withCurrent) {
+    const panel = document.getElementById('omp');
+    if (!panel) return;
+    const cur = document.getElementById('omp-open-current');
+    if (cur) cur.hidden = !withCurrent;
+
+    panel.classList.add('open');
+    const rect = anchor.getBoundingClientRect();
+    const width = panel.offsetWidth;
+    const left = Math.min(Math.max(8, rect.right - width), window.innerWidth - width - 8);
+    panel.style.top = `${rect.bottom + 8}px`;
+    panel.style.left = `${left}px`;
+  }
+
+  function closeOpenModePanel() {
+    const panel = document.getElementById('omp');
+    if (panel) panel.classList.remove('open');
+  }
+
+  function bindOpenMode() {
+    const panel = document.getElementById('omp');
+    if (!panel) return;
+
+    [document.getElementById('openmode-toggle'), document.getElementById('openmode-toggle-modal')].forEach(
+      (btn) => {
+        if (!btn) return;
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (panel.classList.contains('open')) {
+            closeOpenModePanel();
+            return;
+          }
+          openModePanel(btn, btn.id === 'openmode-toggle-modal' && !!currentModalId);
+        });
+      }
+    );
+
+    panel.addEventListener('click', (e) => {
+      const opt = e.target.closest('.mode-opt');
+      if (opt) {
+        const mode = opt.dataset.mode;
+        if (mode !== getOpenMode()) {
+          setOpenMode(mode);
+          showToast(OPEN_MODES[mode].toast);
+        }
+        closeOpenModePanel();
+        return;
+      }
+      if (e.target.closest('#omp-reset')) {
+        try {
+          localStorage.removeItem(OPEN_MODE_KEY);
+        } catch {
+          // 忽略
+        }
+        renderOpenModeUI();
+        showToast('已恢复默认：弹窗阅读');
+        return;
+      }
+      if (e.target.closest('#omp-open-current') && currentModalId) {
+        window.open(SC.getDetailUrl(currentModalId), '_blank', 'noopener');
+        closeOpenModePanel();
+      }
+    });
+
+    // 点击别处收起面板
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('#omp')) return;
+      if (e.target.closest('#openmode-toggle') || e.target.closest('#openmode-toggle-modal')) return;
+      closeOpenModePanel();
+    });
+  }
+
+  /* 打开弹窗 — 内联渲染详情（渲染逻辑见 site-common.js） */
+  /** @param {string} urlOrId @param {string} [title] */
   async function openModal(urlOrId, title) {
-    const id =
-      typeof urlOrId === 'string' && urlOrId.startsWith('./detail.html')
-        ? urlOrId.replace('./detail.html?id=', '')
-        : urlOrId;
+    const id = SC.parseId(urlOrId);
+    currentModalId = id;
 
     document.getElementById('modal-title').textContent = title;
 
@@ -908,109 +968,25 @@
     document.body.style.overflow = 'hidden';
 
     try {
-      const content = await getContent(id);
+      const content = await SC.fetchContent(id);
 
       if (content && Array.isArray(content.segments)) {
-        const isSocial = content.type === '小红书' || content.type === '微博';
-        const postTime = content.time || '';
-
-        const tagLabel =
-          content.tag && !/^\d+$/.test(String(content.tag)) ? `#${escapeHtml(String(content.tag))}` : '';
-        const authorObj = content.author || {};
-        const authorName = typeof authorObj === 'string' ? authorObj : authorObj.name || '';
-        const weiboUrl = content.weibo_url || '';
-
-        let html;
-        if (isSocial) {
-          // 左图右文布局
-          const images = content.segments.filter((s) => s.i);
-          const totalImg = images.length;
-          html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
-          if (tagLabel || authorName) {
-            html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}${weiboUrl ? `<a href="${weiboUrl}" target="_blank" class="detail-weibo-link">🔗 查看原帖</a>` : ''}</div>`;
-          }
-          html += '</div><div class="social-post">';
-          // 左侧图片轮播
-          html += '<div class="social-gallery">';
-          if (totalImg > 0) {
-            html += '<div class="gallery-track" id="gallery-track">';
-            images.forEach((seg, idx) => {
-              html += `<div class="gallery-slide" data-idx="${idx}">
-              <img src="${escapeHtml(seg.i)}" alt="图片 ${idx + 1}" loading="lazy" decoding="async"
-                   onload="this.classList.add('loaded')">
-            </div>`;
-            });
-            html += '</div>';
-            if (totalImg > 1) {
-              html += `<button class="gallery-arrow prev" data-dir="-1" aria-label="上一张">‹</button>`;
-              html += `<button class="gallery-arrow next" data-dir="1" aria-label="下一张">›</button>`;
-            }
-            html += `<div class="gallery-counter">${totalImg > 1 ? '<span id="gallery-idx">1</span> / ' : ''}${totalImg}</div>`;
-            // inject current index
-          }
-          html += '</div>';
-          // 右侧正文
-          html += '<div class="social-content">';
-          if (authorName) html += `<div class="social-author">👤 ${escapeHtml(authorName)}</div>`;
-          if (postTime) html += `<div class="social-time">${escapeHtml(postTime)}</div>`;
-          content.segments
-            .filter((s) => s.t)
-            .forEach((seg) => {
-              const paragraphs = splitParagraphs(seg.t);
-              paragraphs.forEach((p) => {
-                html += `<p class="social-text">${escapeHtml(p)}</p>`;
-              });
-            });
-          html += '</div></div>';
-
-          html += buildShareBar(id, content.title || title);
-          detailEl.innerHTML = html;
-          // 绑定图片点击灯箱
-          detailEl.querySelectorAll('.gallery-slide img').forEach((img) => {
-            img.addEventListener('click', () => showLightbox(img.src));
-            img.style.cursor = 'pointer';
-          });
-          // 初始化轮播状态
-          galleryTotal = totalImg;
-          galleryIdx = 1;
-        } else {
-          // 原有布局：文字图片交错
-          html = `<div class="detail-header"><h2 class="detail-title">${escapeHtml(content.title || title)}</h2>`;
-          if (tagLabel || authorName) {
-            html += `<div class="detail-meta">${tagLabel ? `<span class="detail-tag">${tagLabel}</span>` : ''}${authorName ? `<span class="detail-author">👤 ${escapeHtml(authorName)}</span>` : ''}${weiboUrl ? `<a href="${weiboUrl}" target="_blank" class="detail-weibo-link">🔗 查看原帖</a>` : ''}</div>`;
-          }
-          html += '</div><div class="detail-body">';
-          content.segments.forEach((seg) => {
-            if (seg.t) {
-              html += `<p>${escapeHtml(seg.t)}</p>`;
-            } else if (seg.i) {
-              html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
-                          onload="this.classList.add('loaded')">`;
-            }
-          });
-          html += '</div>';
-          html += buildShareBar(id, content.title || title);
-          detailEl.innerHTML = html;
-          // 绑定图片点击灯箱事件
-          detailEl.querySelectorAll('.detail-body img').forEach((img) => {
-            img.addEventListener('click', () => showLightbox(img.src));
-            img.style.cursor = 'pointer';
-          });
-        }
+        const result = SC.renderDetail(content, id, title);
+        detailEl.innerHTML = result.html;
+        // 轮播状态（仅社交图文用到）
+        galleryTotal = result.imageCount;
+        galleryIdx = 1;
+        // 图片点击 → 灯箱
+        detailEl.querySelectorAll('.detail-body img, .gallery-slide img').forEach((img) => {
+          img.addEventListener('click', () => showLightbox(img.src));
+          img.style.cursor = 'pointer';
+        });
       } else {
-        detailEl.innerHTML = `
-        <div class="detail-error">
-          <p>暂无详情内容</p>
-          <p style="font-size:12px;color:#bbb;margin-top:8px;">ID: ${escapeHtml(id)}</p>
-        </div>`;
+        detailEl.innerHTML = SC.renderPlaceholder(id, '暂无详情内容');
       }
     } catch (err) {
       console.error('[openModal] 渲染详情失败:', err);
-      detailEl.innerHTML = `
-      <div class="detail-error">
-        <p>内容渲染出错</p>
-        <p style="font-size:12px;color:#bbb;margin-top:8px;">请稍后重试</p>
-      </div>`;
+      detailEl.innerHTML = SC.renderPlaceholder(id, '内容渲染出错，请稍后重试');
     }
   }
 
@@ -1024,6 +1000,7 @@
       detailEl.innerHTML = '';
     }, 300);
     document.body.style.overflow = '';
+    currentModalId = '';
   }
 
   /* 花友推荐弹窗 */
@@ -1138,87 +1115,15 @@
   }
   // slideGallery 通过事件委托调用，无需暴露到 window
 
-  /* HTML 转义（纯字符串实现，避免频繁创建 DOM 节点） */
-  /** @param {string} str @returns {string} */
-  const ESCAPE_MAP = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-  function escapeHtml(str) {
-    return String(str).replace(/[&<>"']/g, (c) => ESCAPE_MAP[c]);
-  }
-
-  /* 智能分段：自动识别文本中的段落边界 */
-  /** @param {string} text @returns {string[]} */
-  function splitParagraphs(text) {
-    if (!text || !text.trim()) return [];
-    // 1. 双换行 = 明确自然段
-    if (text.includes('\n\n')) {
-      return text
-        .split(/\n\n+/)
-        .map((p) => {
-          return p.trim();
-        })
-        .filter(Boolean);
-    }
-    // 2. 单换行 = 手动分行
-    if (text.includes('\n')) {
-      return text
-        .split(/\n+/)
-        .map((p) => {
-          return p.trim();
-        })
-        .filter(Boolean);
-    }
-    // 3. 无换行：按句号/感叹号/问号切分，每句独立成段
-    //    社交内容一句话就是一行，比硬凑更自然
-    const sentences = [];
-    let buf = '';
-    for (let i = 0; i < text.length; i++) {
-      const ch = text[i];
-      buf += ch;
-      if ('。！？!?'.indexOf(ch) !== -1) {
-        sentences.push(buf.trim());
-        buf = '';
-      }
-    }
-    if (buf.trim()) sentences.push(buf.trim());
-    return sentences.length > 0 ? sentences : [text];
-  }
+  /* HTML 转义与智能分段见 site-common.js（SC.escapeHtml / SC.splitParagraphs） */
 
   /* ===== 分享功能 ===== */
 
-  /** @param {string} id @param {string} title @returns {string} */
-  function buildShareBar(id, title) {
-    const url = encodeURIComponent(`${location.origin + location.pathname}?share=${id}`);
-    const text = encodeURIComponent(title || '园艺图鉴');
-    return `
-  <div class="share-bar">
-    <span class="share-label">分享到</span>
-    <button class="share-btn" data-action="copy" data-id="${escapeHtml(id)}" title="复制链接">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-      复制链接
-    </button>
-    <button class="share-btn" data-action="qr" data-id="${escapeHtml(id)}" title="微信扫码">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7h-7z"/></svg>
-      微信
-    </button>
-    <button class="share-btn" data-action="qq" data-id="${escapeHtml(id)}" data-title="${escapeHtml(title || '')}" title="分享到QQ">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C7 2 4 5 4 8c0 2 1 3 2 4l-1 3 4-2c1 .5 2 .5 3 .5s2 0 3-.5l4 2-1-3c1-1 2-2 2-4 0-3-3-6-8-6z"/></svg>
-      QQ
-    </button>
-    <button class="share-btn" data-action="native" data-id="${escapeHtml(id)}" data-title="${escapeHtml(title || '')}" title="更多">
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      更多
-    </button>
-  </div>`;
-  }
-
-  /** @param {string} id @returns {string} */
-  function getShareUrl(id) {
-    return `${location.origin + location.pathname.replace(/\/?$/, '/')}detail.html?id=${encodeURIComponent(id)}`;
-  }
+  /* 分享栏 HTML 与分享链接统一由 site-common.js 提供（SC.buildShareBar / SC.getShareUrl） */
 
   /** @param {string} id */
   function copyLink(id) {
-    const url = getShareUrl(id);
+    const url = SC.getShareUrl(id);
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => showToast('链接已复制，去微信/小红书粘贴吧'));
     } else {
@@ -1236,7 +1141,7 @@
 
   /** @param {string} id @param {string} title */
   function shareToQQ(id, title) {
-    const url = getShareUrl(id);
+    const url = SC.getShareUrl(id);
     const qqUrl = `https://connect.qq.com/widget/shareqq/index.html?url=${encodeURIComponent(
       url
     )}&title=${encodeURIComponent(title || '园艺图鉴')}&summary=${encodeURIComponent(
@@ -1247,7 +1152,7 @@
 
   /** @param {string} id */
   function showQrPopup(id) {
-    const url = getShareUrl(id);
+    const url = SC.getShareUrl(id);
     const qrImg = document.getElementById('qr-img');
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
     document.getElementById('qr-overlay').classList.add('active');
@@ -1259,7 +1164,7 @@
 
   /** @param {string} id @param {string} title */
   function nativeShare(id, title) {
-    const url = getShareUrl(id);
+    const url = SC.getShareUrl(id);
     if (navigator.share) {
       navigator.share({ title: title || '园艺图鉴', text: title || '园艺图鉴', url }).catch(() => {});
     } else {
@@ -1278,11 +1183,24 @@
   /* 启动 */
   loadData();
 
+  /* 兼容旧版分享参数：?share=xxx → 跳转到独立详情页 detail.html?id=xxx */
+  (function redirectLegacyShare() {
+    let legacyId = '';
+    try {
+      legacyId = new URLSearchParams(location.search).get('share') || '';
+    } catch {
+      // 老浏览器不支持 URLSearchParams 时忽略
+    }
+    if (legacyId) location.replace(SC.getDetailUrl(legacyId));
+  })();
+
   /* 窗口大小变化时重新计算每页数量并重绘 */
   let resizeTimer;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(async () => {
+      // 小屏 / 大屏切换会影响生效的打开方式，刷新按钮与面板状态
+      renderOpenModeUI();
       const newSize = calculatePageSize();
       if (newSize !== pageSize) {
         pageSize = newSize;

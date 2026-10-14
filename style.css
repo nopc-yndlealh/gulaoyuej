@@ -974,7 +974,8 @@ nav#sidebar::-webkit-scrollbar-thumb {
   transition:
     opacity 0.25s,
     transform 0.25s;
-  z-index: 4000;
+  /* 高于弹窗 #modal-overlay(9000)，否则弹窗内点分享看不到提示 */
+  z-index: 9600;
   white-space: nowrap;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -1469,5 +1470,329 @@ body.classify-mode .card {
     min-width: 28px;
     height: 28px;
     font-size: 13px;
+  }
+}
+
+/* ============================================
+   卡片打开方式切换面板（顶栏按钮 / 详情弹窗按钮共用）
+   ============================================ */
+.omp {
+  position: fixed;
+  top: 64px;
+  left: 24px;
+  width: min(330px, calc(100vw - 16px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28);
+  padding: 8px;
+  z-index: 9500;
+  display: none;
+  transition: var(--theme-transition);
+}
+.omp.open {
+  display: block;
+  animation: ompIn 0.16s ease;
+}
+@keyframes ompIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.omp-title {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  padding: 6px 10px 8px;
+}
+.omp .mode-opt {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 9px 10px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.omp .mode-opt:hover {
+  background: var(--surface-hover);
+}
+.omp .mode-opt.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.omp .mode-opt .mo-icon {
+  font-size: 16px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+.omp .mode-opt .mo-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.omp .mode-opt .mo-name {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.omp .mode-opt .mo-desc {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+.omp .mode-opt .mo-check {
+  color: var(--accent);
+  font-weight: 700;
+  opacity: 0;
+}
+.omp .mode-opt.selected .mo-check {
+  opacity: 1;
+}
+.omp-action {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 9px 10px;
+  background: transparent;
+  border: none;
+  border-top: 1px solid var(--border-light);
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  text-align: left;
+  color: var(--accent);
+  cursor: pointer;
+}
+.omp-action:hover {
+  background: var(--accent-soft);
+}
+.omp-action[hidden] {
+  display: none;
+}
+.omp-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px 4px;
+  border-top: 1px solid var(--border-light);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.omp-foot button {
+  margin-left: auto;
+  background: var(--surface-hover);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.omp-foot button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* 顶栏触发按钮：处于「新标签页」模式时右下角亮一个小点 */
+#openmode-toggle {
+  position: relative;
+}
+#openmode-toggle.alt::after {
+  content: '';
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4caf50;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+/* 详情弹窗 header 里的触发按钮（背景是 surface，用深色字） */
+.modal-tools {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.omp-trigger-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.omp-trigger-modal:hover {
+  background: var(--surface-hover);
+  color: var(--accent);
+}
+
+/* ============================================
+   独立详情页 detail.html
+   ============================================ */
+body.detail-page {
+  overflow-y: auto;
+}
+body.detail-page header.dp-bar {
+  height: var(--header-h);
+  background-color: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s;
+}
+.dp-brand {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.dp-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.16);
+  border: none;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+.dp-back:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+.dp-back:active {
+  transform: scale(0.96);
+}
+.dp-tools {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+a.header-btn {
+  text-decoration: none;
+}
+.dp-main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 28px 20px 0;
+}
+.dp-article {
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 40px;
+  background: var(--surface);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: var(--theme-transition);
+}
+/* 弹窗里 #detail-view 是独立滚动容器；整页模式下让它跟随文档流 */
+body.detail-page #detail-view {
+  flex: 1;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+  min-height: 45vh;
+}
+body.detail-page #detail-view .detail-body {
+  padding: 8px 28px 24px;
+}
+body.detail-page #detail-view .detail-header {
+  padding-top: 6px;
+}
+
+/* 占位提示的补充样式 */
+#detail-view .detail-error-id {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+#detail-view .detail-error-actions {
+  margin-top: 16px;
+}
+#detail-view .detail-error-actions a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 13px;
+}
+#detail-view .detail-error-actions a:hover {
+  text-decoration: underline;
+}
+
+/* 手机端：首页 header 是隐藏的，但详情页顶栏必须保留 */
+@media (max-width: 768px) {
+  body.detail-page header.dp-bar {
+    display: flex;
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .dp-brand {
+    font-size: 14px;
+  }
+  .dp-back {
+    font-size: 12.5px;
+    padding: 6px 11px;
+  }
+  .dp-main {
+    padding: 14px 10px 0;
+  }
+  .dp-article {
+    border-radius: 12px;
+    margin-bottom: 24px;
+  }
+  body.detail-page #detail-view .detail-body {
+    padding: 4px 18px 18px;
+  }
+  body.detail-page #detail-view .detail-title {
+    padding: 14px 18px 6px;
+    font-size: 18px;
+  }
+  body.detail-page #detail-view .detail-meta {
+    padding: 4px 18px 10px;
   }
 }
