@@ -92,7 +92,34 @@ EXCLUDE = {
     "weibo_4745836221432278": "「精日/文化侵略」民族话题",
     "weibo_4699232475547616": "「文化输出超话」话题，主体是服饰与文化争论",
     "weibo_4529564813107283": "濒危野生植物保护的社会争论（与前述同类，保持一致剔除）",
+    # —— 第三轮：来自旧分类 plant_kept 的误判（那批是更早的、标准更松的一次分类）——
+    "weibo_5254956038752558": "明墓缠足女性骨骼，服饰/考古（旧分类误收）",
+    "weibo_5264818300519583": "明代厚底鞋遗存，服饰史（旧分类误收）",
+    "weibo_5106565187113832": "「红楼梦年代是康熙」，服饰考据（旧分类误收）",
 }
+
+# 更早的一次微博内容分类结果（MediaCrawler 输出目录）。
+# 当时把 1855 条微博分成 plant_kept / flower / succulent_kept / uncertain / noise。
+# 这里用 plant_kept ∪ succulent_kept 作为**召回**来源：它的标准比关键词宽，
+# 能捞回关键词漏掉的真内容（如「超级大芍药」「花盆里自己长出来的牵牛」）。
+# 但它也放进了缠足/厚底鞋这类误判，所以仍要过一遍上面的 EXCLUDE。
+CLASSIFIED_DIR = Path(r"E:\MediaCrawler_Output\weibo_filtered\jsonl")
+CLASSIFIED_KEEP = ["creator_contents_plant_kept.jsonl", "creator_contents_succulent_kept.jsonl"]
+
+
+def load_classified_kept():
+    """读取更早那次分类里判为园艺的帖子 id。文件不存在则返回空集合。"""
+    ids = set()
+    for fn in CLASSIFIED_KEEP:
+        p = CLASSIFIED_DIR / fn
+        if not p.exists():
+            continue
+        with open(p, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    ids.add("weibo_" + json.loads(line)["note_id"])
+    return ids
 
 
 def load(p):
@@ -126,33 +153,51 @@ def main():
         print(f"✗ 没有 cat=\"{CAT}\" 的条目", file=sys.stderr)
         return 1
 
-    candidates, dropped_kw = [], []
+    # 两路召回取并集：
+    #   A. 关键词规则（精确度靠人工复核兜）
+    #   B. 更早那次分类的 plant_kept ∪ succulent_kept（召回更全）
+    # 单用 A 会漏（「超级大芍药」「花盆里长出的牵牛」都没命中关键词），
+    # 单用 B 会脏（缠足骨骼、厚底鞋也被判成了 plant_kept）。
+    classified = load_classified_kept()
+    wb_ids = {p["id"] for p in wb}
+    kw_cand, dropped_kw = [], []
     for p in wb:
         t = body(p)
         hits = [k for k in PLANT if k in t]
         negs = [k for k in NEG if k in t]
         if hits and not negs:
-            candidates.append((p, hits))
+            kw_cand.append((p, hits))
         else:
             dropped_kw.append((p, negs))
 
+    cls_cand = [p for p in wb if p["id"] in classified]
+    cls_only = [p for p in cls_cand if p not in [x[0] for x in kw_cand]]
+
+    cand_ids = {p["id"] for p, _ in kw_cand} | {p["id"] for p in cls_cand}
     keep, drop_manual = [], []
-    for p, hits in candidates:
-        (drop_manual if p["id"] in EXCLUDE else keep).append((p, hits))
+    for p in wb:
+        if p["id"] not in cand_ids:
+            continue
+        if p["id"] in EXCLUDE:
+            drop_manual.append(p)
+        else:
+            keep.append(p)
 
     print(f"cat=\"{CAT}\" 共 {len(wb)} 条")
-    print(f"  关键词候选      : {len(candidates)}")
-    print(f"  人工剔除        : {len(drop_manual)}")
-    print(f"  → **保留**      : {len(keep)}")
-    print(f"  → 下架          : {len(wb) - len(keep)}（关键词未命中 {len(dropped_kw)} + 人工剔除 {len(drop_manual)}）\n")
+    print(f"  A 关键词候选            : {len(kw_cand)}")
+    print(f"  B 旧分类 plant_kept 命中 : {len(cls_cand)}（其中 {len(cls_only)} 条是关键词漏掉的）")
+    print(f"  并集                    : {len(cand_ids)}")
+    print(f"  人工剔除                : {len(drop_manual)}")
+    print(f"  → **保留**              : {len(keep)}")
+    print(f"  → 下架                  : {len(wb) - len(keep)}\n")
 
     print("=== 保留（这些会留在「微博」分类里）===")
-    for i, (p, hits) in enumerate(keep, 1):
+    for i, p in enumerate(keep, 1):
         n = sum(1 for s in p.get("segments", []) if s.get("i"))
         print(f"{i:>3}. {p['id']}  图{n:<2} {p.get('title','')[:56]}")
 
     print("\n=== 人工剔除（附原因，可推翻）===")
-    for p, hits in drop_manual:
+    for p in drop_manual:
         print(f"  {p['id']}  {EXCLUDE[p['id']]}")
         print(f"       原标题: {p.get('title','')[:56]}")
 
@@ -160,13 +205,13 @@ def main():
         L = ["# 微博分类筛选结果\n", f"- 分类内总计 {len(wb)} 条",
              f"- 保留 **{len(keep)}** 条，其余下架（`status=draft`，数据保留、可随时恢复）\n",
              "## 保留\n", "| # | id | 标题 | 图 |", "|---|---|---|---|"]
-        for i, (p, hits) in enumerate(keep, 1):
+        for i, p in enumerate(keep, 1):
             n = sum(1 for s in p.get("segments", []) if s.get("i"))
             L.append(f"| {i} | `{p['id']}` | {p.get('title','').replace('|','\\|')[:70]} | {n} |")
         L.append("\n## 人工剔除（附原因）\n")
         L.append("| id | 剔除原因 | 原标题 |")
         L.append("|---|---|---|")
-        for p, _ in drop_manual:
+        for p in drop_manual:
             L.append(f"| `{p['id']}` | {EXCLUDE[p['id']]} | {p.get('title','').replace('|','\\|')[:60]} |")
         L.append(f"\n## 关键词未命中而下架（{len(dropped_kw)} 条）\n")
         L.append("| id | 标题 |")
@@ -180,7 +225,7 @@ def main():
         print("\n── 预演结束，未写盘。加 --apply 实际执行。──")
         return 0
 
-    keep_ids = {p["id"] for p, _ in keep}
+    keep_ids = {p["id"] for p in keep}
     changed = 0
     for p in wb:
         want = "published" if p["id"] in keep_ids else "draft"
