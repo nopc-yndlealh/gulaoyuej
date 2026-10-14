@@ -24,3 +24,8 @@ data/index.json.trimmed_bak
 
 # 构建时生成，不进仓库
 content/_build_report.md
+
+# data/ 全部由 tools/build.py 在构建时生成，不进仓库。
+# 这样每次 push 只包含改动的那几条 content/posts/*.json，
+# 而不是每次重传 15MB 生成物；同时也避免「有人手改生成物导致与源头不一致」。
+data/
