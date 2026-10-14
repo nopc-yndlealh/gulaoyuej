@@ -1340,6 +1340,14 @@ body.classify-mode .card {
   margin-top: 16px;
   min-height: 400px;
 }
+/* 纯文字帖（微博里有大量）：不要留 400px 最小高度，否则文字上方一片空白，
+   看着像图片没加载出来。配合 site-common.js 里「无图不渲染 .social-gallery」。 */
+.social-post.text-only {
+  min-height: auto;
+}
+.social-post.text-only .social-content {
+  max-width: 62ch;
+}
 .social-gallery {
   flex: 0 0 55%;
   max-width: 55%;

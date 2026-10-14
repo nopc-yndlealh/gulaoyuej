@@ -270,9 +270,12 @@
       // 左图右文
       const images = segments.filter((s) => s.i);
       const totalImg = images.length;
-      let html = head + '<div class="social-post">';
-      html += '<div class="social-gallery">';
+      // 没有图片时不要渲染 .social-gallery —— 它带着 flex:0 0 55% + 背景 + 边框
+      // + aspect-ratio，空着也会占掉左边 55% 画一个空框。
+      // 微博账号里有大量纯文字帖（古籍考据、品种评论），这个空框看着就像图裂了。
+      let html = head + `<div class="social-post${totalImg ? '' : ' text-only'}">`;
       if (totalImg > 0) {
+        html += '<div class="social-gallery">';
         html += '<div class="gallery-track" id="gallery-track">';
         images.forEach((seg, idx) => {
           html += `<div class="gallery-slide" data-idx="${idx}">
@@ -286,8 +289,8 @@
           html += `<button class="gallery-arrow next" data-dir="1" aria-label="下一张">›</button>`;
         }
         html += `<div class="gallery-counter">${totalImg > 1 ? '<span id="gallery-idx">1</span> / ' : ''}${totalImg}</div>`;
+        html += '</div>';
       }
-      html += '</div>';
 
       html += '<div class="social-content">';
       const authorObj = content.author || {};
