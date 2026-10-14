@@ -29,3 +29,9 @@ content/_build_report.md
 # 这样每次 push 只包含改动的那几条 content/posts/*.json，
 # 而不是每次重传 15MB 生成物；同时也避免「有人手改生成物导致与源头不一致」。
 data/
+
+# 凭据与临时产物，绝不进仓库
+cf-token.txt
+*.token
+.env
+.env.*

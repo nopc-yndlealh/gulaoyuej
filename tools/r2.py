@@ -1,0 +1,226 @@
+#!/usr/bin/env python3
+"""
+R2 对象存储小工具（走 Cloudflare REST API，不需要 S3 密钥）。
+
+凭据来源，按优先级：
+  1. 环境变量 CLOUDFLARE_API_TOKEN
+  2. C:\\Users\\<用户>\\.workbuddy\\cf-token.txt      ← 推荐放这里
+  3. %APPDATA%\\xdg.config\\.wrangler\\config\\default.toml 的 oauth_token
+     （注意：wrangler 的 OAuth 授权里**没有** r2 scope，通常用不了，只作兜底）
+
+⚠️ 令牌只放在仓库外的本地文件里，绝不进 git。仓库的 .gitignore 也已加了防护。
+
+命令
+----
+  python3 tools/r2.py ls [prefix]              列出对象（前缀可选）
+  python3 tools/r2.py has <name> [<name>...]   检查某几个图片名在不在
+  python3 tools/r2.py get <key> <outfile>      下载一个对象
+  python3 tools/r2.py put <localfile> <key>    上传（key 形如 images/xxx.webp）
+  python3 tools/r2.py rm <key>                 删除
+  python3 tools/r2.py check-refs               核对 content/posts 里引用的图片是否都在 R2
+  python3 tools/r2.py check-refs --limit 20    只报前 20 个缺失
+
+`check-refs` 才是重点：它能在本地就发现「引用了 R2 上不存在的图片」这类裂图，
+不用等用户反馈。构建脚本的离线自检只能验证「图片在 img.feijibei.top 域名上」，
+验证不了「文件真的存在」。
+"""
+import argparse
+import json
+import os
+import re
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+POSTS = ROOT / "content" / "posts"
+
+ACCOUNT = "082a519e512f02161ab5a57b376d3f4c"
+BUCKET = "plant-images"
+API = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT}/r2/buckets/{BUCKET}/objects"
+
+TOKEN_PATHS = [
+    Path.home() / ".workbuddy" / "cf-token.txt",
+    Path(os.environ.get("APPDATA", "")) / ".." / ".workbuddy" / "cf-token.txt",
+]
+
+
+def token():
+    t = os.environ.get("CLOUDFLARE_API_TOKEN")
+    if t:
+        return t.strip()
+    for p in TOKEN_PATHS:
+        try:
+            p = p.resolve()
+        except OSError:
+            continue
+        if p.exists():
+            v = p.read_text(encoding="utf-8").strip()
+            if v:
+                return v
+    cfg = Path(os.environ.get("APPDATA", "")) / "xdg.config" / ".wrangler" / "config" / "default.toml"
+    if cfg.exists():
+        m = re.search(r'oauth_token\s*=\s*"([^"]+)"', cfg.read_text(encoding="utf-8"))
+        if m:
+            return m.group(1)
+    print("✗ 找不到 Cloudflare 令牌。请把它放到 ~/.workbuddy/cf-token.txt，"
+          "或设置环境变量 CLOUDFLARE_API_TOKEN。", file=sys.stderr)
+    sys.exit(1)
+
+
+def call(method, url, data=None, ctype="application/octet-stream"):
+    req = urllib.request.Request(url, data=data, method=method)
+    req.add_header("Authorization", "Bearer " + token())
+    if data is not None:
+        req.add_header("Content-Type", ctype)
+    try:
+        with urllib.request.urlopen(req, timeout=120) as r:
+            return r.status, r.read()
+    except urllib.error.HTTPError as e:
+        return e.code, e.read()[:400]
+
+
+def list_keys(prefix=""):
+    keys, cursor = [], None
+    while True:
+        q = {"per_page": "1000"}
+        if prefix:
+            q["prefix"] = prefix
+        if cursor:
+            q["cursor"] = cursor
+        st, body = call("GET", API + "?" + urllib.parse.urlencode(q))
+        if st != 200:
+            print(f"✗ 列取失败 HTTP {st}: {body[:200]}", file=sys.stderr)
+            break
+        d = json.loads(body)
+        res = d.get("result", [])
+        keys += [o["key"] for o in res]
+        cursor = (d.get("result_info") or {}).get("cursor")
+        if not cursor or not res:
+            break
+    return keys
+
+
+def cmd_ls(args):
+    keys = list_keys(args.prefix or "")
+    print(f"共 {len(keys)} 个对象")
+    for k in keys[:args.limit]:
+        print("  " + k)
+    if len(keys) > args.limit:
+        print(f"  … 另有 {len(keys) - args.limit} 个（用 --limit 调整）")
+
+
+def cmd_has(args):
+    """按精确文件名逐个前缀查询，避免拉全量清单（4129 个对象很慢）。"""
+    for n in args.names:
+        st, body = call("GET", API + "?" + urllib.parse.urlencode(
+            {"prefix": "images/" + n, "per_page": "1"}))
+        if st != 200:
+            print(f"  ? 查询失败 HTTP {st}  {n}")
+            continue
+        found = json.loads(body).get("result") or []
+        hit = any(o["key"] == "images/" + n for o in found)
+        print(f"  {'✓ 有  ' if hit else '✗ 没有'}  {n}")
+
+
+def cmd_get(args):
+    st, body = call("GET", f"{API}/{urllib.parse.quote(args.key)}")
+    if st != 200:
+        print(f"✗ HTTP {st}: {body[:200]}", file=sys.stderr)
+        return 1
+    Path(args.out).write_bytes(body)
+    print(f"✓ 已保存 {args.out}（{len(body)} 字节）")
+    return 0
+
+
+def cmd_put(args):
+    data = Path(args.local).read_bytes()
+    ext = Path(args.local).suffix.lower()
+    ctype = {".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+             ".png": "image/png", ".gif": "image/gif"}.get(ext, "application/octet-stream")
+    st, body = call("PUT", f"{API}/{urllib.parse.quote(args.key)}", data, ctype)
+    if st != 200:
+        print(f"✗ HTTP {st}: {body[:200]}", file=sys.stderr)
+        return 1
+    print(f"✓ 已上传 {args.key}（{len(data)} 字节）")
+    return 0
+
+
+def cmd_rm(args):
+    st, _ = call("DELETE", f"{API}/{urllib.parse.quote(args.key)}")
+    print(("✓ 已删除 " if st == 200 else f"✗ HTTP {st} ") + args.key)
+    return 0 if st == 200 else 1
+
+
+def cmd_check_refs(args):
+    """核对 content/posts 里引用的每一张图，在 R2 上是否真的存在。"""
+    print("正在拉取 R2 对象清单…")
+    names = set(k.split("/", 1)[1] for k in list_keys("images/"))
+    print(f"  R2 上 images/ 下共 {len(names)} 个对象\n")
+
+    posts = []
+    for f in sorted(POSTS.glob("*.json")):
+        with open(f, encoding="utf-8") as fh:
+            posts.append(json.load(fh))
+
+    total = missing = 0
+    by_post = {}
+    for p in posts:
+        bad = []
+        for s in p.get("segments", []):
+            u = s.get("i")
+            if not u or "/images/" not in u:
+                continue
+            total += 1
+            n = u.rsplit("/", 1)[-1]
+            if n not in names:
+                bad.append(n)
+        if bad:
+            by_post[p["id"]] = (p.get("cat"), p.get("status"), bad)
+            missing += len(bad)
+
+    print(f"正文引用的图片共 {total} 处，其中 R2 上不存在的 {missing} 处")
+    if not by_post:
+        print("✓ 全部存在于 R2")
+        return 0
+
+    print(f"分布在 {len(by_post)} 个帖子：\n")
+    for pid, (cat, st, bad) in list(by_post.items())[:args.limit]:
+        print(f"  [{cat}/{st}] {pid}  缺 {len(bad)} 张")
+        for n in bad[:2]:
+            print(f"      ✗ {n[:88]}")
+    if len(by_post) > args.limit:
+        print(f"  … 另有 {len(by_post) - args.limit} 个帖子")
+    print("\n提示：若是「文件名被重复拼接帖子 id」，用 tools/fix_image_names.py 修。")
+    return 1
+
+
+def main():
+    ap = argparse.ArgumentParser(description="R2 对象存储小工具")
+    sub = ap.add_subparsers(dest="cmd", required=True)
+
+    p = sub.add_parser("ls", help="列出对象"); p.add_argument("prefix", nargs="?", default="")
+    p.add_argument("--limit", type=int, default=30); p.set_defaults(func=cmd_ls)
+
+    p = sub.add_parser("has", help="检查对象是否存在"); p.add_argument("names", nargs="+")
+    p.set_defaults(func=cmd_has)
+
+    p = sub.add_parser("get", help="下载对象"); p.add_argument("key"); p.add_argument("out")
+    p.set_defaults(func=cmd_get)
+
+    p = sub.add_parser("put", help="上传对象"); p.add_argument("local"); p.add_argument("key")
+    p.set_defaults(func=cmd_put)
+
+    p = sub.add_parser("rm", help="删除对象"); p.add_argument("key"); p.set_defaults(func=cmd_rm)
+
+    p = sub.add_parser("check-refs", help="核对正文引用的图片是否都在 R2")
+    p.add_argument("--limit", type=int, default=15); p.set_defaults(func=cmd_check_refs)
+
+    args = ap.parse_args()
+    return args.func(args) or 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
