@@ -4,8 +4,10 @@ parse_data.py
 images/
 *.bak
 *.bak_new
+*.bak_*
 data/.r2_upload_state.json
 data/*backup*
+data/*.remote
 images_tmp/
 images_test_tmp/
 node_modules/
@@ -13,4 +15,9 @@ node_modules/
 
 # 工作区记忆目录 / 临时文件，不进站点仓库
 .workbuddy/
-data/index.json.remote
+
+# 已废弃的遗留产物：内容已全部迁到 data/content/{分类}.json，
+# 下面这些是历史单体/备份，不再被任何代码引用（见 data/content.json 7.5MB）
+data/content.json
+data/index.json.bak_reorder
+data/index.json.trimmed_bak

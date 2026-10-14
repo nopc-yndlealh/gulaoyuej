@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  说明：本站是「单页 + 模态框」结构，app.js 里没有任何 URL 路由
+  （无 hash / pushState / searchParams），因此 3641 条内容条目
+  都没有独立可分享的 URL，无法进入 sitemap。
+  这里只列出真实的独立页面。
+  若要收录条目页，需先给 app.js 加上 hash 路由（如 /#rose_0001）。
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://feijibei.top/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://feijibei.top/sedum-evo-2019</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://feijibei.top/%E6%99%AF%E5%A4%A9%E7%A7%91%E6%BC%94%E5%8C%96%E5%9B%BE%E8%B0%B1</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+</urlset>

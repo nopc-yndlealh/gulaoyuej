@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# 内部管理工具，不需要被收录
+Disallow: /admin
+Disallow: /tools/
+
+Sitemap: https://feijibei.top/sitemap.xml

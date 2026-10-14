@@ -1,35 +1,48 @@
-# Cloudflare Pages _headers - Cache & Security
+# Cloudflare Pages 响应头
+#
+# ⚠️ 关键机制：Cloudflare Pages 对同一个请求会「叠加」所有匹配规则的响应头，
+#    而不是后者覆盖前者。所以有两条铁律：
+#      ① Cache-Control 绝不写进 /*（通配全部），只写在最具体的那一条规则里；
+#      ② 不允许出现两条会同时命中的 Cache-Control 规则。
+#
+#    改动前的实际后果（线上实测 /data/content/丹陶.json）：
+#      该 URL 同时命中 /*、/data/*、/data/content/* 三条规则，头被拼成
+#      "public, max-age=0, must-revalidate, public, max-age=86400,
+#       stale-while-revalidate=604800, public, max-age=86400, ..."
+#      —— 同一指令出现 3 次且自相矛盾，浏览器只能各自解释，
+#      这就是「我明明改了，页面还是旧的」的不确定性来源。
+#
+#    本文件已按上述规则重写：任意 URL 最多只命中一条 Cache-Control。
+
 /*
-  Cache-Control: public, max-age=0, must-revalidate
-/index.html
-  Cache-Control: public, max-age=3600
-  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
-/*.html
-  Cache-Control: public, max-age=3600
   Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
-/*.css
-  Cache-Control: public, max-age=3600, must-revalidate
-/*.js
-  Cache-Control: public, max-age=3600, must-revalidate
-/*.svg
-  Cache-Control: public, max-age=31536000, immutable
-/*.png
-  Cache-Control: public, max-age=31536000, immutable
-/*.jpg
-  Cache-Control: public, max-age=31536000, immutable
-/*.jpeg
-  Cache-Control: public, max-age=31536000, immutable
-/*.webp
-  Cache-Control: public, max-age=31536000, immutable
-/*.ico
-  Cache-Control: public, max-age=31536000, immutable
-/manifest.json
-  Cache-Control: public, max-age=86400
 
-# 数据 JSON：内容不常变，长效缓存 + 后台刷新，减少每次回源 RTT（直击首屏加载慢）
+# 首页与所有 HTML：不走缓存，保证发版立刻可见
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# sw.js 也命中这条（max-age=0 + must-revalidate），
+# 这样修 Service Worker 自身时不会把自己锁死
+/*.js
+  Cache-Control: public, max-age=0, must-revalidate
+
+# CSS 虽然带 ?v= 版本号，但改版频繁，
+# 优先保证「改完刷新就能看到」，靠 ETag 走 304 省流量
+/*.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/*.svg
+  Cache-Control: public, max-age=604800
+
+/manifest.json
+  Cache-Control: public, max-age=3600
+
+# 数据 JSON：不缓存正文，靠 ETag 走 304。
+# 发布后立刻生效；未变更时 2.4MB 的 search-index 命中 304 几乎零开销。
 /data/*
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
-/data/content/*
-  Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+  Cache-Control: public, max-age=0, must-revalidate
