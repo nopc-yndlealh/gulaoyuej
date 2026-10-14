@@ -264,7 +264,12 @@ def main():
         "tree": TREE,
         "parentCats": PARENT_CATS,
     }
-    dump(OUT / "taxonomy.json", taxonomy)
+    # taxonomy.json 是手工维护的源头，不是迁移产物 ——
+    # 已存在就保留，避免重跑迁移把人工调整过的分类冲掉。
+    if (OUT / "taxonomy.json").exists():
+        print("↷ content/taxonomy.json 已存在，保留（手工维护）")
+    else:
+        dump(OUT / "taxonomy.json", taxonomy)
 
     for pid, post in posts.items():
         dump(POSTS / f"{pid}.json", post)

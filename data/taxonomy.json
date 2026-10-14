@@ -1,6 +1,13 @@
 {
   "version": 1,
-  "note": "分类的唯一真相。post 里的 cat 必须命中此处的某个分组名 / children 项 / parentCats 项，否则构建脚本会报错。",
+  "note": "分类的唯一真相，手工维护（tools/migrate_to_posts.py 只在文件不存在时生成它）。post 里的 cat 必须命中此处的某个分组名 / children 项 / parentCats 项，否则构建脚本会报错。",
+  "fields": {
+    "name": "分组名，也是 cat 的匹配值",
+    "multi": "true 时子项的 cat 需要带 prefix（如「多肉/石莲花属」）",
+    "prefix": "multi 为 true 时使用，默认「分组名/」",
+    "hidden": "true 时该分组不在侧边栏与移动端导航里出现（但「全部条目」和搜索仍能搜到）。用于「暂时不想让它占版面，但也不删」的整块内容",
+    "children": "子分类名列表；为空表示这个分组本身就是一个分类"
+  },
   "tree": [
     {
       "name": "月季",
@@ -18,8 +25,7 @@
         "种植分享",
         "竞赛,评选以及月季园实测",
         "其他育种家",
-        "云小123456",
-        "微博"
+        "云小123456"
       ]
     },
     {
@@ -49,6 +55,12 @@
     {
       "name": "养花日常",
       "multi": false,
+      "children": []
+    },
+    {
+      "name": "微博",
+      "multi": false,
+      "hidden": false,
       "children": []
     },
     {

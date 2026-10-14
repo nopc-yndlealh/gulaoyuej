@@ -219,7 +219,6 @@
         '竞赛,评选以及月季园实测',
         '其他育种家',
         '云小123456',
-        '微博',
       ],
     },
     {
@@ -242,6 +241,10 @@
     },
     { name: '古代园艺', children: [] },
     { name: '养花日常', children: [] },
+    // 微博是从「月季」里独立出来的单独分类：
+    // 它是 899 条搬运内容的暂存区，混在育种家分类里会稀释侧边栏。
+    // 想整块隐藏就把 taxonomy.json 里这个分组的 hidden 改成 true。
+    { name: '微博', children: [] },
     { name: '园艺导航', children: [] },
     { name: '花友推荐', children: [] },
   ];
@@ -252,13 +255,21 @@
       console.warn('taxonomy.json 结构异常，沿用内置兜底分类树');
       return;
     }
-    TREE_CONFIG = tax.tree.map((g) => ({
+    // hidden 的分组不进侧边栏，但条目仍在「全部条目」与搜索里 ——
+    // 这是「有意隐藏」与「静默丢失」的区别：前者可配置、可解释。
+    const visible = tax.tree.filter((g) => !g.hidden);
+    const hiddenCount = tax.tree.length - visible.length;
+
+    TREE_CONFIG = visible.map((g) => ({
       name: g.name,
       // multi 组把子项拼在前缀后面，cat 形如「多肉/石莲花属」
       prefix: g.multi ? g.prefix || `${g.name}/` : null,
       children: Array.isArray(g.children) ? g.children : [],
     }));
-    console.log(`🗂️ 分类树载入自 taxonomy.json：${TREE_CONFIG.length} 组`);
+    console.log(
+      `🗂️ 分类树载入自 taxonomy.json：${TREE_CONFIG.length} 组可见` +
+        (hiddenCount ? `，${hiddenCount} 组已隐藏` : '')
+    );
   }
   /** @type {Record<string, any[]>} 额外数据（导航链接/作者信息） */
   let extraData = {};

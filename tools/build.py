@@ -383,19 +383,34 @@ def check_integrity(out):
         problems.append(f"content-index 指向不存在的分块：{missing_block}")
 
     # 6. 数据质量问题（只报告，不阻断构建 —— 这些需要人来决定怎么处理）
+    idx_by_id = {e["id"]: e for e in index}
     empty, foreign = [], []
     for slug, items in blocks.items():
         for pid, entry in items.items():
+            meta = idx_by_id.get(pid, {})
+            row = {
+                "id": pid,
+                "cat": meta.get("cat", slug),
+                "title": entry.get("title") or meta.get("title", ""),
+                "thumb": meta.get("thumb", ""),
+                "n_img": sum(1 for s in entry.get("segments", []) if s.get("i")),
+                "n_bad": 0,
+                "bad_url": "",
+            }
             if not entry.get("segments"):
-                empty.append((pid, slug, entry.get("title", "")))
+                empty.append(row)
             for s in entry.get("segments", []):
                 u = s.get("i")
                 if u and "img.feijibei.top" not in u:
-                    foreign.append((pid, slug, u))
+                    row["n_bad"] += 1
+                    if not row["bad_url"]:
+                        row["bad_url"] = u
+            if row["n_bad"]:
+                foreign.append(row)
     if empty:
-        data_issues.append(("published 但没有正文（点开会是空白）", empty))
+        data_issues.append(("empty", "published 但没有正文（点开会是「暂无详情内容」）", empty))
     if foreign:
-        data_issues.append(("图片不在 R2 域名上（百度有防盗链，线上会裂图）", foreign))
+        data_issues.append(("foreign", "图片不在 R2 域名上（原图已失效）", foreign))
 
     print(f"  index.json          {len(index)} 条")
     print(f"  content-index.json  {len(slugs)} 条映射")
@@ -413,20 +428,63 @@ def check_integrity(out):
         print("  ✓ 结构不变量全部通过：无 id 重复、无孤儿、无空壳、无悬空映射")
 
     if data_issues:
-        print(f"\n  ⚠️  内容质量问题 {len(data_issues)} 类（不阻断构建，需人工决定）：")
-        for label, items in data_issues:
+        total = sum(len(items) for _, _, items in data_issues)
+        print(f"\n  ⚠️  内容质量问题 {len(data_issues)} 类 / {total} 条（不阻断构建，需人工决定）：")
+        for _, label, items in data_issues:
             print(f"    - {label}：{len(items)} 条")
-        # 明细写文件，避免刷屏；发布工具上线前应读这份报告
-        lines = ["# 构建报告\n", f"生成时间：{_now()}\n"]
-        for label, items in data_issues:
-            lines.append(f"## {label}（{len(items)} 条）\n")
-            for pid, slug, extra in items:
-                lines.append(f"- `{pid}` [{slug}] {extra}")
-            lines.append("")
-        (SRC / "_build_report.md").write_text("\n".join(lines), encoding="utf-8")
-        print(f"    明细见 content/_build_report.md")
+        _write_report(data_issues)
+        print("    明细见 content/_build_report.md")
 
     return ok
+
+
+def _write_report(data_issues):
+    """把内容质量问题写成可操作的清单。
+
+    刻意保留缩略图与图数：单看 id 无法判断该补内容还是该下架，
+    必须能看到「这条到底是什么」才能做决定。
+    """
+    L = ["# 内容体检报告\n", f"生成时间：{_now()}\n"]
+    L.append("> 这里只列**内容质量**问题，不阻断构建。")
+    L.append("> 结构问题（id 重复 / 孤儿 / 空壳 / 悬空映射）会直接让构建失败。\n")
+
+    for kind, label, items in data_issues:
+        L.append(f"## {label} — {len(items)} 条\n")
+        if kind == "empty":
+            L.append("判定依据：该条目的 `segments` 是空数组。卡片列表里能看到，点开是「暂无详情内容」。\n")
+            L.append("| id | 分类 | 标题 | 缩略图 | 建议 |")
+            L.append("|---|---|---|---|---|")
+            for r in items:
+                advice = "抓取残留，建议下架" if r["title"] in ("无标题", "") else "缺正文，建议补内容或下架"
+                L.append(f"| `{r['id']}` | {r['cat']} | {r['title'] or '(空)'} | "
+                         f"{'[查看](' + r['thumb'] + ')' if r['thumb'] else '无'} | {advice} |")
+        elif kind == "foreign":
+            L.append("判定依据：图片 URL 的域名不是 `img.feijibei.top`。\n")
+            L.append("实测结论：`tiebapic.baidu.com` 带 Referer 返回 403；不带 Referer 返回 200，")
+            L.append("但内容是**占位图** —— 两个完全不同的 URL 返回同一个 4262 字节文件（md5 相同），")
+            L.append("说明原图已失效、拿不回来了。这些条目大多只坏 1 张，其余图都在 R2。\n")
+            L.append("| id | 分类 | 标题 | 坏图/总图 | 失效链接 | 建议 |")
+            L.append("|---|---|---|---|---|---|")
+            for r in items:
+                L.append(f"| `{r['id']}` | {r['cat']} | {r['title'] or '(空)'} | "
+                         f"{r['n_bad']}/{r['n_img']} | `{r['bad_url'][:60]}…` | 删掉该图 |")
+        L.append("")
+
+    L.append("## 怎么处理\n")
+    L.append("```bash")
+    L.append("# 下架：status 改成 draft —— 条目从列表与搜索里消失，数据仍完整保留，随时可改回")
+    L.append("python3 tools/set_status.py --draft --from-report          # 下架本报告里「没有正文」的全部条目（预演）")
+    L.append("python3 tools/set_status.py --draft --from-report --apply  # 实际写入")
+    L.append("python3 tools/set_status.py --draft <id> [<id> ...]        # 指定 id")
+    L.append("")
+    L.append("# 删掉失效图片（预演后加 --apply）：")
+    L.append("python3 tools/fix_broken_images.py")
+    L.append("python3 tools/fix_broken_images.py --apply")
+    L.append("")
+    L.append("# 补内容：直接编辑 content/posts/{id}.json 的 segments 数组，然后重新构建")
+    L.append("python3 tools/build.py")
+    L.append("```")
+    (SRC / "_build_report.md").write_text("\n".join(L), encoding="utf-8")
 
 
 def _now():
