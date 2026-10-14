@@ -1,0 +1,30 @@
+{
+  "id": "tieba_7598486785",
+  "title": "这是有点缺素了吗",
+  "cat": "",
+  "source": "tieba",
+  "seq": 101724,
+  "segments": [
+    {
+      "t": "叶脉颜色好像不太对。"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7598486785_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7598486785_001.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7598486785_002.webp"
+    }
+  ],
+  "time": "2021-11-03 07:36",
+  "contentAuthor": {
+    "name": "竹子竹子竹子🌿",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg?t=1779722576",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg%3Ft%3D1779722576"
+  },
+  "contentTag": "47",
+  "status": "draft",
+  "legacyOnly": true
+}

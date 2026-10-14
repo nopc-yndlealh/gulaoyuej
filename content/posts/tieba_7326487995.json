@@ -1,0 +1,31 @@
+{
+  "id": "tieba_7326487995",
+  "title": "因为标签掉了所以不知道品种信息的品种",
+  "cat": "云小123456",
+  "source": "tieba",
+  "seq": 1295,
+  "type": "月季",
+  "thumb": "https://img.feijibei.top/images/tieba_7326487995_000.webp",
+  "tag": "54",
+  "author": "云小123456",
+  "segments": [
+    {
+      "t": "有可能是杂交伊芙，那个时候是有杂交旁系伊芙的念头来着，这个品种花型还蛮饱满的，耐热性还不错，颜色分布很有趣，香味也还可以"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7326487995_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7326487995_001.webp"
+    }
+  ],
+  "contentType": "月季",
+  "time": "2021-04-30 13:29",
+  "contentAuthor": {
+    "name": "云小123456",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.93296799.4nCBkGapSNihAglzWd7jig?t=1779722322",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.93296799.4nCBkGapSNihAglzWd7jig%3Ft%3D1779722322"
+  },
+  "contentTag": "54",
+  "status": "published"
+}

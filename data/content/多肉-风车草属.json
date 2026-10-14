@@ -472,29 +472,8 @@
       }
     ]
   },
-  "xhs_67d1943c000000000603b692": {
-    "title": "景天万花筒第一期：风车草属&美丽莲属",
-    "type": "小红书",
-    "segments": [
-      {
-        "i": "https://img.feijibei.top/images/xhs_67d1943c000000000603b692_0.webp"
-      },
-      {
-        "t": "风车草属Graptopetalum&美丽莲属Tacitus\n#多肉[话题]# #多肉植物[话题]# #多肉控[话题]# #植物图鉴[话题]# #园艺爱好者[话题]# #花卉植物[话题]# #植物科普[话题]#"
-      }
-    ],
-    "author": {
-      "name": "三火的小肉铺",
-      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31u6p4ph42a005oj0un6k1km72b3o1gg",
-      "url": ""
-    },
-    "time": "2025-03-12 22:03",
-    "tag": "121"
-  },
   "succ_1141": {
     "title": "[翻译] Graptopetalum amethystinum 桃之卵",
-    "type": "风车草属",
-    "source": "funjing",
     "segments": [
       {
         "t": "风车草属：简介（总论）： http://funjing.com/5001/ 作者：James Low 翻译：Qiuhan 一切权利属于原作者。欢迎勘误。 Graptopetalum amethystinum （醉美人，桃之卵） 由Walther发表于1905年；分布于墨西哥中西部到中北部；n =34,35；花白色，花瓣底部带红色斑点或横线。这个品种是根据其叶片那紫水晶（amethyst）般的颜色命名的【注意：这种植物叶片和茎部的特征和其他不同属的两种植物奇迹般地相似：Pachyphytum oviferum（星美人）和P. saltensis，这导致它一开始被划定为Pachyphytum（厚叶草属）！但一开花就无疑可以确信其归属了。它们的花都具备本属的特征，差别显著。它们叶子的颜色也有一定不同，但很容易看混。实际上，将三种植物种在同一盆里恐怕将非常有教学意义】。参考1987年五月号CSSA Journ.第103页。这种植物有两种十分流行的杂交：Graptoveria ‘Amethorum’（大和莲，红葡萄，紫葡萄，详见 http://funjing.com/5021/ ）和x G. ‘Debby’（黛比）。 = Pachyphytum amethystinum ，由Rose发表于1905年，已弃用。 =* G. amethystinum ，由Walther发表于1905年，现用名 。"
@@ -517,22 +496,22 @@
       {
         "t": "G. amethystinum （醉美人，桃之卵） 【照片和植株由 Jean-Michel Moullec提供】"
       }
-    ]
+    ],
+    "type": "风车草属",
+    "source": "funjing"
   },
   "succ_1142": {
     "title": "[翻译] Graptopetalum bartramii",
-    "type": "风车草属",
-    "source": "funjing",
     "segments": [
       {
         "t": "风车草属：简介（总论）： http://funjing.com/5001/ 翻译：Qiuhan 一切权利属于原作者。欢迎勘误。 Graptopetalum bartramii Synonym: Echeveria bartramii Rose, 1926 异名： Echeveria bartramii ，由Rose发表于1926年 Distribution: USA (central and southern Arizona), Mexico (Chihuahua); rocky places, 1200 – 2000 m. 分布于美国（亚利桑那州的中部和南部）、墨西哥（吉娃娃州^^）的岩石地带，海拔1200-2000米。 Description (according to IHSP, 2003) : 根据IHSP2003年的描述： Rosette plants, usually forming mats, main root thickened, stem shorts. 莲座形，经常铺满一地，主根肥厚，短茎。 Rosettes dense, with ≥ 20 leaves. 莲座密实，叶子在20片以上。 Leaves ovate to broadly spatulate, apically pointed, flat or upper face somewhat concave, 2,5 – 6,25 cm, bluish-green, margins and tips reddish. 叶子为卵形或宽匙形，有尖，扁平或上表面略凹，2.5-6.25cm， 蓝绿色，叶缘和叶尖发红。 Inflorescences 2 -7 from amongst the inner rosette leaves, 20 – 30 cm, racemes or mostly thyrses with few scorpioid branches with up to 3 flowers each, pedicels short. 花序有2-7根，几乎是从最里面的叶子处伸出，20-30cm，总状花序或以聚伞圆锥花序为主，外加一些蝎尾状花序分枝，每枝上最多3朵花，花梗很短。 Flowers 5-merous, evil-scented or without scent, sepals narrowly triangular to oblong-lanceolate, ± acute, small, 5 mm, corolla 16 – 28 mm in diameter, petals narrow, 8 – 15 mm, whitish, tube somewhat shorter than the sepals, lobes acute, esp. the upper &frac12; with red or brown spots and/or bands. 花5瓣， evil-scented（不确定是恶臭还是强烈气味的意思）或无味；萼片为窄倒三角或椭圆形-披针形，有尖，小，5mm；花冠16-28mm直径，花瓣窄，8-15mm，发白，管状结构比萼片略短，裂片锐尖，上1/2出游红色或棕色的斑点或条带。 Cytology: n = 31 染色体：n=31 另外有的地方管bartramii叫秋丽，其实看了照片就知道根本就不是，秋丽应当是×Graptosedum 'Francesco Baldi'"
       }
-    ]
+    ],
+    "type": "风车草属",
+    "source": "funjing"
   },
   "succ_1143": {
     "title": "[翻译] Graptopetalum macdougallii 蔓莲",
-    "type": "风车草属",
-    "source": "funjing",
     "segments": [
       {
         "t": "风车草属：简介（总论）： http://funjing.com/forum.php?mod=viewthread&tid=500 作者：James Low 翻译：Qiuhan 一切权利属于原作者。欢迎勘误。 Graptopetalum macdougallii （蔓莲） 由Alexander发表于1956年；分布于墨西哥西南部的Oaxaca州；花黄色或白色，上有红纹；n可能=66，但Uhl在1970年AJB的第1116页曾发表过n=64,66,193,244,245的发现。其名字是为了纪念美国植物学家Tom Macdougall，他花了整整后半生在墨西哥研究植物。它和小型Echeveria（拟石莲）很像，有许多匍匐茎，会形成较大的丛生，常用来做吊篮。在园艺栽培中，这个品种有两个十分不一样的类型，花朵的差异显著。 =* G. macdougallii ，由Alexander发表于1956年，现用名。"
@@ -576,12 +555,12 @@
       {
         "t": "设为封面 Photos Michael Wisnev"
       }
-    ]
+    ],
+    "type": "风车草属",
+    "source": "funjing"
   },
   "succ_1144": {
     "title": "[翻译] Graptopetalum paraguayense 胧月",
-    "type": "风车草属",
-    "source": "funjing",
     "segments": [
       {
         "t": "风车草属：简介（总论）： http://funjing.com/5001/ 作者：James Low 翻译：Qiuhan 一切权利属于原作者。欢迎勘误。 Graptopetalum paraguayense （胧月，风车草，宝石花） 由Shepherd发表于1912年；分布于墨西哥东北部；n=68；花白色，上有红色斑纹。它的名字意味着原产地是Paraguay（巴拉圭），但随后证明这个品种并不是来自那里的，而是来自墨西哥。自从1904年一个纽约的多肉批发商F. Weinberg将这个品种引进到仙肉界之后，再没有植株在野外被发现过，因此即便到了2000年其具体的产地依旧成谜。参考CSSA Journ.1986年三月号第38页。这个品种的叶片呈莲座状，很像是Echeveria（拟石莲属），但茎部更长。它极易种植，几乎和野草一样好长，甚至能够耐霜冻，大概是本属里种植最广泛的品种了，也广泛用于杂交。其亚种 ssp. bernalense 在1979年被Alfred Lau在Cerro Bernal山区发现，那里位于墨西哥东北部的Tamaulipas州，所以也许 G. paraguayese （胧月）的故乡也在附近。另一个变种 ssp. mendozaue （姬秋丽）则是在最近才被发现的。 = Echeveria weinbergii ，由Shepherd发表于1912年，已废弃。 = Cotyledon paraguayensis ，由Brown发表于1914年，已废弃。 = Byrnesia weinbergii ，由Rose发表于1922年，已废弃（Rose成立了一个新属，随后又弃用了）。 = Echeveria arizonica ，由Rose发表于19??年，已废弃。 = Sedum weinbergii ，由Berger发表于1930年，已废弃。 = Graptopetalum weinbergii ，由Walther发表于1930年，已废弃。 = Graptopetalum byrnesia ，由Walther发表于1931年，已废弃。 = Echeveria byrnesia ，由Rooskby发表于1933年，已废弃。 = Echeveria paraguayensis ，由Von Poellnitz发表于1936年，已废弃。 = Sedum paraguayense ，由Bullock发表于1937年，已废弃。 =* Graptopetalum paraguayense ，由Walther发表于1938年，现用名。 + ssp. bernalense ，由Kimnach和Moran于1986年发现，现用名。n=68。参见CSSA Journ.1986年三月号ISI#1660。 + ssp. mendozae （姬秋丽），由Glass和Chazaro发表于1997年。请注意：这个亚种和 ssp. bernalense 很像，被暂定为另一个亚种，但最终归属还未定，也有可能被列为独立的品种，因此在前文中也列出了。 （译者注：目前姬秋丽已经是独立的种， Graptopetalum mendozae ）"
@@ -607,12 +586,12 @@
       {
         "t": "Graptopetalum paraguayense （胧月）【照片和植株由Jean-Michel Moullec提供】"
       }
-    ]
+    ],
+    "type": "风车草属",
+    "source": "funjing"
   },
   "succ_1145": {
     "title": "[翻译] Graptopetalum rusbyi 银天女",
-    "type": "风车草属",
-    "source": "funjing",
     "segments": [
       {
         "t": "风车草属：简介（总论）： http://funjing.com/5001/ 作者：James Low 翻译：Qiuhan 一切权利属于原作者。欢迎勘误。 Graptopetalum rusbyi （银天女） 由Rose发表于1924年；分布于美国亚利桑那州东南部到墨西哥中北部；花橙色，上有红色斑纹，可能有5、6甚至7片花瓣。Moran在CSSA Journ. 1984年号第169页起叙述了这个品种的历史，包括照片和绘画。这个品种的外观随地域分布而有一定不同，但终归是小型的扁平莲座，丛生，叶子可能是蓝色、淡紫色或是蓝绿色，中心叶子粉红。 = Cotyledon rusbyi ，由Greene发表于1883年，已废弃。 = Dudleya rusbyi ，由Britton和Rose发表于1903年，已废弃，错误的属。 = Echeveria rusbyi ，由Nels和Macbr发表于1913年，已废弃，错误的属。 =* Graptopetalum rusbyi ，由Rose发表于1924年，现用名。 = Graptopetalum orpetii ，由Walther发表于1930年，已废弃。 （译者注： Graptopetalum orpetii 原先是一个独立的种，后被合并到银天女里面。大家看到 Graptopetalum orpetii 不要买，知道是银天女就好了。原文中还列出了一个废弃的名字 Graptopetalum bartramii ，但现在又已经算是独立的种了，故删去以避免误导。）"
@@ -632,12 +611,12 @@
       {
         "t": "Graptopetalum rusbyi 银天女，发现于美国亚利桑那州的Pinal C°【照片和植株由Jean-Michel Moullec提供】"
       }
-    ]
+    ],
+    "type": "风车草属",
+    "source": "funjing"
   },
   "succ_1146": {
     "title": "[翻译] Graptopetalum superbum 华丽风车",
-    "type": "风车草属",
-    "source": "funjing",
     "segments": [
       {
         "t": "风车草属：简介（总论）： http://funjing.com/5001/ 作者：James Low 翻译：Qiuhan 一切权利属于原作者。欢迎勘误。 Graptopetalum superbum （华丽风车） 由Kimnach发表于1987年，Acevedo-Rosas发表于2003年，即原来的 G. pentandrum ssp. superbum ，在2003年Novon#13（4）第377-380页上正式作为独立品种发表。 = G. pentandrum ssp. superbum ，由Kimnach发表于1987年，已废弃。 ==* G. superbum , 由Acevedo-Rosas发表于2003年，现用名。"
@@ -666,6 +645,27 @@
       {
         "t": "Photos Emmanuelle Aubé"
       }
-    ]
+    ],
+    "type": "风车草属",
+    "source": "funjing"
+  },
+  "xhs_67d1943c000000000603b692": {
+    "title": "景天万花筒第一期：风车草属&美丽莲属",
+    "segments": [
+      {
+        "i": "https://img.feijibei.top/images/xhs_67d1943c000000000603b692_0.webp"
+      },
+      {
+        "t": "风车草属Graptopetalum&美丽莲属Tacitus\n#多肉[话题]# #多肉植物[话题]# #多肉控[话题]# #植物图鉴[话题]# #园艺爱好者[话题]# #花卉植物[话题]# #植物科普[话题]#"
+      }
+    ],
+    "type": "小红书",
+    "author": {
+      "name": "三火的小肉铺",
+      "avatar": "https://sns-avatar-qc.xhscdn.com/avatar/1040g2jo31u6p4ph42a005oj0un6k1km72b3o1gg",
+      "url": ""
+    },
+    "time": "2025-03-12 22:03",
+    "tag": "121"
   }
 }

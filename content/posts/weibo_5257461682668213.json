@@ -1,0 +1,29 @@
+{
+  "id": "weibo_5257461682668213",
+  "title": "无标题",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 103481,
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1i9i46gplwaj30s10kc47l.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1i9i46kd0vjj31901aqaq7.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1i9i46o4l3bj30pk0nb47b.webp"
+    },
+    {
+      "t": "《中国纪行》里说明代妇女开脸/挽面直接用镊子拔掉额头上一些头发。效果大概就类似图2这些画里的样子，露出光洁的大额头。到清代、近现代，主流是用线绞，而不是用镊子拔了"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2026-01-21 17:46",
+  "contentAuthor": {
+    "name": "朱玛交柯"
+  },
+  "contentTag": "708",
+  "status": "draft",
+  "legacyOnly": true
+}

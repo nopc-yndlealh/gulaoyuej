@@ -2871,8 +2871,6 @@
   },
   "succ_1099": {
     "title": "[干货]Aeonium莲花掌属8组",
-    "type": "莲花掌属",
-    "source": "funjing",
     "segments": [
       {
         "t": "之前看见 @Qiuhan 写的帖子然后就很好奇,想知道Aeonium会不会也有类似系(Series)的分类呢.刚好之后在找资料学习的时候看见了ICN的资料里有\"Section\"这一个项目,现在扫尾一下把这个也整理好叭, Aeonium统共有8组,组内收录原始种,包括种下亚种,共38项,部分组会附加一些自然杂交种.由G. Tavormina分类整理. 同组植物外型上会有相似,另外Aeonium的多种产生侧芽方式也是组内相同的,同理对于杂交选育来说,组内种之间会比较容易. 因为植栽大概是这里最不正规的家伙 所以不瞎介绍组(Section)的概念,直接把资料上来好啦.没有名字的全部采用原名避免不懂内涵的Noway犯错.^皿^ I. Petrothamnium"
@@ -2925,12 +2923,12 @@
       {
         "t": "Aeonium aureum © COBCAN Aeonium aizoon Tenerife 长生 Aeonium aureum Tenerife, Gran Canaria, El Hierro, La Gomera, La Palma 黄金山地 Aeonium diplocyclum La Gomera, El Hierro, La Palma 冷霜 Aeonium dodrentale Tenerife 玉瓮 原文来自ICN旧站 分组已不具时效性,现仅供参考."
       }
-    ]
+    ],
+    "type": "莲花掌属",
+    "source": "funjing"
   },
   "succ_1160": {
     "title": "Aeonium莲花掌属介绍及索引",
-    "type": "莲花掌属",
-    "source": "funjing",
     "segments": [
       {
         "t": "本帖资料来源于ICN与Dave's Garden以及植栽.图片大部分来源于Flickr,均标注作者名. 前言: 植栽最喜欢的属就是Aeonium,它们繁复绚烂的叶片,靡曼优雅的身姿,无一不叫人为之痴迷. 从叶片中悄悄舒展的蘖芽,从叶缘偷偷晕染的秋意,都是阳光般的欣喜! 这样的异邦植物,却饱含着禅意,怎么能不叫人倾心? 所以植栽在自己学习之余,将资料与大家分享."
@@ -2971,6 +2969,8 @@
       {
         "t": "© Joyce-Tex-Buckner Aeonium spathulatum (Hornem.) Praeger 仙童唱 .................................. http://funjing.com/9351/ Aeonium stuessyi H.Y.Liu 清合莲 ..................................The Plant List认可,但ICN无记录. Aeonium tabuliforme (Haw.) Webb & Berthel.  明镜 .................................. http://funjing.com/9361/ Aeonium undulatum Webb & Berthel. 艳姿 .................................. http://funjing.com/9381/ Aeonium urbicum (C.Sm. ex Hornem.) Webb & Berthel. 翡翠城 .................................. http://funjing.com/9391/ Aeonium valverdense (Praeger) Praeger 舞龙华 .................................. http://funjing.com/9401/ 特别链接:Greenovia山地玫瑰资料及索引( http://funjing.com/6191/ ) Aeonium莲花掌属植物的日常养护( http://funjing.com/8181/ ) 贴中资料来自:ICN & Dave's Garden & Welipedia 以及植栽个人所撰， 图片来自:Flickr(部分图片作者关闭下载功能,但实在无法找到适合的图片,故植栽使用了截图功能,向原作者致歉 ) 另 Aeonium saundersii Bolle 珠碧/桑氏莲花掌 一篇为 @种花小医杂家赵 帖. 品种信息来自:The Plant List"
       }
-    ]
+    ],
+    "type": "莲花掌属",
+    "source": "funjing"
   }
 }

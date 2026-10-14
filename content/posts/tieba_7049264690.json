@@ -1,0 +1,24 @@
+{
+  "id": "tieba_7049264690",
+  "title": "分享贴子",
+  "cat": "",
+  "source": "tieba",
+  "seq": 101590,
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/tieba_7049264690_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7049264690_001.webp"
+    }
+  ],
+  "time": "2020-10-28 10:57",
+  "contentAuthor": {
+    "name": "竹子竹子竹子🌿",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg?t=1779721380",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg%3Ft%3D1779721380"
+  },
+  "contentTag": "82",
+  "status": "draft",
+  "legacyOnly": true
+}

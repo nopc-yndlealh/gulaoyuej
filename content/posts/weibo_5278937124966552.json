@@ -1,0 +1,24 @@
+{
+  "id": "weibo_5278937124966552",
+  "title": "白幅巾",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 103505,
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1ibemgniyk3j32u94eje82.webp"
+    },
+    {
+      "t": "白幅巾。照片描述说是游神，但我觉得是出殡"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2026-03-22 00:02",
+  "contentAuthor": {
+    "name": "朱玛交柯",
+    "avatar": "https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/007C5AOXly8hjqd0tvxvcj30u00u0goq.jpg?KID=imgbed,tva&Expires=1779889237&ssig=5EUQXIlwfb",
+    "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
+  },
+  "contentTag": "35",
+  "status": "draft"
+}

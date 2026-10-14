@@ -91,16 +91,20 @@
       // search-index.json（~2.5MB）→ 延迟到首次搜索时按需加载
       // content-index.json（~160KB）→ 首次点开详情时才加载（见 site-common.js），减小首屏下载
 
-      // 加载园艺导航 & 花友推荐数据
+      // 加载分类树 & 园艺导航 & 花友推荐数据
+      // 顺序很重要：分类树必须在 transformData() 之前就位，
+      // 否则侧边栏会按兜底名单渲染，漏掉 taxonomy 里新增的分类。
       try {
-        const [navRes, authorRes] = await Promise.all([
+        const [taxRes, navRes, authorRes] = await Promise.all([
+          fetch('./data/taxonomy.json'),
           fetch('./data/nav-links.json'),
           fetch('./data/authors.json'),
         ]);
+        if (taxRes.ok) applyTaxonomy(await taxRes.json());
         if (navRes.ok) extraData.navLinks = await navRes.json();
         if (authorRes.ok) extraData.authors = await authorRes.json();
       } catch (e) {
-        console.warn('导航/作者数据加载失败:', e.message);
+        console.warn('分类树/导航/作者数据加载失败:', e.message);
       }
 
       // 注入虚拟条目到 rawData
@@ -185,9 +189,20 @@
     }
   }
 
-  /* 树状分类配置 */
+  /* 树状分类配置（兜底值）
+   *
+   * 真正生效的分类树来自 ./data/taxonomy.json —— 由 tools/build.py 从
+   * content/taxonomy.json 生成，那是分类的唯一真相。
+   *
+   * 为什么不能继续硬编码：这份名单漏了「微博」，导致 899 条 cat="微博"
+   * 的条目在侧边栏和移动端导航里都没有入口（全文搜索 "微博" 命中 0 处）。
+   * 分类名单硬编码在前端，只要后端数据一变就会静默漂移，而且没有任何
+   * 报错 —— 又是那种「谁也没做错，但内容就是不见了」的问题。
+   *
+   * 这里保留一份兜底，仅用于 taxonomy.json 拉取失败时不至于侧边栏全塌。
+   * 改动 content/taxonomy.json 时，这份兜底也应同步。 */
   /** @type {TreeConfigGroup[]} */
-  const TREE_CONFIG = [
+  let TREE_CONFIG = [
     {
       name: '月季',
       children: [
@@ -204,10 +219,12 @@
         '竞赛,评选以及月季园实测',
         '其他育种家',
         '云小123456',
+        '微博',
       ],
     },
     {
       name: '多肉',
+      prefix: '多肉/',
       children: [
         '石莲花属',
         '莲花掌属',
@@ -228,6 +245,21 @@
     { name: '园艺导航', children: [] },
     { name: '花友推荐', children: [] },
   ];
+
+  /** 用 data/taxonomy.json 覆盖内置分类树 @param {any} tax */
+  function applyTaxonomy(tax) {
+    if (!tax || !Array.isArray(tax.tree) || tax.tree.length === 0) {
+      console.warn('taxonomy.json 结构异常，沿用内置兜底分类树');
+      return;
+    }
+    TREE_CONFIG = tax.tree.map((g) => ({
+      name: g.name,
+      // multi 组把子项拼在前缀后面，cat 形如「多肉/石莲花属」
+      prefix: g.multi ? g.prefix || `${g.name}/` : null,
+      children: Array.isArray(g.children) ? g.children : [],
+    }));
+    console.log(`🗂️ 分类树载入自 taxonomy.json：${TREE_CONFIG.length} 组`);
+  }
   /** @type {Record<string, any[]>} 额外数据（导航链接/作者信息） */
   let extraData = {};
 
@@ -260,13 +292,23 @@
       if (group.children.length > 0) {
         // 有显式 children 列表（月季或带子分类的多肉）
         group.children.forEach((childName) => {
-          // 多肉：cat 键为 "多肉/石莲花属" 格式
-          const catKey = group.name === '多肉' ? `${group.name}/${childName}` : childName;
+          // 带前缀的组：cat 键为「多肉/石莲花属」格式
+          const catKey = group.prefix ? `${group.prefix}${childName}` : childName;
           const items = flatGroups[catKey] || [];
           node.children.push({ name: childName, items, isLeaf: true });
           node.itemCount += items.length;
           totalItems += items.length;
         });
+
+        // 直接挂在组名上的条目（cat 恰好等于组名，如 cat="多肉" 的知识图谱）。
+        // 旧逻辑在有 children 时对这些条目不闻不问，等于静默丢弃 ——
+        // flatGroups 里有数据，但树里没有任何节点引用它，读者点不到。
+        const groupDirect = flatGroups[group.name] || [];
+        if (groupDirect.length > 0) {
+          node.children.push({ name: '其他', items: groupDirect, isLeaf: true });
+          node.itemCount += groupDirect.length;
+          totalItems += groupDirect.length;
+        }
       } else {
         // 无显式 children：从 flatGroups 中自动发现子分类
         const prefix = `${group.name}/`;

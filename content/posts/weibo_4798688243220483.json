@@ -1,0 +1,28 @@
+{
+  "id": "weibo_4798688243220483",
+  "title": "一些奇思妙想",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 2527,
+  "type": "月季",
+  "thumb": "https://img.feijibei.top/images/weibo__007C5AOXly1h4uiu2jkl9j30rs1xt7el.webp",
+  "tag": "781",
+  "author": "朱玛交柯",
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1h4uiu2jkl9j30rs1xt7el.webp"
+    },
+    {
+      "t": "一些奇思妙想"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2022-08-04 18:24",
+  "contentAuthor": {
+    "name": "朱玛交柯",
+    "avatar": "https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/007C5AOXly8hjqd0tvxvcj30u00u0goq.jpg?KID=imgbed,tva&Expires=1779892164&ssig=46bkCcG80C",
+    "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
+  },
+  "contentTag": "781",
+  "status": "published"
+}

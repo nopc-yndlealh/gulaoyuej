@@ -1,0 +1,33 @@
+{
+  "id": "tieba_7970346113",
+  "title": "这是猫薄荷？",
+  "cat": "",
+  "source": "tieba",
+  "seq": 101803,
+  "segments": [
+    {
+      "t": "真香。柑橘调的木质香气。难怪猫猫喜欢。"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7970346113_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7970346113_001.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7970346113_002.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7970346113_003.webp"
+    }
+  ],
+  "time": "2022-08-11 08:28",
+  "contentAuthor": {
+    "name": "竹子竹子竹子🌿",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg?t=1779722420",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg%3Ft%3D1779722420"
+  },
+  "contentTag": "36",
+  "status": "draft",
+  "legacyOnly": true
+}

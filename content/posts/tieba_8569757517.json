@@ -1,0 +1,42 @@
+{
+  "id": "tieba_8569757517",
+  "title": "老哥们这是啥*",
+  "cat": "",
+  "source": "tieba",
+  "seq": 101838,
+  "segments": [
+    {
+      "t": "https://tieba.baidu.com/mo/q/movideo/page?thumbnail=08fa513d269759eef0a074f9f4fb43166d22df14&video=4_1deab7794fe2b175a0cc2ac7a39f5f93&product=tieba-movideo&thread_id=8569757517"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_001.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_002.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_003.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_004.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_005.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_8569757517_006.webp"
+    }
+  ],
+  "time": "2023-08-28 05:10",
+  "contentAuthor": {
+    "name": "天真的小小之歌",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.b7cba5f3.UUIj7DxtOUV1ASribNyuhg?t=1779721934",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.b7cba5f3.UUIj7DxtOUV1ASribNyuhg%3Ft%3D1779721934"
+  },
+  "contentTag": "7",
+  "status": "draft",
+  "legacyOnly": true
+}

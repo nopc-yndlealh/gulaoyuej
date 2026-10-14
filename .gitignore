@@ -21,3 +21,6 @@ node_modules/
 data/content.json
 data/index.json.bak_reorder
 data/index.json.trimmed_bak
+
+# 构建时生成，不进仓库
+content/_build_report.md

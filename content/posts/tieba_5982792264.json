@@ -1,0 +1,39 @@
+{
+  "id": "tieba_5982792264",
+  "title": "偶然见到，这个是狮子猫吗？",
+  "cat": "",
+  "source": "tieba",
+  "seq": 101231,
+  "segments": [
+    {
+      "t": "偶然见到，这个是狮子猫吗？"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5982792264_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5982792264_001.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5982792264_002.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5982792264_003.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5982792264_004.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5982792264_005.webp"
+    }
+  ],
+  "time": "2018-12-19 14:10",
+  "contentAuthor": {
+    "name": "天真的小小之歌",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.b7cba5f3.UUIj7DxtOUV1ASribNyuhg?t=1779722637",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.b7cba5f3.UUIj7DxtOUV1ASribNyuhg%3Ft%3D1779722637"
+  },
+  "contentTag": "55",
+  "status": "draft",
+  "legacyOnly": true
+}

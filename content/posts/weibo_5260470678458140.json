@@ -1,0 +1,27 @@
+{
+  "id": "weibo_5260470678458140",
+  "title": "无标题",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 103487,
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1i9rpt8tm7oj30f60fh40g.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1i9rpt9bdozj32801o0x03.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1i9rpt9bg87j32801o07tk.webp"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2026-01-30 01:03",
+  "contentAuthor": {
+    "name": "朱玛交柯",
+    "avatar": "https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/007C5AOXly8hjqd0tvxvcj30u00u0goq.jpg?KID=imgbed,tva&Expires=1779889316&ssig=2uPpK4wnyU",
+    "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
+  },
+  "contentTag": "52",
+  "status": "draft"
+}

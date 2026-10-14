@@ -1,0 +1,27 @@
+{
+  "id": "weibo_4569461170898376",
+  "title": "众所周知，蟒袍是一种明确具体的袍，可以有龙纹、凤纹、虎纹....",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 102234,
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1gkj8h49j5hj30yi0pttj0.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1gkj8h57as1j30jt0jljua.webp"
+    },
+    {
+      "t": "众所周知，蟒袍是一种明确具体的袍，可以有龙纹、凤纹、虎纹...."
+    }
+  ],
+  "contentType": "微博",
+  "time": "2020-11-10 05:18",
+  "contentAuthor": {
+    "name": "朱玛交柯",
+    "avatar": "https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/007C5AOXly8hjqd0tvxvcj30u00u0goq.jpg?KID=imgbed,tva&Expires=1779893307&ssig=dYfyK38zyP",
+    "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
+  },
+  "contentTag": "1199",
+  "status": "draft"
+}

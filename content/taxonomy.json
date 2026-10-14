@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "note": "分类的唯一真相。post 里的 cat 必须命中此处的某个分组名 / children 项 / parentCats 项，否则构建脚本会报错。",
+  "tree": [
+    {
+      "name": "月季",
+      "multi": false,
+      "children": [
+        "丹陶",
+        "吉洛",
+        "奥斯汀",
+        "戴尔巴德",
+        "玫昂",
+        "科尔德斯",
+        "古老月季",
+        "育种相关",
+        "特性合集",
+        "种植分享",
+        "竞赛,评选以及月季园实测",
+        "其他育种家",
+        "云小123456",
+        "微博"
+      ]
+    },
+    {
+      "name": "多肉",
+      "multi": true,
+      "prefix": "多肉/",
+      "children": [
+        "石莲花属",
+        "莲花掌属",
+        "风车草属",
+        "青锁龙属",
+        "景天属",
+        "仙女杯属",
+        "Lenophyllum",
+        "美丽莲属",
+        "厚叶草属",
+        "Prometheum",
+        "瓦松属",
+        "综合日常"
+      ]
+    },
+    {
+      "name": "古代园艺",
+      "multi": false,
+      "children": []
+    },
+    {
+      "name": "养花日常",
+      "multi": false,
+      "children": []
+    },
+    {
+      "name": "园艺导航",
+      "multi": false,
+      "children": []
+    },
+    {
+      "name": "花友推荐",
+      "multi": false,
+      "children": []
+    }
+  ],
+  "parentCats": [
+    "多肉"
+  ]
+}

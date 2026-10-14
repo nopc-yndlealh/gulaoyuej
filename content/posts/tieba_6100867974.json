@@ -1,0 +1,43 @@
+{
+  "id": "tieba_6100867974",
+  "title": "可爱的蔷薇",
+  "cat": "云小123456",
+  "source": "tieba",
+  "seq": 1726,
+  "type": "月季",
+  "thumb": "https://img.feijibei.top/images/tieba_6100867974_000.webp",
+  "tag": "399",
+  "author": "云小123456",
+  "segments": [
+    {
+      "t": "可爱的蔷薇"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6100867974_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6100867974_001.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6100867974_002.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6100867974_003.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6100867974_004.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6100867974_005.webp"
+    }
+  ],
+  "contentType": "月季",
+  "time": "2019-04-14 14:41",
+  "contentAuthor": {
+    "name": "云小123456",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.93296799.4nCBkGapSNihAglzWd7jig?t=1779721732",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.93296799.4nCBkGapSNihAglzWd7jig%3Ft%3D1779721732"
+  },
+  "contentTag": "399",
+  "status": "published"
+}

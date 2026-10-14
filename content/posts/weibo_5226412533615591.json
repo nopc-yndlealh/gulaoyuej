@@ -1,0 +1,24 @@
+{
+  "id": "weibo_5226412533615591",
+  "title": "这是啥",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 1851,
+  "type": "月季",
+  "tag": "3",
+  "author": "螺旋真理",
+  "segments": [
+    {
+      "t": "这是啥？"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2025-10-28 01:28",
+  "contentAuthor": {
+    "name": "螺旋真理",
+    "avatar": "https://tva2.sinaimg.cn/crop.358.56.1256.1256.180/576bb392jw8ev0mplacp5j21kw11xk2s.jpg?KID=imgbed,tva&Expires=1779889534&ssig=yL%2BPGovyEE",
+    "url": "https://m.weibo.cn/u/1466676114?launchid=10000360-page_H5"
+  },
+  "contentTag": "3",
+  "status": "published"
+}

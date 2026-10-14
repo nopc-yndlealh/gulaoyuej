@@ -1,0 +1,24 @@
+{
+  "id": "weibo_5262698687498425",
+  "title": "又像狐狸又像老鼠的狗转发微博",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 1816,
+  "type": "月季",
+  "tag": "31",
+  "author": "朱玛交柯",
+  "segments": [
+    {
+      "t": "又像狐狸又像老鼠的狗//@墨湫龍:转发微博"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2026-02-05 04:36",
+  "contentAuthor": {
+    "name": "朱玛交柯",
+    "avatar": "https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/007C5AOXly8hjqd0tvxvcj30u00u0goq.jpg?KID=imgbed,tva&Expires=1779889316&ssig=2uPpK4wnyU",
+    "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
+  },
+  "contentTag": "31",
+  "status": "published"
+}

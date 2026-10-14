@@ -81,6 +81,8 @@ export interface TransformedData {
 // ── 分类配置 ──
 export interface TreeConfigGroup {
   name: string;
+  /** 子分类的 cat 前缀（如「多肉/」）；无前缀为 null。来自 data/taxonomy.json */
+  prefix?: string | null;
   children: string[];
 }
 

@@ -1,0 +1,40 @@
+{
+  "id": "tieba_7825681949",
+  "title": "今日的水贴",
+  "cat": "云小123456",
+  "source": "tieba",
+  "seq": 1206,
+  "type": "月季",
+  "thumb": "https://img.feijibei.top/images/tieba_7825681949_000.webp",
+  "tag": "6",
+  "author": "云小123456",
+  "segments": [
+    {
+      "t": "因为近来没啥花可看，下一批花要等点时间了，只能看看玫瑰的花，我在学习拍视频，以后大家可以看到动态的水贴啦"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7825681949_000.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7825681949_001.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7825681949_002.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7825681949_003.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_7825681949_004.webp"
+    }
+  ],
+  "contentType": "月季",
+  "time": "2022-05-08 11:57",
+  "contentAuthor": {
+    "name": "云小123456",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.93296799.4nCBkGapSNihAglzWd7jig?t=1779721592",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.93296799.4nCBkGapSNihAglzWd7jig%3Ft%3D1779721592"
+  },
+  "contentTag": "6",
+  "status": "published"
+}

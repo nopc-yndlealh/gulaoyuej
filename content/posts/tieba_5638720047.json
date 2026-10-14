@@ -1,0 +1,24 @@
+{
+  "id": "tieba_5638720047",
+  "title": "分享贴子",
+  "cat": "",
+  "source": "tieba",
+  "seq": 101220,
+  "segments": [
+    {
+      "t": "分享贴子"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_5638720047_000.webp"
+    }
+  ],
+  "time": "2018-04-08 15:18",
+  "contentAuthor": {
+    "name": "跌水繁落º",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.e00bc9c7.8zTm_WK3MwokUroRmV2WPw?t=1779722764",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.e00bc9c7.8zTm_WK3MwokUroRmV2WPw%3Ft%3D1779722764"
+  },
+  "contentTag": "77",
+  "status": "draft",
+  "legacyOnly": true
+}

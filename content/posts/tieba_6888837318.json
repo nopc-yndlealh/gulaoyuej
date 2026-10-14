@@ -1,0 +1,40 @@
+{
+  "id": "tieba_6888837318",
+  "title": "花园的早晨",
+  "cat": "云小123456",
+  "source": "tieba",
+  "seq": 1476,
+  "type": "月季",
+  "thumb": "https://img.feijibei.top/images/tieba_6888837318_002.webp",
+  "tag": "187",
+  "author": "云小123456",
+  "segments": [
+    {
+      "t": "花园的早晨"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6888837318_002.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6888837318_003.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6888837318_004.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6888837318_005.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/tieba_6888837318_006.webp"
+    }
+  ],
+  "contentType": "月季",
+  "time": "2020-08-18 07:25",
+  "contentAuthor": {
+    "name": "云小123456",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.93296799.4nCBkGapSNihAglzWd7jig?t=1779722516",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.93296799.4nCBkGapSNihAglzWd7jig%3Ft%3D1779722516"
+  },
+  "contentTag": "187",
+  "status": "published"
+}

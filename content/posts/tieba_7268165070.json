@@ -1,0 +1,30 @@
+{
+  "id": "tieba_7268165070",
+  "title": "心动的感觉",
+  "cat": "云小123456",
+  "source": "tieba",
+  "seq": 1319,
+  "type": "月季",
+  "tag": "34",
+  "author": "竹子竹子竹子🌿",
+  "segments": [
+    {
+      "t": "心动的感觉"
+    },
+    {
+      "t": "心动的感觉\"\n\n\nawait page.evaluate('() => (Array.from(document.querySelectorAll(\\'.pb-content-wrap, .pb-text-wrapper, .d_post_content, [class*=post-content], [class*=reply-content]\\')).map(e=>e.innerText.trim()).filter(t=>t.length>0).join(\\'"
+    },
+    {
+      "t": "\\'))');"
+    }
+  ],
+  "contentType": "月季",
+  "time": "2021-03-20 04:25",
+  "contentAuthor": {
+    "name": "竹子竹子竹子🌿",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg?t=1779722738",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg%3Ft%3D1779722738"
+  },
+  "contentTag": "34",
+  "status": "published"
+}

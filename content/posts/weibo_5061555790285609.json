@@ -1,0 +1,27 @@
+{
+  "id": "weibo_5061555790285609",
+  "title": "这是哪位的小号来认领一下",
+  "cat": "微博",
+  "source": "weibo",
+  "seq": 103117,
+  "segments": [
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1hs54rhwhu4j30yi0ip75n.webp"
+    },
+    {
+      "i": "https://img.feijibei.top/images/weibo__007C5AOXly1hs54ricl9oj30u30u0gok.webp"
+    },
+    {
+      "t": "这是哪位的小号来认领一下。另外怎么口径都不统一啊。我咋一会儿精日一会儿精汉，一会儿激进一会儿保守"
+    }
+  ],
+  "contentType": "微博",
+  "time": "2024-07-30 03:26",
+  "contentAuthor": {
+    "name": "朱玛交柯",
+    "avatar": "https://tvax3.sinaimg.cn/crop.0.0.1080.1080.180/007C5AOXly8hjqd0tvxvcj30u00u0goq.jpg?KID=imgbed,tva&Expires=1779890821&ssig=KY42LmyvQP",
+    "url": "https://m.weibo.cn/u/6975763775?launchid=10000360-page_H5"
+  },
+  "contentTag": "425",
+  "status": "draft"
+}

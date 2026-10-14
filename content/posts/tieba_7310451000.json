@@ -1,0 +1,58 @@
+{
+  "id": "tieba_7310451000",
+  "title": "求名字 好靓",
+  "cat": "养花日常",
+  "source": "tieba",
+  "seq": 1301,
+  "type": "月季",
+  "thumb": "https://img.feijibei.top/images/tieba_7310451000_001.webp",
+  "tag": "32",
+  "author": "竹子竹子竹子🌿",
+  "segments": [
+    {
+      "t": "求名字 好靓"
+    },
+    {
+      "t": "荼靡？"
+    },
+    {
+      "t": "合柱组全缘托叶系的某种，我猜是悬钩子蔷薇，这个开花很香，香到有点腻的那种，叶背和杆子上有很多小毛毛，图有点糊，看不太清楚。当然或许也可能是长尖叶蔷薇。"
+    },
+    {
+      "t": "麝香蔷薇？"
+    },
+    {
+      "t": "应该是长尖叶蔷薇"
+    },
+    {
+      "t": "长尖叶蔷薇的小叶好像比它多。麝香蔷薇中国没有"
+    },
+    {
+      "t": "白残花"
+    },
+    {
+      "t": "刺好多😂😂"
+    },
+    {
+      "t": "我家门口好多\"\n\n\nawait page.evaluate('() => (Array.from(document.querySelectorAll(\\'.pb-content-wrap, .pb-text-wrapper, .d_post_content, [class*=post-content], [class*=reply-content]\\')).map(e=>e.innerText.trim()).filter(t=>t.length>0).join(\\'"
+    },
+    {
+      "t": "\\'))');\n\n### Page\n- Page URL: https://tieba.baidu.com/p/7310451000?see_lz=1\n- Page Title: 求名字 好靓-百度贴吧\n- Console: 16 errors, 0 warnings\n### Events\n- New console entries: .playwright-cli\\console-2026-05-30T01-05-22-295Z.log#L48-L61"
+    },
+    {
+      "i": "https://img.feijibei.top/images/e8e7b213c3cdb71621d1563b7b3db395.webp"
+    },
+    {
+      "i": "https://tiebapic.baidu.com/forum/pic/item/1574151b9d16fdfa658dd1a1a38f8c5495ee7b3c.jpg?tbpicau=2026-06-10-05_2dbc00dafa3909eb5216360c60a7946e"
+    }
+  ],
+  "contentType": "月季",
+  "time": "2021-04-20 03:18",
+  "contentAuthor": {
+    "name": "竹子竹子竹子🌿",
+    "avatar": "https://gss0.bdstatic.com/6LZ1dD3d1sgCo2Kml5_Y_D3/sys/portrait/item/tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg?t=1779722715",
+    "url": "https://tieba.baidu.com/home/main?id=tb.1.8037631b.GkWA71ufjFdWiAxXDQB5Hg%3Ft%3D1779722715"
+  },
+  "contentTag": "32",
+  "status": "published"
+}
