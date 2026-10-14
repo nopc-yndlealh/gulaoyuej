@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>feijibei.top · 内容编辑器</title>
+<style>
+:root{
+  --bg:#f7f6f3; --surface:#fff; --surface2:#fbfaf8; --text:#1f1d1b; --muted:#8a857e;
+  --border:#e3e0da; --accent:#ff8e14; --accent-soft:#fff3e3;
+  --ok:#1d9e75; --warn:#ba7517; --err:#c0392b; --radius:10px;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#1c1a19; --surface:#262422; --surface2:#2e2b29; --text:#eae7e3;
+         --muted:#9a948d; --border:#3a3633; --accent-soft:#3a2c18; }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+     background:var(--bg);color:var(--text);font-size:14px;height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--surface);
+       border-bottom:1px solid var(--border);flex-wrap:wrap}
+header h1{font-size:15px;font-weight:600}
+header .sp{flex:1}
+button{font:inherit;padding:7px 14px;border:1px solid var(--border);border-radius:7px;
+       background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+button.primary:disabled{opacity:.45;cursor:not-allowed}
+button.ghost{background:transparent}
+button.sm{padding:3px 8px;font-size:12px;border-radius:5px}
+.pill{font-size:12px;padding:2px 9px;border-radius:20px;background:var(--surface2);
+      border:1px solid var(--border);color:var(--muted)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.pill.err{color:var(--err);border-color:var(--err)}
+main{flex:1;display:grid;grid-template-columns:280px 1fr 380px;gap:0;min-height:0}
+@media (max-width:1200px){ main{grid-template-columns:240px 1fr} #preview{display:none} }
+@media (max-width:820px){ main{grid-template-columns:1fr} #listpane{display:none} }
+.col{min-height:0;overflow:auto;padding:12px}
+#listpane{border-right:1px solid var(--border);background:var(--surface2)}
+#editpane{border-right:1px solid var(--border);background:var(--surface)}
+#preview{background:var(--surface2)}
+input,select,textarea{width:100%;font:inherit;padding:7px 10px;border:1px solid var(--border);
+  border-radius:7px;background:var(--surface);color:var(--text)}
+textarea{resize:vertical;min-height:64px;line-height:1.6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:12px;color:var(--muted);line-height:1.6}
+.list-item{padding:7px 9px;border-radius:7px;cursor:pointer;border:1px solid transparent;
+           display:flex;gap:6px;align-items:baseline}
+.list-item:hover{background:var(--surface)}
+.list-item.sel{background:var(--accent-soft);border-color:var(--accent)}
+.list-item .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.list-item .m{font-size:11px;color:var(--muted);white-space:nowrap}
+.list-item.draft .t{opacity:.55}
+.seg{border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;
+     background:var(--surface2);cursor:grab}
+.seg.dragging{opacity:.4}
+.seg.over{border-color:var(--accent)}
+.seg .hd{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+.badge{font-size:11px;padding:1px 7px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
+.badge.img{background:#e8f7ef;color:#1d9e75}
+.badge.vid{background:#fdf0e0;color:#ba7517}
+@media (prefers-color-scheme: dark){ .badge.img{background:#12331f} .badge.vid{background:#3a2c12} }
+.seg .thumb{max-height:80px;border-radius:6px;margin-top:5px;display:block}
+.mockup{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.mockup .mh{padding:14px 14px 6px}
+.mockup .mt{font-size:16px;font-weight:600;line-height:1.4}
+.mockup .mm{font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap}
+.mockup .mb{padding:6px 14px 14px}
+.mockup .mb p{font-size:13.5px;line-height:1.75;margin-bottom:9px;white-space:pre-wrap}
+.mockup .mb img{width:100%;border-radius:8px;margin-bottom:9px;display:block}
+.mockup .empty{padding:40px 16px;text-align:center;color:var(--muted)}
+#log{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;white-space:pre-wrap;
+     background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+     padding:8px;max-height:180px;overflow:auto;margin-top:10px;display:none}
+.msg{padding:8px 10px;border-radius:7px;margin-bottom:10px;font-size:13px;display:none}
+.msg.err{background:#fdecea;color:#8c2216;border:1px solid #f3c0b8;display:block}
+.msg.warn{background:#fdf6e3;color:#7a4e07;border:1px solid #ecd9a5;display:block}
+.msg.ok{background:#e9f7f1;color:#0f6e56;border:1px solid #a8ddc9;display:block}
+@media (prefers-color-scheme: dark){
+  .msg.err{background:#3a1714;color:#f2b8b0;border-color:#5c2a24}
+  .msg.warn{background:#3a3016;color:#f0d79a;border-color:#5c4a22}
+  .msg.ok{background:#123025;color:#a8ddc9;border-color:#1f5443}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>📝 feijibei.top 内容编辑器</h1>
+  <span class="pill" id="p-repo">…</span>
+  <span class="pill" id="p-r2">…</span>
+  <span class="sp"></span>
+  <button class="ghost" onclick="reload()">↻ 列表</button>
+  <button onclick="newPost()">＋ 新建</button>
+  <button id="btn-save" class="primary" onclick="save()">保存</button>
+  <button id="btn-pub" class="primary" onclick="publish()">🚀 发布</button>
+</header>
+
+<main>
+  <div id="listpane" class="col">
+    <input id="q" placeholder="搜索标题 / 正文…" oninput="loadList()">
+    <label>分类筛选</label>
+    <select id="fcat" onchange="loadList()"><option value="">全部</option></select>
+    <div class="hint" id="listmeta" style="margin:8px 0"></div>
+    <div id="list"></div>
+  </div>
+
+  <div id="editpane" class="col">
+    <div class="msg" id="msg"></div>
+    <div class="row">
+      <div><label>ID *（如 rose_0001 / weibo_1234567890123456，决定文件名）</label>
+        <input id="f-id" placeholder="rose_0001"></div>
+      <div><label>状态</label>
+        <select id="f-status"><option value="published">published（上架）</option>
+        <option value="draft">draft（下架，仅本地保留）</option></select></div>
+    </div>
+    <label>标题 *（列表与详情的标题）</label>
+    <input id="f-title" placeholder="品种名 / 文章标题" oninput="renderPreview()">
+
+    <div class="row">
+      <div><label>分类 *（必须命中 taxonomy.json）</label>
+        <select id="f-cat" onchange="renderPreview()"></select></div>
+      <div><label>来源</label>
+        <input id="f-source" placeholder="rose / succ / tieba / weibo / xhs"></div>
+    </div>
+    <div class="row">
+      <div><label>标签</label><input id="f-tag" placeholder="如 1"></div>
+      <div><label>时间</label><input id="f-time" placeholder="2024-01-01 12:00"></div>
+    </div>
+    <div class="row">
+      <div><label>原始标题（详情页用，可留空）</label><input id="f-rawTitle"></div>
+      <div><label>作者名</label><input id="f-author" oninput="renderPreview()"></div>
+    </div>
+
+    <label style="margin-top:18px">内容段落 <span class="hint">（拖左边的 ⠿ 排序；图文按顺序呈现）</span></label>
+    <div id="segs"></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <button class="sm" onclick="addSeg('t')">＋ 文字</button>
+      <button class="sm" onclick="addSeg('i')">＋ 图片（填 URL）</button>
+      <button class="sm" onclick="pickImage()">＋ 上传图片到 R2</button>
+      <button class="sm" onclick="addSeg('v')">＋ 视频外链</button>
+      <input type="file" id="file" accept="image/*" style="display:none" onchange="uploadFile(this.files[0])">
+    </div>
+    <div id="log"></div>
+  </div>
+
+  <div id="preview" class="col">
+    <div class="hint" style="margin-bottom:8px">前台详情预览</div>
+    <div class="mockup" id="mock"></div>
+  </div>
+</main>
+
+<script>
+let CATS = [], CUR = null, SEGS = [], DRAG = -1;
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function msg(kind, text){ const m = $('msg'); m.className = 'msg' + (kind ? ' ' + kind : ''); m.textContent = text || ''; }
+function log(t){ const l = $('log'); l.style.display = 'block'; l.textContent += t + '\n'; l.scrollTop = l.scrollHeight; }
+
+async function api(path, opt){
+  const r = await fetch(path, opt);
+  const t = await r.text();
+  let d; try { d = JSON.parse(t); } catch { throw new Error('返回不是 JSON：' + t.slice(0,200)); }
+  if (!r.ok) throw Object.assign(new Error(d.error || 'HTTP ' + r.status), {payload:d});
+  return d;
+}
+
+async function boot(){
+  const meta = await api('/api/meta');
+  CATS = meta.cats;
+  $('f-cat').innerHTML = CATS.map(c => `<option>${esc(c)}</option>`).join('');
+  $('fcat').innerHTML = '<option value="">全部</option>' + CATS.map(c => `<option>${esc(c)}</option>`).join('');
+  $('p-r2').textContent = meta.r2 ? 'R2 已就绪' : 'R2 未配置';
+  $('p-r2').className = 'pill ' + (meta.r2 ? 'ok' : 'err');
+  document.querySelector('#listpane label').textContent = `分类筛选（共 ${meta.total} 条）`;
+  await loadList(); await refreshStatus();
+}
+
+async function refreshStatus(){
+  try{
+    const s = await api('/api/status');
+    $('p-repo').textContent = s.branch + (s.dirty ? ` · ${s.dirty} 项未提交` : ' · 干净');
+    $('p-repo').className = 'pill' + (s.dirty ? '' : ' ok');
+  }catch(e){ $('p-repo').textContent = '仓库状态未知'; }
+}
+
+async function loadList(){
+  const q = $('q').value.trim(), cat = $('fcat').value;
+  const d = await api(`/api/list?q=${encodeURIComponent(q)}&cat=${encodeURIComponent(cat)}&n=200`);
+  $('listmeta').textContent = `显示 ${d.rows.length} / 匹配 ${d.total} 条`;
+  $('list').innerHTML = d.rows.map(r => `
+    <div class="list-item${r.status==='draft'?' draft':''}${CUR&&CUR.id===r.id?' sel':''}"
+         onclick="openPost('${esc(r.id)}')">
+      <span class="t">${esc(r.title || r.id)}</span>
+      <span class="m">${r.img?r.img+'图':'—'}${r.status==='draft'?' · 草稿':''}</span>
+    </div>`).join('') || '<div class="hint">没有匹配的条目</div>';
+}
+
+async function openPost(id){
+  const p = await api('/api/post?id=' + encodeURIComponent(id));
+  CUR = p;
+  $('f-id').value = p.id || '';
+  $('f-title').value = p.title || '';
+  $('f-cat').value = p.cat || CATS[0];
+  $('f-source').value = p.source || '';
+  $('f-tag').value = p.tag || '';
+  $('f-time').value = p.time || '';
+  $('f-rawTitle').value = p.rawTitle || '';
+  $('f-author').value = (typeof p.author === 'string') ? p.author : (p.contentAuthor?.name || '');
+  $('f-status').value = p.status || 'published';
+  SEGS = (p.segments || []).map(s => ({t:s.t||'', i:s.i||'', v:s.v||''}));
+  msg('', '');
+  renderSegs(); renderPreview(); loadList(); refreshStatus();
+}
+
+function newPost(){
+  CUR = null; SEGS = [{t:'',i:'',v:''}];
+  ['f-id','f-title','f-source','f-tag','f-time','f-rawTitle','f-author'].forEach(i => $(i).value = '');
+  $('f-cat').value = CATS[0]; $('f-status').value = 'published';
+  msg('', ''); renderSegs(); renderPreview();
+}
+
+function addSeg(k){ SEGS.push({t:'',i:'',v:''}); renderSegs(); }
+function pickImage(){ $('file').click(); }
+function delSeg(i){ SEGS.splice(i,1); renderSegs(); renderPreview(); }
+function setSeg(i,k,val){ SEGS[i][k]=val; SEGS[i].k=k; renderPreview(); }
+
+function renderSegs(){
+  $('segs').innerHTML = SEGS.map((s,i) => {
+    const kind = s.k || (s.t?'t':s.i?'i':s.v?'v':'t');
+    const val = kind==='t'?s.t:kind==='i'?s.i:s.v;
+    const label = {t:'文字', i:'图片', v:'视频'}[kind];
+    const cls = {t:'', i:'img', v:'vid'}[kind];
+    const body = kind==='t'
+      ? `<textarea rows="3" placeholder="文字内容…" oninput="setSeg(${i},'t',this.value)">${esc(val)}</textarea>`
+      : `<input placeholder="${kind==='i'?'图片 URL（须在 img.feijibei.top 上）':'B站 / YouTube 链接'}"
+                value="${esc(val)}" oninput="setSeg(${i},'${kind}',this.value)">`;
+    const thumb = (kind==='i' && val) ? `<img class="thumb" src="${esc(val)}" loading="lazy">` : '';
+    return `<div class="seg" draggable="true" data-i="${i}"
+      ondragstart="DRAG=${i};this.classList.add('dragging')"
+      ondragover="event.preventDefault();this.classList.add('over')"
+      ondragleave="this.classList.remove('over')"
+      ondrop="event.preventDefault();dropSeg(${i})"
+      ondragend="this.classList.remove('dragging')">
+      <div class="hd"><span class="badge ${cls}">${label}</span>
+        <span class="hint">第 ${i+1} 段</span><span style="flex:1"></span>
+        <button class="sm" onclick="delSeg(${i})">删除</button></div>
+      ${body}${thumb}</div>`;
+  }).join('') || '<div class="hint">还没有段落，点下面的按钮添加</div>';
+}
+
+function dropSeg(to){
+  document.querySelectorAll('.seg').forEach(e => e.classList.remove('over','dragging'));
+  if (DRAG === -1 || DRAG === to) return;
+  const [m] = SEGS.splice(DRAG,1); SEGS.splice(to,0,m); DRAG = -1;
+  renderSegs(); renderPreview();
+}
+
+function collect(){
+  const segs = SEGS.map(s => {
+    const kind = s.k || (s.t?'t':s.i?'i':s.v?'v':'t');
+    const v = (kind==='t'?s.t:kind==='i'?s.i:s.v || '').trim();
+    return v ? {[kind]: v} : null;
+  }).filter(Boolean);
+  const author = $('f-author').value.trim();
+  const p = {
+    id: $('f-id').value.trim(),
+    title: $('f-title').value.trim(),
+    cat: $('f-cat').value,
+    source: $('f-source').value.trim() || $('f-id').value.trim().split('_')[0],
+    tag: $('f-tag').value.trim(),
+    time: $('f-time').value.trim(),
+    rawTitle: $('f-rawTitle').value.trim(),
+    status: $('f-status').value,
+    segments: segs,
+  };
+  if (author) p.author = author;
+  if (CUR){
+    for (const k of ['type','date','image','contentType','contentTag','contentAuthor','legacySource','seq','thumb'])
+      if (CUR[k] !== undefined) p[k] = CUR[k];
+    if (CUR.rawTitle && !p.rawTitle) p.rawTitle = CUR.rawTitle;
+  }
+  return p;
+}
+
+function renderPreview(){
+  const p = collect();
+  const segs = p.segments || [];
+  if (!segs.length){ $('mock').innerHTML = '<div class="empty">还没有内容</div>'; return; }
+  const body = segs.map(s => {
+    if (s.t) return s.t.split('\n').filter(Boolean).map(x => `<p>${esc(x)}</p>`).join('');
+    if (s.i) return `<img src="${esc(s.i)}" loading="lazy" alt="">`;
+    if (s.v){
+      const yt = s.v.match(/(?:youtu\.be\/|v=)([\w-]{6,})/);
+      const bv = s.v.match(/(BV\w+)/i);
+      const src = yt ? `https://www.youtube.com/embed/${yt[1]}`
+                : bv ? `https://player.bilibili.com/player.html?bvid=${bv[1]}&autoplay=0` : null;
+      return src ? `<iframe src="${esc(src)}" style="width:100%;aspect-ratio:16/9;border:0;border-radius:8px;margin-bottom:9px" loading="lazy"></iframe>`
+                 : `<p style="color:var(--muted)">🎬 ${esc(s.v)}</p>`;
+    }
+    return '';
+  }).join('');
+  $('mock').innerHTML = `<div class="mh"><div class="mt">${esc(p.title || '未命名')}</div>
+    <div class="mm">${p.tag?'<span>#'+esc(p.tag)+'</span>':''}
+      ${p.author?'<span>👤 '+esc(p.author)+'</span>':''}
+      ${p.time?'<span>'+esc(p.time)+'</span>':''}
+      <span>${esc(p.cat)}</span>
+      ${p.status==='draft'?'<span style="color:var(--warn)">草稿</span>':''}</div></div>
+    <div class="mb">${body}</div>`;
+}
+
+async function save(){
+  msg('', '');
+  try{
+    const d = await api('/api/save', {method:'POST', headers:{'Content-Type':'application/json'},
+                                      body: JSON.stringify({post: collect()})});
+    CUR = collect(); CUR.id = d.id;
+    msg(d.warnings && d.warnings.length ? 'warn' : 'ok',
+        `✓ 已${d.action} ${d.id}` + (d.warnings && d.warnings.length ? '　⚠ ' + d.warnings.join('；') : ''));
+    await loadList(); await refreshStatus(); loadPost(d.id);
+  }catch(e){
+    msg('err', '✗ ' + (e.payload?.errors ? e.payload.errors.join('；') : e.message));
+  }
+}
+
+async function loadPost(id){
+  const p = await api('/api/post?id=' + encodeURIComponent(id));
+  CUR = p; $('f-id').value = p.id; $('f-status').value = p.status || 'published';
+}
+
+async function publish(){
+  if (CUR && $('f-id').value.trim() && $('f-id').value.trim() === CUR.id){
+    try{ await save(); }catch(e){ return; }
+  }
+  $('btn-pub').disabled = true; $('btn-pub').textContent = '发布中…';
+  msg('', '');
+  try{
+    const d = await api('/api/publish', {method:'POST', headers:{'Content-Type':'application/json'},
+                                         body: JSON.stringify({})});
+    msg(d.step === 'nochange' ? 'warn' : 'ok',
+        (d.step==='nochange' ? '没有需要提交的改动' : `✓ ${d.message}（${d.commit}）`)
+        + '　Cloudflare 会在 1-2 分钟后部署完成');
+    log(d.log || '');
+  }catch(e){
+    msg('err', '✗ ' + (e.payload?.step ? `[${e.payload.step}] ` : '') + e.message);
+    log(e.payload?.log || '');
+  }finally{
+    $('btn-pub').disabled = false; $('btn-pub').textContent = '🚀 发布';
+    await refreshStatus();
+  }
+}
+
+async function uploadFile(file){
+  if (!file) return;
+  if (file.size > 12 * 1024 * 1024){ msg('err', '图片超过 12MB'); return; }
+  msg('warn', `正在上传 ${file.name} …`);
+  const b64 = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
+  // 文件名规范：weibo__<原名>.webp 那种历史命名不动，新图统一加 wb 前缀避免撞名
+  const safe = file.name.replace(/[^\w.\-]+/g, '_');
+  const fname = safe.startsWith('wb_') ? safe : 'wb_' + Date.now().toString(36) + '_' + safe;
+  try{
+    const d = await api('/api/image', {method:'POST', headers:{'Content-Type':'application/json'},
+                                       body: JSON.stringify({filename: fname, data: b64})});
+    SEGS.push({i: d.url, t:'', v:'', k:'i'});
+    renderSegs(); renderPreview();
+    msg('ok', `✓ 已上传到 R2：${d.url.split('/').pop()}（${(d.size/1024).toFixed(0)} KB）`);
+  }catch(e){ msg('err', '✗ 上传失败：' + e.message); }
+  $('file').value = '';
+}
+
+window.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's'){ e.preventDefault(); save(); }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); publish(); }
+});
+window.addEventListener('beforeunload', e => {
+  // 只有在 id/标题有内容且未保存时提示（简化判断）
+  if (CUR && $('f-id').value.trim() !== CUR.id) { e.preventDefault(); e.returnValue = ''; }
+});
+boot().catch(e => msg('err', '启动失败：' + e.message));
+</script>
+</body>
+</html>

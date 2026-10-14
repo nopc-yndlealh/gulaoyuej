@@ -211,6 +211,12 @@ def generate(posts, taxonomy, out):
     # TREE_CONFIG 硬编码在前端（硬编码导致「微博」899 条不可达）
     dump(out / "taxonomy.json", taxonomy)
 
+    # 外观参数下发：app.js 从 ./data/theme.json 读，不再把卡片宽度、
+    # 间距、主题色硬编码在 app.js 与 style.css 里
+    theme_src = SRC / "theme.json"
+    if theme_src.exists():
+        dump(out / "theme.json", load(theme_src))
+
     for name in ("nav-links.json", "authors.json", "featured.json"):
         if (SRC / name).exists():
             dump(out / name, load(SRC / name))

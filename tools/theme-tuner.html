@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>feijibei.top · 外观调参</title>
+<style>
+:root{ --bg:#1c1a19; --surface:#262422; --surface2:#2e2b29; --text:#eae7e3; --muted:#9a948d;
+       --border:#3a3633; --accent:#ff8e14; --ok:#1d9e75; }
+@media (prefers-color-scheme: light){
+  :root{ --bg:#f7f6f3; --surface:#fff; --surface2:#fbfaf8; --text:#1f1d1b; --muted:#8a857e; --border:#e3e0da; }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;
+     background:var(--bg);color:var(--text);font-size:13.5px;height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:9px 14px;background:var(--surface);
+       border-bottom:1px solid var(--border);flex-wrap:wrap}
+header h1{font-size:14.5px;font-weight:600}
+header .sp{flex:1}
+button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--border);border-radius:7px;
+       background:var(--surface);color:var(--text);cursor:pointer}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+button.primary:disabled{opacity:.45}
+button.sm{padding:3px 9px;font-size:12px}
+main{flex:1;display:grid;grid-template-columns:330px 1fr;min-height:0}
+@media (max-width:900px){ main{grid-template-columns:1fr} #pv{display:none} }
+#ctl{overflow:auto;padding:12px;border-right:1px solid var(--border);background:var(--surface2)}
+#pv{display:flex;flex-direction:column;min-height:0;padding:10px;gap:8px}
+fieldset{border:1px solid var(--border);border-radius:9px;padding:10px 12px 13px;margin-bottom:11px}
+legend{font-size:12px;color:var(--muted);padding:0 5px}
+label{display:flex;align-items:center;gap:8px;margin:9px 0;font-size:12.5px}
+label > span:first-child{flex:0 0 96px;color:var(--muted)}
+label input[type=range]{flex:1;min-width:0}
+label input[type=number],label input[type=text]{width:62px;font:inherit;padding:3px 6px;
+  border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text)}
+label input[type=color]{width:42px;height:26px;padding:0;border:1px solid var(--border);
+  border-radius:6px;background:var(--surface);cursor:pointer}
+label output{flex:0 0 44px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+select,textarea{font:inherit;padding:4px 7px;border:1px solid var(--border);border-radius:6px;
+  background:var(--surface);color:var(--text);width:100%}
+textarea{min-height:64px;font-family:ui-monospace,Consolas,monospace;font-size:12px;line-height:1.5}
+.hint{font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:6px}
+#bar{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+#msg{padding:7px 10px;border-radius:7px;font-size:12.5px;display:none}
+#msg.ok{display:block;background:#123025;color:#a8ddc9;border:1px solid #1f5443}
+#msg.err{display:block;background:#3a1714;color:#f2b8b0;border:1px solid #5c2a24}
+@media (prefers-color-scheme: light){
+  #msg.ok{background:#e9f7f1;color:#0f6e56;border-color:#a8ddc9}
+  #msg.err{background:#fdecea;color:#8c2216;border-color:#f3c0b8}
+}
+iframe{flex:1;width:100%;border:1px solid var(--border);border-radius:9px;background:#fff}
+#wrap{display:flex;justify-content:center;width:100%;height:100%;min-height:0}
+#wrap > div{height:100%}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎨 feijibei.top 外观调参</h1>
+  <span class="hint" id="src">加载中…</span>
+  <span class="sp"></span>
+  <button class="sm" onclick="reloadPreview()">↻ 重载预览</button>
+  <button class="sm" onclick="setMode('light')">浅色</button>
+  <button class="sm" onclick="setMode('dark')">暗色</button>
+  <select id="dev" style="width:auto" onchange="setDevice()">
+    <option value="100">桌面宽度</option>
+    <option value="820">平板 820</option>
+    <option value="420">手机 420</option>
+  </select>
+  <span class="sp"></span>
+  <button onclick="resetTheme()">还原当前 theme.json</button>
+  <button class="primary" onclick="saveToRepo()">保存到仓库</button>
+</header>
+
+<main>
+  <div id="ctl">
+    <div id="msg"></div>
+
+    <fieldset>
+      <legend>主色</legend>
+      <label><span>浅色模式</span><input type="color" id="accentLight" oninput="changed()"><input type="text" id="accentLightHex" oninput="changed()" style="width:84px"></label>
+      <label><span>暗色模式</span><input type="color" id="accentDark" oninput="changed()"><input type="text" id="accentDarkHex" oninput="changed()" style="width:84px"></label>
+      <div class="hint">accent-light（浅色版）与 accent-soft（柔光版）会自动从主色派生，不用单独填。</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>卡片与分页</legend>
+      <label><span>最小宽度 桌面</span><input type="range" id="cwD" min="110" max="300" step="5" oninput="changed()"><output id="cwDv"></output></label>
+      <label><span>最小宽度 平板</span><input type="range" id="cwT" min="100" max="260" step="5" oninput="changed()"><output id="cwTv"></output></label>
+      <label><span>间距 桌面</span><input type="range" id="gapD" min="4" max="40" step="1" oninput="changed()"><output id="gapDv"></output></label>
+      <label><span>每屏行数</span><input type="range" id="rowsD" min="1" max="10" step="1" oninput="changed()"><output id="rowsDv"></output></label>
+      <label><span>手机列数</span><input type="range" id="mCols" min="1" max="4" step="1" oninput="changed()"><output id="mColsv"></output></label>
+      <label><span>缩略图比例</span>
+        <select id="ratio" onchange="changed()" style="flex:1">
+          <option value="4 / 3">4 : 3（默认）</option>
+          <option value="1 / 1">1 : 1 方形</option>
+          <option value="3 / 4">3 : 4 竖版</option>
+          <option value="16 / 9">16 : 9 宽幅</option>
+          <option value="3 / 2">3 : 2</option>
+        </select></label>
+      <div class="hint" id="pgHint"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>布局</legend>
+      <label><span>侧栏宽度</span><input type="range" id="sbw" min="140" max="360" step="4" oninput="changed()"><output id="sbwv"></output></label>
+      <label><span>顶栏高度</span><input type="range" id="hdh" min="40" max="96" step="2" oninput="changed()"><output id="hdhv"></output></label>
+      <label><span>大圆角</span><input type="range" id="rad" min="0" max="28" step="1" oninput="changed()"><output id="radv"></output></label>
+      <label><span>小圆角</span><input type="range" id="radS" min="0" max="20" step="1" oninput="changed()"><output id="radSv"></output></label>
+      <div class="hint">侧栏宽度只在桌面端（窗口宽 &gt; 900px）生效；顶栏高度影响首页头部。</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>逃生舱（任意 CSS 变量）</legend>
+      <textarea id="cssv" placeholder='{"--card-title-size": "15px"}' oninput="changed()"></textarea>
+      <div class="hint">写在这里的键会直接注入 <code>:root</code>。改不动、又想试的样式都能从这儿过。</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>生成的 theme.json</legend>
+      <textarea id="out" style="min-height:180px" readonly></textarea>
+      <div class="hint">与仓库 content/theme.json 结构一致。点「保存到仓库」会写回该文件。</div>
+    </fieldset>
+  </div>
+
+  <div id="pv">
+    <div id="bar"><span class="hint">实时预览（同源 iframe，改一处立刻可见）</span></div>
+    <div id="wrap"><div style="width:100%" id="framewrap">
+      <iframe id="f" src="/index.html"></iframe>
+    </div></div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let CUR = {};       // 当前 theme.json 原值（用于「还原」）
+let MODE = null;    // 强制浅/暗
+
+function msg(k, t){ const m = $('msg'); m.className = k ? 'ok' : ''; m.textContent = t || ''; }
+
+// ── 读取仓库现有 theme.json ──
+async function loadTheme(){
+  const r = await fetch('/data/theme.json?t=' + Date.now());
+  const t = await r.json();
+  CUR = JSON.parse(JSON.stringify(t));
+  $('src').textContent = '已读取 data/theme.json';
+  applyToForm(t);
+  changed();
+}
+
+function applyToForm(t){
+  const a = t.accent || {}, c = t.card || {}, L = t.layout || {};
+  $('accentLight').value = a.light || '#ff8e14'; $('accentLightHex').value = a.light || '#ff8e14';
+  $('accentDark').value = a.dark || '#322040';  $('accentDarkHex').value = a.dark || '#322040';
+  $('cwD').value = (c.minWidth||{}).desktop ?? 170;
+  $('cwT').value = (c.minWidth||{}).tablet ?? 140;
+  $('gapD').value = (c.gap||{}).desktop ?? 16;
+  $('rowsD').value = (c.rows||{}).desktop ?? 4;
+  $('mCols').value = c.mobileCols ?? 2;
+  $('ratio').value = c.thumbRatio || '4 / 3';
+  if (!$('ratio').value) $('ratio').value = '4 / 3';
+  $('sbw').value = L.sidebarWidth ?? 220;
+  $('hdh').value = L.headerHeight ?? 56;
+  $('rad').value = L.radius ?? 12;
+  $('radS').value = L.radiusSm ?? 8;
+  $('cssv').value = t.cssVars && Object.keys(t.cssVars).length ? JSON.stringify(t.cssVars, null, 1) : '';
+}
+
+function hexToRgb(h){ h=String(h).replace('#',''); if(h.length===3)h=h.split('').map(c=>c+c).join('');
+  return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)); }
+function lighten(h,a){ return '#'+hexToRgb(h).map(v=>Math.round(v+(255-v)*a)).map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function rgbaOf(h,a){ const [r,g,b]=hexToRgb(h); return `rgba(${r}, ${g}, ${b}, ${a})`; }
+
+// ── 从表单收集 ──
+function collect(){
+  let cssv = {};
+  const raw = $('cssv').value.trim();
+  if (raw){ try{ cssv = JSON.parse(raw); }catch(e){ msg(0, '⚠ 逃生舱 JSON 格式错误，已忽略'); } }
+  return {
+    accent: { light: $('accentLightHex').value.trim() || $('accentLight').value,
+              dark:  $('accentDarkHex').value.trim()  || $('accentDark').value },
+    card: {
+      minWidth: { desktop: +$('cwD').value, tablet: +$('cwT').value },
+      gap:      { desktop: +$('gapD').value, tablet: Math.max(4, Math.round(+$('gapD').value * 0.75)) },
+      rows:     { desktop: +$('rowsD').value, tablet: +$('rowsD').value, mobile: +$('rowsD').value },
+      mobileCols: +$('mCols').value,
+      thumbRatio: $('ratio').value,
+    },
+    layout: { sidebarWidth: +$('sbw').value, headerHeight: +$('hdh').value,
+              radius: +$('rad').value, radiusSm: +$('radS').value },
+    cssVars: cssv,
+  };
+}
+
+// ── 应用（同时更新预览与输出） ──
+function changed(){
+  $('cwDv').textContent = $('cwD').value + 'px';
+  $('cwTv').textContent = $('cwT').value + 'px';
+  $('gapDv').textContent = $('gapD').value + 'px';
+  $('rowsDv').textContent = $('rowsD').value;
+  $('mColsv').textContent = $('mCols').value;
+  $('sbwv').textContent = $('sbw').value + 'px';
+  $('hdhv').textContent = $('hdh').value + 'px';
+  $('radv').textContent = $('rad').value + 'px';
+  $('radSv').textContent = $('radS').value + 'px';
+  // 双向同步色值输入
+  if (document.activeElement !== $('accentLightHex')) $('accentLightHex').value = $('accentLight').value;
+  if (document.activeElement !== $('accentDarkHex'))  $('accentDarkHex').value  = $('accentDark').value;
+  if (document.activeElement !== $('accentLight'))    $('accentLight').value    = ($('accentLightHex').value.match(/^#[0-9a-fA-F]{6}$/)||[])[0] || $('accentLight').value;
+  if (document.activeElement !== $('accentDark'))     $('accentDark').value     = ($('accentDarkHex').value.match(/^#[0-9a-fA-F]{6}$/)||[])[0] || $('accentDark').value;
+
+  const t = collect();
+  $('out').value = JSON.stringify(t, null, 2);
+  applyToPreview(t);
+  updatePageHint();
+}
+
+function applyToPreview(t){
+  const d = $('f').contentDocument;
+  if (!d) return;
+  const st = d.documentElement.style;
+  const a = t.accent;
+  st.setProperty('--accent', a.light);
+  st.setProperty('--accent-light', lighten(a.light, 0.18));
+  st.setProperty('--accent-soft', rgbaOf(a.light, 0.12));
+  st.setProperty('--accent-dark', a.dark);
+  st.setProperty('--accent-light-dark', lighten(a.dark, 0.18));
+  st.setProperty('--accent-soft-dark', rgbaOf(a.dark, 0.15));
+  st.setProperty('--sidebar-w', t.layout.sidebarWidth + 'px');
+  st.setProperty('--header-h', t.layout.headerHeight + 'px');
+  st.setProperty('--radius', t.layout.radius + 'px');
+  st.setProperty('--radius-sm', t.layout.radiusSm + 'px');
+  st.setProperty('--thumb-ratio', t.card.thumbRatio);
+  Object.entries(t.cssVars || {}).forEach(([k, v]) => { if (k.startsWith('--')) st.setProperty(k, String(v)); });
+}
+
+// 预览里报一下当前每页数量，方便判断分页大小
+function updatePageHint(){
+  const d = $('f').contentDocument;
+  if (!d) return;
+  const grid = d.getElementById('grid');
+  const t = collect();
+  const w = grid ? grid.clientWidth : 0;
+  const c = t.card;
+  const mw = window.innerWidth <= 768 ? c.minWidth.tablet : c.minWidth.desktop;
+  const gap = window.innerWidth <= 768 ? c.gap.tablet : c.gap.desktop;
+  const perRow = Math.max(1, Math.floor((w + gap) / (mw + gap)));
+  $('pgHint').textContent = `当前预览：容器 ${w}px，每行 ${perRow} 张 × ${c.rows.desktop} 行 = 每页 ${perRow * c.rows.desktop} 张。`
+    + `（改完宽度/行数后，翻页或重载预览才会按新值重算）`;
+}
+
+function setDevice(){
+  const w = $('dev').value;
+  $('framewrap').style.width = w + '%';
+  $('framewrap').style.maxWidth = (w === '100' ? '100%' : (w === '820' ? '900px' : '440px'));
+  setTimeout(() => { changed(); updatePageHint(); }, 100);
+}
+
+function setMode(m){
+  MODE = m;
+  try{ localStorage.setItem('feijibei-theme', m); }catch(e){}
+  reloadPreview();
+}
+function reloadPreview(){
+  $('f').src = '/index.html?t=' + Date.now();
+}
+
+function resetTheme(){ applyToForm(CUR); changed(); msg(1, '已还原到仓库当前的 theme.json'); }
+
+async function saveToRepo(){
+  const t = collect();
+  try{
+    const r = await fetch('/api/theme', {method:'POST', headers:{'Content-Type':'application/json'},
+                                         body: JSON.stringify({theme: t})});
+    const d = await r.json();
+    if (!r.ok || !d.ok) throw new Error(d.error || 'HTTP ' + r.status);
+    CUR = JSON.parse(JSON.stringify(t));
+    msg(1, '✓ 已写入 content/theme.json —— 回「内容编辑器」点「🚀 发布」就能上线');
+  }catch(e){ msg(0, '✗ 保存失败：' + e.message); }
+}
+
+$('f').addEventListener('load', () => {
+  if (MODE){ try{ $('f').contentDocument.defaultView.localStorage.setItem('feijibei-theme', MODE); }catch(e){} }
+  // 等站点自己的 app.js 应用完 theme.json，再用面板的值覆盖（后写的赢）
+  setTimeout(() => { changed(); updatePageHint(); }, 1200);
+});
+
+loadTheme().catch(e => { $('src').textContent = '读取失败'; msg(0, '✗ 读取 data/theme.json 失败：' + e.message); });
+</script>
+</body>
+</html>

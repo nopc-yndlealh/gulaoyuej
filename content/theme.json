@@ -1,0 +1,43 @@
+{
+  "accent": {
+    "light": "#ff8e14",
+    "dark": "#322040"
+  },
+  "card": {
+    "minWidth": {
+      "desktop": 170,
+      "tablet": 140
+    },
+    "gap": {
+      "desktop": 16,
+      "tablet": 12
+    },
+    "rows": {
+      "desktop": 4,
+      "tablet": 4,
+      "mobile": 4
+    },
+    "mobileCols": 2,
+    "thumbRatio": "4 / 3"
+  },
+  "layout": {
+    "sidebarWidth": 220,
+    "headerHeight": 56,
+    "radius": 12,
+    "radiusSm": 8
+  },
+  "cssVars": {},
+  "_note": "站点外观参数。改这里，不用碰 app.js / style.css。改完跑 `python3 tools/build.py` 会同步到 data/theme.json；线上 1-2 分钟生效。也可以用 tools/theme-tuner.html 拖滑杆实时调。",
+  "_fields": {
+    "accent.light / accent.dark": "主色（浅色/暗色模式各一个）。accent-light 与 accent-soft 由主色自动派生，不用手填",
+    "card.minWidth": "卡片最小宽度(px)，决定每行放几张",
+    "card.gap": "卡片间距(px)",
+    "card.rows": "每屏渲染几行（分页每页数量 = 每行张数 × 行数）",
+    "card.mobileCols": "手机端固定几列",
+    "card.thumbRatio": "缩略图宽高比，如 \"4 / 3\"、\"1 / 1\"、\"16 / 9\"",
+    "layout.sidebarWidth": "桌面端左侧分类栏宽度(px)",
+    "layout.headerHeight": "顶栏高度(px)",
+    "layout.radius / radiusSm": "大/小圆角(px)",
+    "cssVars": "逃生舱：任意 CSS 变量写这里会直接注入 :root，例如 {\"--card-title-size\": \"15px\"}"
+  }
+}

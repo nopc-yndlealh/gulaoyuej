@@ -46,12 +46,91 @@
   /** @type {number} 当前轮播图片索引 */
   let galleryIdx = 1;
 
+  /* ===== 外观参数（来自 ./data/theme.json，源头是 content/theme.json） =====
+     这些值原本硬编码在本文件与 style.css 里 —— 改一个卡片间距要翻两个文件、
+     再走一遍「改代码 → 推送 → 等部署 → 刷新看效果」。
+     现在集中到 theme.json：改完跑一次构建，或用 tools/theme-tuner.html 拖滑杆。
+     下面这份是兜底默认值，theme.json 拉取失败时沿用（不阻塞页面）。 */
+  const THEME = {
+    accent: { light: '#ff8e14', dark: '#322040' },
+    card: {
+      minWidth: { desktop: 170, tablet: 140 },
+      gap: { desktop: 16, tablet: 12 },
+      rows: { desktop: 4, tablet: 4, mobile: 4 },
+      mobileCols: 2,
+      thumbRatio: '4 / 3',
+    },
+    layout: { sidebarWidth: 220, headerHeight: 56, radius: 12, radiusSm: 8 },
+    cssVars: {},
+  };
+
+  /* 由主色派生浅色版与柔光版 —— 避免三个色值各填一遍、改一个忘两个 */
+  function hexToRgb(hex) {
+    const h = String(hex).replace('#', '');
+    const n = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+    return [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16));
+  }
+  function lighten(hex, amt) {
+    return '#' + hexToRgb(hex)
+      .map((v) => Math.round(v + (255 - v) * amt))
+      .map((v) => v.toString(16).padStart(2, '0')).join('');
+  }
+  function rgbaOf(hex, a) {
+    const [r, g, b] = hexToRgb(hex);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  }
+
+  /** 把主题参数落到 CSS 变量上 @param {any} t */
+  function applyTheme(t) {
+    const st = document.documentElement.style;
+    const acc = t.accent || {};
+    if (acc.light) {
+      st.setProperty('--accent', acc.light);
+      st.setProperty('--accent-light', lighten(acc.light, 0.18));
+      st.setProperty('--accent-soft', rgbaOf(acc.light, 0.12));
+    }
+    if (acc.dark) {
+      st.setProperty('--accent-dark', acc.dark);
+      st.setProperty('--accent-light-dark', lighten(acc.dark, 0.18));
+      st.setProperty('--accent-soft-dark', rgbaOf(acc.dark, 0.15));
+    }
+    const L = t.layout || {};
+    if (L.sidebarWidth) st.setProperty('--sidebar-w', L.sidebarWidth + 'px');
+    if (L.headerHeight) st.setProperty('--header-h', L.headerHeight + 'px');
+    if (L.radius != null) st.setProperty('--radius', L.radius + 'px');
+    if (L.radiusSm != null) st.setProperty('--radius-sm', L.radiusSm + 'px');
+    const C = t.card || {};
+    if (C.thumbRatio) st.setProperty('--thumb-ratio', C.thumbRatio);
+    // 逃生舱：任意 CSS 变量直接注入
+    Object.entries(t.cssVars || {}).forEach(([k, v]) => {
+      if (k.startsWith('--')) st.setProperty(k, String(v));
+    });
+  }
+
+  /** 载入 data/theme.json；失败则沿用内置默认值 */
+  async function loadTheme() {
+    try {
+      const res = await fetch('./data/theme.json');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const t = await res.json();
+      if (t.accent) THEME.accent = Object.assign({}, THEME.accent, t.accent);
+      if (t.card) THEME.card = Object.assign({}, THEME.card, t.card);
+      if (t.layout) THEME.layout = Object.assign({}, THEME.layout, t.layout);
+      THEME.cssVars = t.cssVars || {};
+      applyTheme(THEME);
+      console.log('🎨 主题参数已应用（theme.json）');
+    } catch (e) {
+      console.warn('theme.json 不可用，沿用内置默认外观:', e.message);
+    }
+  }
+
   /* ===== 分页配置 ===== */
   let pageSize = 30; // 每页卡片数（动态计算）
   let currentPage = 1; // 当前页码（从1开始）
   let currentKeyword = ''; // 当前搜索关键词
 
-  /* 根据容器宽度动态计算每页数量，确保最后一行永远填满 */
+  /* 根据容器宽度动态计算每页数量，确保最后一行永远填满。
+     参数取自 theme.json 的 card.*，不再硬编码。 */
   /** @returns {number} */
   function calculatePageSize() {
     const grid = document.getElementById('grid');
@@ -59,19 +138,21 @@
 
     const width = grid.clientWidth;
     const vw = window.innerWidth;
+    const C = THEME.card;
     let minCardWidth, gap, targetRows;
 
     if (vw <= 420) {
-      // 手机固定2列
-      return Math.max(2, 2 * 4);
+      // 手机端固定列数
+      const cols = C.mobileCols || 2;
+      return Math.max(2, cols * ((C.rows && C.rows.mobile) || 4));
     } else if (vw <= 768) {
-      minCardWidth = 140;
-      gap = 12;
-      targetRows = 4;
+      minCardWidth = (C.minWidth && C.minWidth.tablet) || 140;
+      gap = (C.gap && C.gap.tablet) || 12;
+      targetRows = (C.rows && C.rows.tablet) || 4;
     } else {
-      minCardWidth = 170;
-      gap = 16;
-      targetRows = 4;
+      minCardWidth = (C.minWidth && C.minWidth.desktop) || 170;
+      gap = (C.gap && C.gap.desktop) || 16;
+      targetRows = (C.rows && C.rows.desktop) || 4;
     }
 
     const perRow = Math.max(1, Math.floor((width + gap) / (minCardWidth + gap)));
@@ -109,6 +190,9 @@
 
       // 注入虚拟条目到 rawData
       injectExtraEntries(rawData);
+
+      // 外观参数必须在首次渲染之前就位，否则会先按默认样式画一遍再跳变
+      await loadTheme();
 
       allData = transformData(rawData);
       init();

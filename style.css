@@ -26,6 +26,8 @@
   --header-h: 56px;
   --radius: 12px;
   --radius-sm: 8px;
+  /* 缩略图宽高比。由 data/theme.json 的 card.thumbRatio 覆盖 */
+  --thumb-ratio: 4 / 3;
 
   /* 过渡 */
   --theme-transition:
@@ -405,7 +407,7 @@ main#content {
 
 .card .thumb {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: var(--thumb-ratio, 4 / 3);
   height: auto;
   object-fit: cover;
   display: block;
@@ -420,7 +422,7 @@ main#content {
 /* 骨架屏 shimmer */
 .card .thumb-skeleton {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: var(--thumb-ratio, 4 / 3);
   height: auto;
   background: linear-gradient(90deg, var(--border) 25%, var(--surface-hover) 50%, var(--border) 75%);
   background-size: 200% 100%;
@@ -1346,7 +1348,7 @@ body.classify-mode .card {
   border: 1px solid var(--border-light);
   border-radius: 12px;
   overflow: hidden;
-  aspect-ratio: 4/3;
+  aspect-ratio: var(--thumb-ratio, 4/3);
 }
 .gallery-track {
   display: flex;
