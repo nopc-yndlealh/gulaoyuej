@@ -9,6 +9,9 @@
   "author": "三火的小肉铺",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/xhs_66533504000000001303fb08_0.webp"
+    },
+    {
       "t": "Graptopetalum macdougallii"
     }
   ],
@@ -20,5 +23,6 @@
     "url": ""
   },
   "contentTag": "425",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/xhs_66533504000000001303fb08_0.webp"
 }

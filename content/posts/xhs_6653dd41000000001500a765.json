@@ -9,6 +9,9 @@
   "author": "三火的小肉铺",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/xhs_6653dd41000000001500a765_0.webp"
+    },
+    {
       "t": "紫色金边大包菜\n#多肉[话题]# #多肉控[话题]# #多肉植物[话题]# #多肉播种[话题]#  #我的多肉植物[话题]# #多肉原始种[话题]# #多肉原始种收集[话题]# #拟石莲属原始种[话题]#"
     }
   ],
@@ -20,5 +23,6 @@
     "url": ""
   },
   "contentTag": "423",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/xhs_6653dd41000000001500a765_0.webp"
 }

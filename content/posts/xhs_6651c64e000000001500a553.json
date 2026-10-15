@@ -9,6 +9,9 @@
   "author": "三火的小肉铺",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/xhs_6651c64e000000001500a553_0.webp"
+    },
+    {
       "t": "Echeveria setosa var.minor"
     }
   ],
@@ -20,5 +23,6 @@
     "url": ""
   },
   "contentTag": "431",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/xhs_6651c64e000000001500a553_0.webp"
 }

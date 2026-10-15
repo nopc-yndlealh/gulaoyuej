@@ -9,6 +9,9 @@
   "author": "三火的小肉铺",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/xhs_6652a372000000000f00dffa_0.webp"
+    },
+    {
       "t": "Echeveria secunda Zanmorano"
     }
   ],
@@ -20,5 +23,6 @@
     "url": ""
   },
   "contentTag": "427",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/xhs_6652a372000000000f00dffa_0.webp"
 }

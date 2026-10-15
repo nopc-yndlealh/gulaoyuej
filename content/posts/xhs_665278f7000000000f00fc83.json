@@ -9,6 +9,9 @@
   "author": "三火的小肉铺",
   "segments": [
     {
+      "i": "https://img.feijibei.top/images/xhs_665278f7000000000f00fc83_0.webp"
+    },
+    {
       "t": "Echeveria cante"
     }
   ],
@@ -20,5 +23,6 @@
     "url": ""
   },
   "contentTag": "429",
-  "status": "published"
+  "status": "published",
+  "thumb": "https://img.feijibei.top/images/xhs_665278f7000000000f00fc83_0.webp"
 }
