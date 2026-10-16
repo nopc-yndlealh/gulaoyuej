@@ -373,6 +373,11 @@ class Handler(BaseHTTPRequestHandler):
                 f = ROOT / "tools" / "theme-tuner.html"
                 return self._send(200, f.read_text(encoding="utf-8"),
                                   "text/html; charset=utf-8")
+            # 正文图宽度对照：真 672px 下同时比 现状 / 100% / 86% / 75%
+            if u.path in ("/compare", "/compare.html"):
+                f = ROOT / "tools" / "img-width-compare.html"
+                return self._send(200, f.read_text(encoding="utf-8"),
+                                  "text/html; charset=utf-8")
             if u.path == "/api/meta":
                 tax = taxonomy()
                 cats = sorted(valid_cats(tax))

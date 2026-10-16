@@ -50,6 +50,23 @@
         color: #fff;
         border-color: #3b82f6;
       }
+      /* 回站入口：本页是 overflow:hidden 的全屏图，没有它就只能靠浏览器后退 */
+      #toolbar .tb-home {
+        padding: 6px 14px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+        background: rgba(30, 41, 59, 0.9);
+        backdrop-filter: blur(8px);
+        color: #cbd5e1;
+        text-decoration: none;
+        font-size: 13px;
+        transition: all 0.2s;
+      }
+      #toolbar .tb-home:hover {
+        background: rgba(51, 65, 85, 0.9);
+        color: #f1f5f9;
+        border-color: rgba(255, 255, 255, 0.3);
+      }
       #legend {
         position: fixed;
         top: 12px;
@@ -281,6 +298,7 @@
     <div id="loading-overlay"><div class="loader">正在构建演化树...</div></div>
 
     <div id="toolbar">
+      <a class="tb-home" href="./index.html" title="返回园艺图鉴">← 园艺图鉴</a>
       <button id="btn-zoom-in" title="放大">🔍+</button>
       <button id="btn-zoom-out" title="缩小">🔍−</button>
       <button id="btn-fit" title="适应屏幕">⊞ 适应</button>

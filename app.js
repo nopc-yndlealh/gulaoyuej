@@ -849,10 +849,11 @@
       const card = e.target.closest('.card');
       if (!card) return;
       const id = card.dataset.id || card.dataset.url;
-      // ── 特殊页面：必须在同步上下文中打开，否则弹窗拦截器会阻止 ──
-      const SPECIAL_PAGES = { sedum_evo_2019: './sedum-evo-2019.html' };
-      if (SPECIAL_PAGES[id]) {
-        window.open(SPECIAL_PAGES[id], '_blank');
+      // ── 特殊页：必须在同步上下文中打开，否则弹窗拦截器会阻止 ──
+      // 映射表在 site-common.js（唯一来源），这里和 detail.html 共用
+      const specialUrl = SC.getSpecialPageUrl(id);
+      if (specialUrl) {
+        window.open(specialUrl, '_blank');
         return;
       }
       // ── 园艺导航：打开外部链接 ──

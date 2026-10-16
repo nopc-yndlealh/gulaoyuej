@@ -187,23 +187,67 @@
   }
 
   /* ============================================================
-     四、链接
+     四、链接 & 特殊页
      ============================================================ */
 
-  /** 站内相对地址，用于新标签页打开详情 @param {string} id @returns {string} */
+  /**
+   * 特殊页：既在卡片列表里（index.json），又**不在** content-index / 正文分块里，
+   * 因为它根本没有正文 —— 内容本体是一张独立的交互式 HTML。
+   * 所以任何「打开详情」的路径都必须拐到这里，否则就是白页。
+   *
+   * 这里是**唯一来源**：app.js 的卡片点击、getDetailUrl / getShareUrl、
+   * detail.html 的自纠偏都读它。（构建侧 tools/build.py 里有一份等价的
+   * Python 集合 SPECIAL_PAGES，两处要保持一致。）
+   * @type {Record<string, string>}
+   */
+  const SPECIAL_PAGES = { sedum_evo_2019: './sedum-evo-2019.html' };
+
+  /** 该 id 是否特殊页 @param {string} id @returns {boolean} */
+  function isSpecialPage(id) {
+    return Object.prototype.hasOwnProperty.call(SPECIAL_PAGES, id);
+  }
+
+  /** 特殊页地址；不是特殊页则返回空串 @param {string} id @returns {string} */
+  function getSpecialPageUrl(id) {
+    return SPECIAL_PAGES[id] || '';
+  }
+
+  /**
+   * 站内相对地址，用于打开详情。
+   * 特殊页返回它自己的独立地址 —— 这样新标签页模式 / ?share= 老链接
+   * 也不会再落到「内容不存在」上。
+   * @param {string} id @returns {string}
+   */
   function getDetailUrl(id) {
+    const sp = getSpecialPageUrl(id);
+    if (sp) return sp;
     return './detail.html?id=' + encodeURIComponent(id);
   }
 
   /** 绝对地址，用于分享（复制链接 / 二维码 / 分享到 QQ） @param {string} id @returns {string} */
   function getShareUrl(id) {
     const dir = global.location.origin + global.location.pathname.replace(/[^/]*$/, '');
+    const sp = getSpecialPageUrl(id);
+    if (sp) return dir + sp.replace(/^\.\//, '');
     return dir + 'detail.html?id=' + encodeURIComponent(id);
   }
 
   /* ============================================================
      五、详情渲染
      ============================================================ */
+
+  /**
+   * 正文图统一铺满时，原图窄于这个宽度就不跟着放大（保持原尺寸）。
+   *
+   * 背景：style.css 里 `#detail-view .detail-body img { width: 100% }` 把所有正文图
+   * 拉到同一个宽度。实测全站 4664 张图，58.9% 在 500–599px（主力 580px，图床固定
+   * 出图宽），放大 ×1.16 看不出；但 <500px 的占 4.6%，最小 24px（贴吧图标），
+   * 拉满就是 28 倍，糊成一片。所以低于阈值的不铺满。
+   *
+   * 改这个值时，同步改 style.css 里对应注释的说明。
+   * @type {number}
+   */
+  const KEEP_NATIVE_MAX_W = 500;
 
   /** 分享栏 @param {string} id @param {string} title @returns {string} */
   function buildShareBar(id, title) {
@@ -314,8 +358,13 @@
       if (seg.t) {
         html += `<p>${escapeHtml(seg.t)}</p>`;
       } else if (seg.i) {
+        // 正文图由 CSS 统一铺满（width:100%，见 style.css）。
+        // 但原图本来就小的拉满会糊成一片 —— 实测 <500px 的占 4.6%，
+        // 最小的是 24px 的贴吧图标（放大 28 倍）。所以加载完按 naturalWidth
+        // 判一下，小的打上 keep-native 保持原尺寸。
+        // 注意：阈值要和 style.css 里的注释、以及下方 KEEP_NATIVE_MAX_W 保持一致。
         html += `<img src="${escapeHtml(seg.i)}" alt="图片" loading="lazy" decoding="async"
-                          onload="this.classList.add('loaded')">`;
+                          onload="this.classList.add('loaded'); if (this.naturalWidth < ${KEEP_NATIVE_MAX_W}) this.classList.add('keep-native');">`;
       }
     });
     html += '</div>' + shareBar;
@@ -359,6 +408,10 @@
     // 链接
     getDetailUrl,
     getShareUrl,
+    // 特殊页（无正文、由独立 HTML 承载的条目）
+    SPECIAL_PAGES,
+    isSpecialPage,
+    getSpecialPageUrl,
     // 渲染
     buildShareBar,
     renderDetail,

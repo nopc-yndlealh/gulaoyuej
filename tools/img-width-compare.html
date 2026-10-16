@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>正文图宽度对照 · feijibei.top</title>
+<style>
+  :root{
+    --bg:#f6f4f1; --surface:#fff; --surface2:#faf9f7; --text:#241f1a; --text2:#5b544c;
+    --muted:#8b8378; --border:#e3ded7; --accent:#ff8e14; --ok:#1f7a44; --warn:#b45309;
+    --radius:12px; --radius-sm:8px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141118; --surface:#1e1a24; --surface2:#241f2c; --text:#eae6f0;
+           --text2:#b9b2c4; --muted:#8d8798; --border:#332d3d; --accent:#ffa94d;
+           --ok:#7ee0a5; --warn:#f0b458; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font:14px/1.6 'PingFang SC','Microsoft YaHei',system-ui,sans-serif}
+  header{position:sticky;top:0;z-index:10;background:var(--surface);
+         border-bottom:1px solid var(--border);padding:12px 18px;
+         display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  h1{margin:0;font-size:15px;font-weight:600}
+  .sp{flex:1}
+  button,select{font:inherit;padding:5px 12px;border:1px solid var(--border);
+    border-radius:7px;background:var(--surface2);color:var(--text);cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  main{padding:20px;display:flex;justify-content:center}
+  .card{width:100%;max-width:720px;background:var(--surface);border:1px solid var(--border);
+        border-radius:16px;overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,.07)}
+  .meta{padding:14px 24px 6px;display:flex;gap:10px;flex-wrap:wrap;
+        font-size:12px;color:var(--muted);border-bottom:1px solid var(--border)}
+  .meta b{color:var(--text2);font-weight:600}
+  /* 正文列：max-width 720 + padding 24 → 内容宽正好 672px（与线上弹窗一致） */
+  .body{padding:14px 24px 24px;line-height:1.85;color:var(--text2);
+        font-size:14.5px;max-width:720px;margin:0 auto}
+  .body p{margin:0;text-indent:2em;white-space:pre-line}
+  .body figure{margin:8px 0 14px}
+  .body img{max-width:100%;border-radius:var(--radius-sm);display:block;
+            box-shadow:0 1px 4px rgba(0,0,0,.12);cursor:zoom-in;opacity:0;
+            transition:opacity .3s}
+  .body img.loaded{opacity:1}
+  /* ── 四档：只改这两条，其余一致 ── */
+  .m-now   .body img{width:auto}
+  .m-full  .body img{width:100%;max-width:100%}
+  .m-w86   .body img{width:86%;max-width:86%}
+  .m-tieba .body img{width:75%;max-width:75%}
+  .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:4px;
+       background:var(--surface2);border:1px solid var(--border);color:var(--muted);
+       font-family:ui-monospace,Consolas,monospace}
+  .tag.up{color:var(--warn);border-color:var(--warn)}
+  .tag.down{color:var(--ok);border-color:var(--ok)}
+  .tag.eq{color:var(--ok);border-color:var(--ok)}
+  .note{max-width:720px;margin:0 auto 18px;padding:11px 14px;border-radius:var(--radius);
+        background:var(--surface);border:1px solid var(--border);font-size:12.5px;
+        color:var(--text2)}
+  .note b{color:var(--text)}
+  .stats{max-width:720px;margin:0 auto 18px;font-size:12px;color:var(--muted);
+         display:flex;gap:14px;flex-wrap:wrap}
+  #zoom{position:fixed;inset:0;background:rgba(0,0,0,.86);display:none;z-index:99;
+        align-items:center;justify-content:center;padding:24px}
+  #zoom.on{display:flex}
+  #zoom img{max-width:100%;max-height:100%;border-radius:8px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>正文图宽度对照</h1>
+  <span class="tag">正文列 672px</span>
+  <span class="sp"></span>
+  <button data-m="now" class="on">现在线上</button>
+  <button data-m="full">统一宽度 100%</button>
+  <button data-m="w86">≈580px 86%</button>
+  <button data-m="tieba">贴吧式 75%</button>
+  <select id="pick"></select>
+</header>
+
+<main>
+  <div style="width:100%">
+    <div class="note" id="note"></div>
+    <div class="stats" id="stats"></div>
+    <div class="card" id="card">
+      <div class="meta" id="cmeta"></div>
+      <div class="body" id="cbody"><p>载入中…</p></div>
+    </div>
+  </div>
+</main>
+
+<div id="zoom"><img alt="放大查看"></div>
+
+<script>
+(function(){
+  'use strict';
+  var $ = function(id){ return document.getElementById(id); };
+  var MODE = 'now';
+  var CUR = null;
+  var cards = null;
+
+  var NOTES = {
+    now:   '<b>现在线上</b>：<code>max-width:100%</code> —— 只封顶、不放大。窄于 672px 的图缩着显示，宽于 672px 的被压到 672px，于是同一篇里大小不一。',
+    full:  '<b>统一宽度 100%</b>：一律铺满 672px。最整齐，但原生宽度小于 672px 的图会被放大。',
+    w86:   '<b>≈580px（86%）</b>：目标约 578px。580px 是本站图的固定出图宽，这一档让绝大多数图 <b>1:1 零缩放</b>，同时大小一致。',
+    tieba: '<b>贴吧式 75%</b>：目标 504px。所有图缩小显示，清晰度无损，但整体偏小、两侧留白 168px。'
+  };
+
+  function debounce(fn, ms){
+    var t; return function(){ clearTimeout(t); t = setTimeout(fn, ms); };
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  var scheduleAnnotate = debounce(annotate, 120);
+
+  function onImgLoad(e){
+    var im = e.currentTarget;
+    if (im.naturalWidth) im.classList.add('loaded');
+    scheduleAnnotate();
+  }
+
+  /* 图片下方实时标注：自然宽 → 显示宽，放大/缩小倍率 */
+  function annotate(){
+    var imgs = $('cbody').querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++){
+      var im = imgs[i];
+      var fig = im.parentNode;
+      var old = fig.querySelector('.tag');
+      if (old) old.parentNode.removeChild(old);
+      var nw = im.naturalWidth;
+      if (!nw) continue;
+      var dw = Math.round(im.getBoundingClientRect().width);
+      var r = dw / nw;
+      var cls = r > 1.005 ? 'up' : (r < 0.995 ? 'down' : 'eq');
+      var word = r > 1.005 ? '放大' : (r < 0.995 ? '缩小' : '原尺寸');
+      var t = document.createElement('div');
+      t.className = 'tag ' + cls;
+      t.style.marginTop = '-10px';
+      t.textContent = nw + 'px → ' + dw + 'px  ' + word + ' ' + r.toFixed(2) + '×';
+      fig.appendChild(t);
+    }
+    summarize();
+  }
+
+  /* 汇总当前档位下的缩放情况 —— 这才是选档的真正依据 */
+  function summarize(){
+    var imgs = $('cbody').querySelectorAll('img');
+    var up = 0, down = 0, eq = 0, worst = 0, total = 0;
+    for (var i = 0; i < imgs.length; i++){
+      var im = imgs[i];
+      if (!im.naturalWidth) continue;
+      total++;
+      var r = im.getBoundingClientRect().width / im.naturalWidth;
+      if (r > 1.005){ up++; if (r > worst) worst = r; }
+      else if (r < 0.995) down++;
+      else eq++;
+    }
+    if (!total){ $('stats').textContent = ''; return; }
+    var parts = ['本页图 ' + total + ' 张',
+                 '原尺寸 ' + eq,
+                 '被放大 ' + up,
+                 '被缩小 ' + down];
+    if (up) parts.push('最大放大 ' + worst.toFixed(2) + '×（越小越糊）');
+    $('stats').innerHTML = parts.map(function(s){ return '<span>' + s + '</span>'; }).join('');
+  }
+
+  function render(){
+    $('card').className = 'card m-' + MODE;
+    $('note').innerHTML = NOTES[MODE];
+    var bs = document.querySelectorAll('header button[data-m]');
+    for (var i = 0; i < bs.length; i++){
+      bs[i].classList.toggle('on', bs[i].dataset.m === MODE);
+    }
+    setTimeout(annotate, 60);
+  }
+
+  function load(id){
+    $('cbody').innerHTML = '<p>载入中…</p>';
+    fetch('/api/post?id=' + encodeURIComponent(id))
+      .then(function(r){ return r.json(); })
+      .then(function(p){
+        CUR = p;
+        $('cmeta').innerHTML = '<b>' + esc(p.title || p.id) + '</b>'
+          + '<span class="tag">' + esc(p.id) + '</span>'
+          + '<span class="tag">' + esc(p.cat || '') + '</span>'
+          + '<span class="tag">' + esc(p.source || '') + '</span>';
+        var segs = p.segments || [];
+        var html = '';
+        for (var i = 0; i < segs.length; i++){
+          var s = segs[i];
+          if (s.t){
+            var ps = String(s.t).split('\n');
+            for (var j = 0; j < ps.length; j++){
+              if (ps[j].trim()) html += '<p>' + esc(ps[j]) + '</p>';
+            }
+          } else if (s.i){
+            html += '<figure><img src="' + esc(s.i) + '" alt="" loading="lazy"></figure>';
+          }
+        }
+        $('cbody').innerHTML = html || '<p>这篇没有正文</p>';
+        // 懒加载图的 naturalWidth 在 load 之前是 0，所以逐张回填标注
+        var ims = $('cbody').querySelectorAll('img');
+        for (var k = 0; k < ims.length; k++){
+          ims[k].addEventListener('load', onImgLoad);
+          ims[k].addEventListener('error', onImgLoad);
+        }
+        render();
+      })
+      .catch(function(e){
+        $('cbody').innerHTML = '<p>读取失败：' + esc(e.message)
+          + '（本页必须由 <code>python3 tools/publish.py</code> 起服务后访问）</p>';
+      });
+  }
+
+  function boot(){
+    // n 要给够：/api/list 是按 seq 排序后**再**截断的，给 400 只会拿到清一色 rose
+    fetch('/api/list?n=3000')
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var rows = (d.rows || []).filter(function(r){ return r.img >= 6; });
+        // 各来源轮流上桌 —— 否则 rose 有几千篇，下拉里根本看不到 tieba / weibo 的混合宽度帖
+        var bySrc = {};
+        rows.forEach(function(r){
+          var s = r.id.split('_')[0];
+          (bySrc[s] = bySrc[s] || []).push(r);
+        });
+        Object.keys(bySrc).forEach(function(s){
+          bySrc[s].sort(function(a, b){ return b.img - a.img; });
+        });
+        var srcs = Object.keys(bySrc), picked = [];
+        for (var n = 0; n < 20 && picked.length < 60; n++){
+          for (var k = 0; k < srcs.length; k++){
+            if (bySrc[srcs[k]][n]) picked.push(bySrc[srcs[k]][n]);
+          }
+        }
+        var pick = $('pick');
+        pick.innerHTML = picked.map(function(r){
+          return '<option value="' + esc(r.id) + '">'
+               + esc((r.title || r.id).slice(0, 22)) + ' · '
+               + esc(r.id.split('_')[0]) + ' ' + r.img + '图</option>';
+        }).join('');
+        if (picked.length) load(picked[0].id);
+        else $('cbody').innerHTML = '<p>没有找到带图的条目</p>';
+      })
+      .catch(function(e){
+        $('cbody').innerHTML = '<p>列表读取失败：' + esc(e.message)
+          + '（本页必须由 <code>python3 tools/publish.py</code> 起服务后访问）</p>';
+      });
+  }
+
+  var bs = document.querySelectorAll('header button[data-m]');
+  for (var i = 0; i < bs.length; i++){
+    bs[i].onclick = function(){
+      MODE = this.dataset.m;
+      render();
+    };
+  }
+  $('pick').onchange = function(){ load(this.value); };
+  $('cbody').onclick = function(e){
+    if (e.target.tagName === 'IMG'){
+      $('zoom').querySelector('img').src = e.target.src;
+      $('zoom').classList.add('on');
+    }
+  };
+  $('zoom').onclick = function(){ this.classList.remove('on'); };
+  window.addEventListener('resize', debounce(annotate, 150));
+
+  boot();
+})();
+</script>
+</body>
+</html>

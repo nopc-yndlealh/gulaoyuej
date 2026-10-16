@@ -117,7 +117,9 @@ def validate(posts, taxonomy, errors, warnings):
             elif cat not in cats:
                 errors.append(f"{pid}: cat='{cat}' 不在 taxonomy.json 里")
 
-            if not p.get("segments"):
+            # 特殊页没有正文是**设计如此**：内容本体是一张独立 HTML
+            # （前端由 app.js / detail.html 统一拐过去），别在这里误报。
+            if not p.get("segments") and pid not in SPECIAL_PAGES:
                 warnings.append(f"{pid}: published 但没有任何正文段落，点开会是空白")
 
             for s in p.get("segments", []):

@@ -643,7 +643,20 @@ main#content {
   text-indent: 2em;
   white-space: pre-line;
 }
+/* ── 正文图：一律铺满正文列（672px），治「同一篇里一大一小」 ──
+   实测全站 4664 张图：58.9% 落在 500–599px，主力恰好 580px（图床固定出图宽）；
+   而旧规则只有 max-width:100%（只封顶、不放大），于是 580px 的显示 580、
+   2000px 的显示 672，同一篇里就差出 90px 来。
+   现在 width:100% 让显示宽只由 CSS 决定，与图片文件多宽无关 —— 没有任何数据要改。
+
+   代价：原图偏小的会被放大。580px 的只放大 ×1.16（基本看不出），
+   但 <500px 的那 4.6%（含 24px 的贴吧图标）最多放大到 28 倍，由下一条 .keep-native 兜住。
+
+   ⚠️ 这个旋钮**不能**放进 content/theme.json —— theme.json 只有 app.js 读，
+      独立详情页 detail.html 读不到它，放进去会让分享链接打开的页面漏掉。
+      放这里则首页弹窗 + 独立详情页同时生效。 */
 #detail-view .detail-body img {
+  width: 100%;
   max-width: 100%;
   border-radius: var(--radius-sm);
   margin: 8px 0;
@@ -654,6 +667,12 @@ main#content {
     opacity 0.4s ease,
     transform 0.2s,
     box-shadow 0.2s;
+}
+/* 原图本来就小的保持原尺寸 —— 别把 24px 的图标拉到 672px。
+   类名由 site-common.js 的 renderDetail() 在 onload 里按 naturalWidth 打上，
+   阈值 500px。纯 CSS 做不到这件事：CSS 拿不到「原图多宽」。 */
+#detail-view .detail-body img.keep-native {
+  width: auto;
 }
 #detail-view .detail-body img.loaded {
   opacity: 1;

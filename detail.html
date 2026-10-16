@@ -47,6 +47,16 @@
         const qrOverlay = document.getElementById('qr-overlay');
 
         const id = SC.parseId(new URLSearchParams(location.search).get('id') || '');
+
+        // 特殊页自纠偏：这类条目没有正文（不在 content-index 里），内容本体是
+        // 一张独立 HTML。老分享链接 / 手输地址落到这里时若不拐走，就会白页。
+        // 用 replace 而不是 href，避免「图谱 → 返回 → 又被送回图谱」的死循环。
+        const specialUrl = SC.getSpecialPageUrl(id);
+        if (specialUrl) {
+          location.replace(specialUrl);
+          return;
+        }
+
         let currentTitle = '';
         let galleryTotal = 0;
         let galleryIdx = 1;
