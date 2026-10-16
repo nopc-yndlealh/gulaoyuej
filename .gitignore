@@ -48,3 +48,6 @@ content/_recompress_backup/
 
 # 构建输出目录（tools/build.py --dist dist 的产物）
 dist/
+
+# wrangler 本机缓存（跑 wrangler 命令时自动生成，含账号 id，不必进仓库）
+.wrangler/
