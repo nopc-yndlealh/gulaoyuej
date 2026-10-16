@@ -14,10 +14,11 @@
  *   我自己的分类树改动就这样被冻住了一轮。
  *   Network-First 让新鲜度不再依赖任何人记得改版本号。
  *
- * 20261014-7f18328 由 tools/build.py --stamp 注入构建号，未注入时退回 'v3'。
+ * 下一行的 BUILD 由 tools/build.py --stamp 注入（构建号 = 日期 + index.json 内容指纹）。
+ * 未注入时 BUILD 仍是未替换的占位符，退回 'v3'。
  * 因为已经是 Network-First，缓存名只影响离线副本的新旧，不影响线上正确性。
  */
-const BUILD = '20261014-7f18328';
+const BUILD = '20261016-21c5e89';
 const IS_STAMPED = !BUILD.startsWith('__');
 const CACHE = `feijibei-${IS_STAMPED ? BUILD : 'v3'}`;
 

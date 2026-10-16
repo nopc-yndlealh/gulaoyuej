@@ -536,12 +536,22 @@ def assemble_dist(dist):
 
 
 def stamp(target=None, data_dir=None):
-    """把构建号写进 index.html 的 ?v= 与 sw.js 的 __BUILD__。
+    """把构建号写进 index.html 的 ?v= 与 sw.js 的构建号。
 
     构建号 = 日期 + index.json 内容指纹。这样只要内容变了，构建号必变，
     Service Worker 的 CACHE 名随之变化，旧缓存会被 activate 阶段清掉；
     内容没变则构建号不变，不制造无意义的缓存失效。
     替代原来手写 `feijibei-v3.4` 与 `?v=20261014` 的做法（手写迟早忘）。
+
+    三处都要刷，缺一处就会「冻住」：
+      1. 任意 `?v=xxx`             —— index.html / sw.js 里引静态资源的版本串
+      2. sw.js 的 `const BUILD`    —— CACHE 名就是它拼的
+      3. `__BUILD__` 占位符        —— 只对还没被消费过的文件有效
+
+    ⚠️ 只替换 `__BUILD__` 是不够的（这是踩过的坑）：占位符在**第一次** stamp 时
+       就被换成字面量了，之后再跑就没有占位符可换，`const BUILD` 会永远冻在
+       第一次那版 —— 表现为 CACHE 名恒定、旧缓存永不清理，且完全没有任何报错。
+       所以必须有第 2 条正则兜底。
     """
     base = Path(target) if target else ROOT
     ddir = Path(data_dir) if data_dir else (base / "data")
@@ -555,6 +565,9 @@ def stamp(target=None, data_dir=None):
             continue
         text = p.read_text(encoding="utf-8")
         new = re.sub(r"\?v=[0-9A-Za-z\-]+", f"?v={build_id}", text)
+        # sw.js 的 `const BUILD = '<id>'`（引号单双都认，顺便容错空格）
+        new = re.sub(r"""(const\s+BUILD\s*=\s*)(['"])[^'"]*\2""",
+                     lambda m: f"{m.group(1)}{m.group(2)}{build_id}{m.group(2)}", new)
         new = new.replace("__BUILD__", build_id)
         if new != text:
             p.write_text(new, encoding="utf-8")
