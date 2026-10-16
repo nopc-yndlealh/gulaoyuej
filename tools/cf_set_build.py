@@ -20,6 +20,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 ACCOUNT = "082a519e512f02161ab5a57b376d3f4c"
@@ -29,21 +30,55 @@ API = f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT}/pages/projects/{
 BUILD_COMMAND = "python3 tools/build.py --dist dist --stamp"
 DESTINATION = "dist"
 
-# wrangler 的 OAuth token 存放位置（Windows）
+# wrangler 的 OAuth token 存放位置。
+#
+# ⚠️ 本机同时存在两个，且**内容不同**（这是踩过的坑）：
+#     ~/.wrangler/config/default.toml                          ← wrangler 4 真正写这个
+#     %APPDATA%/xdg.config/.wrangler/config/default.toml       ← Linux 风格路径，可能是陈旧残留
+#   早先这份列表把「%APPDATA%/xdg.config/...」排在第一位，于是在本机永远读到那份
+#   **过期 40+ 小时**的旧 token → 所有 API 调用 401，而报错只说 Authentication error，
+#   完全不提"你读错文件了"，极难排查。所以：顺序改成「真正在写的那份优先」，
+#   并且 token() 会**枚举全部候选、优先挑未过期的**，不再"遇到第一个存在就返回"。
 CFG_CANDIDATES = [
-    Path(os.environ.get("APPDATA", "")) / "xdg.config" / ".wrangler" / "config" / "default.toml",
-    Path.home() / ".config" / ".wrangler" / "config" / "default.toml",
     Path.home() / ".wrangler" / "config" / "default.toml",
+    Path.home() / ".config" / ".wrangler" / "config" / "default.toml",
+    Path(os.environ.get("APPDATA", "")) / "xdg.config" / ".wrangler" / "config" / "default.toml",
 ]
 
 
 def token():
+    """取一个**可用**的 wrangler OAuth token。
+
+    枚举全部候选，优先返回未过期的；都过期就返回最近修改的那个
+    （wrangler 下次运行时会自动刷新并写回，随手跑 `wrangler whoami` 即可触发）。
+    """
+    best, best_key = None, None
     for p in CFG_CANDIDATES:
-        if p.exists():
-            m = re.search(r'oauth_token\s*=\s*"([^"]+)"', p.read_text(encoding="utf-8"))
-            if m:
-                return m.group(1)
-    print("✗ 找不到 wrangler OAuth token，先跑 wrangler login", file=sys.stderr)
+        if not p.exists():
+            continue
+        text = p.read_text(encoding="utf-8")
+        m = re.search(r'oauth_token\s*=\s*"([^"]+)"', text)
+        if not m:
+            continue
+        expired = False
+        e = re.search(r'expiration_time\s*=\s*"([^"]+)"', text)
+        if e:
+            try:
+                expired = (datetime.fromisoformat(e.group(1).replace("Z", "+00:00"))
+                           <= datetime.now(timezone.utc))
+            except ValueError:
+                pass
+        # 未过期的优先；同级取"最近修改的"
+        key = (1 if expired else 0, -p.stat().st_mtime)
+        if best_key is None or key < best_key:
+            best, best_key = m.group(1), key
+    if best:
+        return best
+    print("✗ 找不到可用的 wrangler OAuth token。已查过：", file=sys.stderr)
+    for p in CFG_CANDIDATES:
+        print(f"    {'存在' if p.exists() else '不存在'}  {p}", file=sys.stderr)
+    print("  跑 `wrangler login`；若之前登录过，跑任意一条 wrangler 命令会顺手刷新 token。",
+          file=sys.stderr)
     sys.exit(1)
 
 
