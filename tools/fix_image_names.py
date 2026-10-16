@@ -69,9 +69,13 @@ def embedded_pids(name):
 def fix_url(url):
     if not isinstance(url, str) or "/images/" not in url:
         return url, None
-    head, name = url.rsplit("/", 1)
+    # 查询串（重压后会有 ?opt=1）不能掺进文件名里比对，改完再原样接回去
+    base, sep, query = str(url).partition("?")
+    head, name = base.rsplit("/", 1)
     new = canonical(name)
-    return (url, None) if new == name else (head + "/" + new, (name, new))
+    if new == name:
+        return url, None
+    return head + "/" + new + (sep + query if sep else ""), (name, new)
 
 
 def load(p):

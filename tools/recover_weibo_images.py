@@ -148,6 +148,29 @@ def download(url, dest):
     return len(b)
 
 
+def webp_size(p):
+    """读 WebP 的真实像素尺寸（不依赖 PIL）。"""
+    import struct
+    b = Path(p).read_bytes()[:8192]
+    if b[:4] != b"RIFF" or b[8:12] != b"WEBP":
+        return None
+    pos = 12
+    while pos + 8 <= len(b):
+        tag, size = b[pos:pos + 4], struct.unpack("<I", b[pos + 4:pos + 8])[0]
+        body = b[pos + 8:pos + 8 + size]
+        if tag == b"VP8 " and body[3:6] == b"\x9d\x01\x2a":
+            w, h = struct.unpack("<HH", body[6:10])
+            return w & 0x3FFF, h & 0x3FFF
+        if tag == b"VP8L":
+            v = struct.unpack("<I", body[1:5])[0]
+            return (v & 0x3FFF) + 1, ((v >> 14) & 0x3FFF) + 1
+        if tag == b"VP8X":
+            return ((body[4] | body[5] << 8 | body[6] << 16) + 1,
+                    (body[7] | body[8] << 8 | body[9] << 16) + 1)
+        pos += 8 + size + (size & 1)
+    return None
+
+
 def to_webp(src, dest):
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(src),
            "-vf", f"scale='min({MAX_EDGE},iw)':-2",
@@ -155,6 +178,17 @@ def to_webp(src, dest):
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0 or not dest.exists():
         raise RuntimeError("ffmpeg 转码失败：" + (r.stderr or "")[:200])
+    # ★ 后置校验：不能只看"ffmpeg 退出码是 0"就当压好了。
+    #   实测 R2 上 475 张在用图超过 1MB（最大 20.36 MB、5976×10697），
+    #   就是当年漏了缩放也没人发现 —— 少了这一道检查，同一个坑会再犯一次。
+    #   宁可这里直接炸掉，也不要静默把巨图传上云端。
+    #
+    #   判据要和上面的 -vf 语义一致：那条命令是**限宽度**到 MAX_EDGE
+    #   （竖图会得到 1600×2864 这种，高度可以超）。所以这里只看宽度 ——
+    #   一开始我用 max(w,h) 判，把正常输出也拦了，是自己想当然。
+    dim = webp_size(dest)
+    if dim and dim[0] > MAX_EDGE:
+        raise RuntimeError(f"缩放没生效：输出 {dim[0]}×{dim[1]}，宽度超过 {MAX_EDGE}")
     return dest.stat().st_size
 
 

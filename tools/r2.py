@@ -29,6 +29,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -70,16 +71,35 @@ def token():
     sys.exit(1)
 
 
-def call(method, url, data=None, ctype="application/octet-stream"):
-    req = urllib.request.Request(url, data=data, method=method)
-    req.add_header("Authorization", "Bearer " + token())
-    if data is not None:
-        req.add_header("Content-Type", ctype)
-    try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            return r.status, r.read()
-    except urllib.error.HTTPError as e:
-        return e.code, e.read()[:400]
+def call(method, url, data=None, ctype="application/octet-stream", tries=3):
+    """发一次请求，带退避重试。
+
+    ⚠️ 必须同时捕 URLError / TimeoutError / OSError，光捕 HTTPError 不够。
+       只捕 HTTPError 时，网络抖动抛的 TimeoutError 会直接打死整个进程 ——
+       check-refs 拉 4000+ 对象要翻好几页，任何一页抖一下就整条崩掉，
+       连已经拉到的结果都拿不到。这正是本项目踩坑清单第 10 条。
+       重试到极限仍失败就返回状态码 0，让调用方自己降级，不要往外抛。
+    """
+    last = "未知错误"
+    for i in range(tries):
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Authorization", "Bearer " + token())
+        if data is not None:
+            req.add_header("Content-Type", ctype)
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return r.status, r.read()
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 504) and i < tries - 1:
+                last = f"HTTP {e.code}"
+            else:
+                return e.code, e.read()[:400]
+        except (urllib.error.URLError, TimeoutError, OSError) as e:
+            last = f"{type(e).__name__}: {e}"
+        if i < tries - 1:
+            time.sleep(1.5 * (i + 1))
+    print(f"  ! 请求重试 {tries} 次仍失败：{last}", file=sys.stderr)
+    return 0, last.encode()
 
 
 def list_keys(prefix=""):
@@ -113,16 +133,24 @@ def cmd_ls(args):
 
 
 def cmd_has(args):
-    """按精确文件名逐个前缀查询，避免拉全量清单（4129 个对象很慢）。"""
+    """按精确文件名逐个前缀查询，避免拉全量清单（4129 个对象很慢）。
+
+    ⚠️ 名字传「裸文件名」或「完整 key」都要认。
+       以前只认裸名、内部无条件再拼一个 "images/"，于是传
+       images/wb_x.webp 会变成查 images/images/wb_x.webp —— **永远返回"没有"**。
+       这种假阴性直接把「文件在不在」的判断带偏，而本项目踩坑清单第 3 条
+       说的就是这件事（"断言缺失前先确认自己用的键是对的"）。别再退回去。
+    """
     for n in args.names:
+        key = n if n.startswith("images/") else "images/" + n
         st, body = call("GET", API + "?" + urllib.parse.urlencode(
-            {"prefix": "images/" + n, "per_page": "1"}))
+            {"prefix": key, "per_page": "10"}))
         if st != 200:
-            print(f"  ? 查询失败 HTTP {st}  {n}")
+            print(f"  ? 查询失败 HTTP {st}  {key}")
             continue
         found = json.loads(body).get("result") or []
-        hit = any(o["key"] == "images/" + n for o in found)
-        print(f"  {'✓ 有  ' if hit else '✗ 没有'}  {n}")
+        hit = any(o["key"] == key for o in found)
+        print(f"  {'✓ 有  ' if hit else '✗ 没有'}  {key}")
 
 
 def cmd_get(args):
@@ -174,7 +202,9 @@ def cmd_check_refs(args):
             if not u or "/images/" not in u:
                 continue
             total += 1
-            n = u.rsplit("/", 1)[-1]
+            # 必须剥掉查询串：重压后 URL 是 `...webp?opt=1`，
+            # 不剥的话取到 `xxx.webp?opt=1`，匹配不上 key → 误报"R2 上不存在"
+            n = u.split("?")[0].split("#")[0].rsplit("/", 1)[-1]
             if n not in names:
                 bad.append(n)
         if bad:

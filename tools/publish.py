@@ -12,7 +12,7 @@ feijibei.top 本地发布服务。
 接口
 ----
   GET  /                      编辑器页面
-  GET  /api/meta              分类树 + 现有条数
+  GET  /api/meta              分类树 + 现有条数 + 草稿数
   GET  /api/list?q=&cat=&n=   搜索 / 列出条目
   GET  /api/post?id=          读单条
   POST /api/save              新建或更新一条（写 content/posts/{id}.json）
@@ -20,11 +20,26 @@ feijibei.top 本地发布服务。
   POST /api/publish           构建 + git commit + push
   GET  /api/status            仓库状态（有无未提交改动）
 
+草稿（「写一半」的稿子，图先留在本机，不进 git）
+  GET  /api/drafts            草稿列表
+  GET  /api/draft?key=        读一份草稿
+  POST /api/draft             写一份草稿（body: {key, draft}）
+  POST /api/draft-delete      删一份草稿（body: {key}）
+  POST /api/draft-image       把本地图存进草稿仓（内容寻址去重）→ 返回本地地址
+  POST /api/push-images       保存时用：把草稿图批量推到 R2（body: {urls})
+  GET  /draft-img/<name>      读取草稿图（只有本机能访问）
+
+空间回收（10GB 配额要精打细算）
+  POST /api/space-scan        只读盘点：总量 / 在用 / 孤儿 / 大图（翻页约 1~2 分钟）
+  POST /api/space-clean       删孤儿图（body: {keys}）。删除不可逆，
+                              删前会重新核对引用、并留清单到本机
+
 写入前一律校验：id 合法、cat 在 taxonomy 里、图片 URL 在 R2 域名上。
 宁可拒绝保存，也不要往单一源里写进坏数据。
 """
 import argparse
 import base64
+import hashlib
 import json
 import os
 import re
@@ -43,6 +58,11 @@ ROOT = Path(__file__).resolve().parent.parent
 POSTS = ROOT / "content" / "posts"
 TAXONOMY = ROOT / "content" / "taxonomy.json"
 R2_PREFIX = "https://img.feijibei.top/"
+# 草稿：写一半的稿子 + 还没上云的本地图。**不进 git**（见 .gitignore）。
+DRAFTS = ROOT / "content" / "_drafts"
+DRAFT_IMG = DRAFTS / "images"
+DRAFT_URL = "/draft-img/"       # 草稿图的本地地址前缀（只有本机能访问）
+DRAFT_NAME_RE = re.compile(r"^[0-9a-f]{16}\.(webp|jpg|jpeg|png|gif)$")
 
 ACC = "082a519e512f02161ab5a57b376d3f4c"
 BUCKET = "plant-images"
@@ -104,6 +124,144 @@ def run_build():
                        cwd=ROOT, capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
     return r.returncode == 0, (r.stdout or "") + (r.stderr or "")
+
+
+# ── 草稿（写一半的稿子；图先留在本机，不进 git）──
+def draft_key_safe(key):
+    """草稿 key 只允许字母数字下划线连字符，防止路径穿越。"""
+    return re.sub(r"[^0-9A-Za-z_-]", "_", str(key or ""))[:80]
+
+
+def draft_path(key):
+    k = draft_key_safe(key)
+    return (DRAFTS / f"{k}.json") if k else None
+
+
+def draft_img_path(name):
+    """草稿图文件名必须形如 <16位hex>.<ext>，别的一律拒绝（防穿越）。"""
+    if not DRAFT_NAME_RE.match(name or ""):
+        return None
+    return DRAFT_IMG / name
+
+
+def draft_count():
+    return len(list(DRAFTS.glob("*.json"))) if DRAFTS.exists() else 0
+
+
+def list_drafts():
+    out = []
+    if not DRAFTS.exists():
+        return out
+    for f in DRAFTS.glob("*.json"):
+        try:
+            d = load_json(f)
+        except Exception:
+            continue
+        segs = d.get("segments") or []
+        out.append({
+            "key": f.stem,
+            "id": d.get("id") or "",
+            "title": d.get("title") or "",
+            "cat": d.get("cat") or "",
+            "segs": len(segs),
+            "imgs": sum(1 for s in segs if s.get("i")),
+            "local_imgs": sum(1 for s in segs
+                              if str(s.get("i") or "").startswith(DRAFT_URL)),
+            "saved_at": d.get("_saved_at") or "",
+        })
+    out.sort(key=lambda x: x["saved_at"], reverse=True)
+    return out
+
+
+def img_name(url):
+    """从图片 URL 取文件名 —— **必须剥掉查询串**。
+
+    重压大图后 URL 会变成 `...webp?opt=1`（靠查询串当新的 CDN 缓存键）。
+    若不剥掉，`rsplit("/", 1)[-1]` 会得到 `xxx.webp?opt=1`，匹配不上 R2 的 key，
+    后果有两层：
+      · 「引用核对」误报裂图（吓人但无害）
+      · **「孤儿扫描」会以为这批图没人引用 → 清理时把正在用的图删掉**（危险）
+    """
+    return str(url).split("?")[0].split("#")[0].rsplit("/", 1)[-1]
+
+
+def referenced_names():
+    """正文里引用到的图片文件名（去重）。"""
+    names = set()
+    for f in POSTS.glob("*.json"):
+        try:
+            d = load_json(f)
+        except Exception:
+            continue
+        for s in d.get("segments") or []:
+            u = s.get("i")
+            if u and isinstance(u, str) and "/images/" in u:
+                names.add(img_name(u))
+    return names
+
+
+def scan_space():
+    """盘点 R2：总量 / 在用 / 孤儿。只读，不删任何东西。
+
+    翻页拉全量清单要 1~2 分钟（4 万多个对象），所以调用方要有耐心。
+    """
+    refs = referenced_names()
+    objs, cursor, pages = [], None, 0
+    while True:
+        q = {"per_page": "1000", "prefix": "images/"}
+        if cursor:
+            q["cursor"] = cursor
+        st, body = call_r2("GET", R2_API + "?" + urllib.parse.urlencode(q))
+        if st != 200:
+            return None, f"第 {pages+1} 页拉取失败（HTTP {st}）"
+        d = json.loads(body)
+        res = d.get("result", [])
+        objs += [(o["key"], o.get("size") or 0) for o in res]
+        pages += 1
+        cursor = (d.get("result_info") or {}).get("cursor")
+        if not cursor or not res:
+            break
+    total = sum(s for _, s in objs)
+    orphans = [(k, s) for k, s in objs if k.split("/", 1)[1] not in refs]
+    obytes = sum(s for _, s in orphans)
+    # 大于 1MB 的在用图 —— 既是流量杀手也是空间杀手
+    big = sorted([(k, s) for k, s in objs
+                  if k.split("/", 1)[1] in refs and s > 1024 * 1024],
+                 key=lambda x: -x[1])
+    return {
+        "objects": len(objs), "pages": pages,
+        "total_bytes": total,
+        "ref_count": len(objs) - len(orphans), "ref_bytes": total - obytes,
+        "orphan_count": len(orphans), "orphan_bytes": obytes,
+        "orphan_keys": [k for k, _ in orphans],
+        "big_count": len(big), "big_bytes": sum(s for _, s in big),
+        "big_top": [[k, s] for k, s in big[:10]],
+    }, None
+
+
+def call_r2(method, url, data=None, ctype="application/octet-stream"):
+    """带重试的 R2 调用（publish.py 这侧用的精简版）。"""
+    tok = cf_token()
+    if not tok:
+        return 0, b"no token"
+    last = b"unknown"
+    for i in range(3):
+        req = urllib.request.Request(url, data=data, method=method)
+        req.add_header("Authorization", "Bearer " + tok)
+        if data is not None:
+            req.add_header("Content-Type", ctype)
+        try:
+            with urllib.request.urlopen(req, timeout=120) as r:
+                return r.status, r.read()
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 500, 502, 503, 504) and i < 2:
+                last = f"HTTP {e.code}".encode()
+            else:
+                return e.code, e.read()[:300]
+        except Exception as e:
+            last = f"{type(e).__name__}: {e}".encode()
+        time.sleep(1.5 * (i + 1))
+    return 0, last
 
 
 # ── 校验 ──
@@ -220,7 +378,17 @@ class Handler(BaseHTTPRequestHandler):
                 cats = sorted(valid_cats(tax))
                 n = len(list(POSTS.glob("*.json")))
                 return self._send(200, {"taxonomy": tax, "cats": cats, "total": n,
-                                        "r2": bool(cf_token())})
+                                        "drafts": draft_count(), "r2": bool(cf_token())})
+            if u.path == "/api/drafts":
+                return self._send(200, {"drafts": list_drafts()})
+            if u.path == "/api/draft":
+                key = q.get("key", [""])[0]
+                f = draft_path(key)
+                if not f or not f.exists():
+                    return self._send(404, {"error": "没有这份草稿"})
+                return self._send(200, load_json(f))
+            if u.path.startswith(DRAFT_URL):
+                return self._draft_image_send(u.path[len(DRAFT_URL):])
             if u.path == "/api/list":
                 kw = (q.get("q", [""])[0] or "").strip().lower()
                 catf = (q.get("cat", [""])[0] or "").strip()
@@ -298,6 +466,20 @@ class Handler(BaseHTTPRequestHandler):
                 return self._publish(body)
             if u.path == "/api/theme":
                 return self._theme(body)
+            if u.path == "/api/draft":
+                return self._draft_save(body)
+            if u.path == "/api/draft-delete":
+                return self._draft_delete(body)
+            if u.path == "/api/draft-gc":
+                return self._draft_gc(body)
+            if u.path == "/api/draft-image":
+                return self._draft_image_save(body)
+            if u.path == "/api/push-images":
+                return self._push_images(body)
+            if u.path == "/api/space-scan":
+                return self._space_scan(body)
+            if u.path == "/api/space-clean":
+                return self._space_clean(body)
             return self._send(404, {"error": "未知路径"})
         except Exception as e:
             import traceback
@@ -347,6 +529,185 @@ class Handler(BaseHTTPRequestHandler):
                                     "error": f"R2 上传失败 HTTP {e.code}: {e.read()[:200]}"})
         print(f"  🖼️  上传 R2 {key}（{len(raw) // 1024} KB）")
         return self._send(200, {"ok": True, "url": R2_PREFIX + key, "size": len(raw)})
+
+    # ---- 草稿 ----
+    def _draft_image_send(self, name):
+        """读取草稿图。只认 <16hex>.<ext> 这种名字，别的直接 403。"""
+        p = draft_img_path(name)
+        if not p:
+            return self._send(403, {"error": "非法文件名"})
+        if not p.exists():
+            return self._send(404, {"error": "草稿图不存在"})
+        ct = {".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+              ".png": "image/png", ".gif": "image/gif"}.get(p.suffix.lower(),
+                                                            "application/octet-stream")
+        return self._send(200, p.read_bytes(), ct)
+
+    def _draft_image_save(self, body):
+        """把本地图存进草稿仓 —— 内容寻址，同一张图贴两次只存一份。
+
+        注意：这一步**不上云**。图就留在 content/_drafts/images/ 里，
+        只有点了「保存」才会由 /api/push-images 推到 R2。
+        """
+        fname = (body.get("filename") or "").strip()
+        data = body.get("data") or ""
+        if not data:
+            return self._send(400, {"ok": False, "error": "缺少 data"})
+        try:
+            raw = base64.b64decode(data.split(",")[-1])
+        except Exception as e:
+            return self._send(400, {"ok": False, "error": f"base64 解不开：{e}"})
+        if len(raw) > 24 * 1024 * 1024:
+            return self._send(400, {"ok": False, "error": "图片超过 24MB"})
+        ext = Path(fname).suffix.lower()
+        if ext not in (".webp", ".jpg", ".jpeg", ".png", ".gif"):
+            ext = ".webp"
+        digest = hashlib.sha1(raw).hexdigest()[:16]
+        DRAFT_IMG.mkdir(parents=True, exist_ok=True)
+        p = DRAFT_IMG / f"{digest}{ext}"
+        if not p.exists():
+            p.write_bytes(raw)
+            print(f"  📝 草稿图入库 {p.name}（{len(raw)//1024} KB，仅本机）")
+        return self._send(200, {"ok": True, "url": DRAFT_URL + p.name,
+                                "size": len(raw)})
+
+    def _draft_save(self, body):
+        key = draft_key_safe(body.get("key"))
+        d = body.get("draft")
+        if not key:
+            return self._send(400, {"ok": False, "error": "缺少草稿 key"})
+        if not isinstance(d, dict):
+            return self._send(400, {"ok": False, "error": "缺少 draft 对象"})
+        DRAFTS.mkdir(parents=True, exist_ok=True)
+        d["_saved_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+        save_json(DRAFTS / f"{key}.json", d)
+        return self._send(200, {"ok": True, "key": key, "saved_at": d["_saved_at"]})
+
+    def _draft_delete(self, body):
+        f = draft_path(body.get("key"))
+        if f and f.exists():
+            f.unlink()
+            print(f"  🗑️  草稿已清 {f.name}")
+        return self._send(200, {"ok": True})
+
+    def _push_images(self, body):
+        """把草稿图批量推到 R2，返回 {本地地址: R2地址}。
+
+        这是「图片上云」的唯一入口。写作全程图都留在本机，只有点「保存」
+        才会走到这里 —— 用户不该在插图的那一刻就被传到云端。
+        """
+        tok = cf_token()
+        if not tok:
+            return self._send(400, {"ok": False, "error": "没找到 Cloudflare 令牌，无法上传"})
+        urls = body.get("urls") or []
+        if not isinstance(urls, list):
+            return self._send(400, {"ok": False, "error": "urls 必须是数组"})
+        mapping, failed = {}, []
+        for u in urls:
+            s = str(u)
+            name = s[len(DRAFT_URL):] if s.startswith(DRAFT_URL) else ""
+            p = draft_img_path(name)
+            if not p or not p.exists():
+                failed.append([s, "草稿图不存在"])
+                continue
+            raw = p.read_bytes()
+            key = f"images/wb_{int(time.time()*1000):x}_{Path(name).stem}{p.suffix.lower()}"
+            ctype = {".webp": "image/webp", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+                     ".png": "image/png", ".gif": "image/gif"}.get(p.suffix.lower(),
+                                                                   "application/octet-stream")
+            req = urllib.request.Request(f"{R2_API}/{urllib.parse.quote(key)}",
+                                         data=raw, method="PUT")
+            req.add_header("Authorization", "Bearer " + tok)
+            req.add_header("Content-Type", ctype)
+            try:
+                with urllib.request.urlopen(req, timeout=120) as r:
+                    if r.status == 200:
+                        mapping[s] = R2_PREFIX + key
+                        print(f"  ☁️  上云 {key}（{len(raw)//1024} KB）")
+                    else:
+                        failed.append([s, f"HTTP {r.status}"])
+            except Exception as e:
+                failed.append([s, f"{type(e).__name__}: {e}"])
+        return self._send(200 if not failed else 502,
+                          {"ok": not failed, "mapping": mapping, "failed": failed})
+
+    def _draft_gc(self, body):
+        """清掉草稿图里没人再用到的**本机文件**。只动 content/_drafts/，绝不碰云端。"""
+        used = set()
+        if DRAFTS.exists():
+            for f in DRAFTS.glob("*.json"):
+                try:
+                    d = load_json(f)
+                except Exception:
+                    continue
+                for s in d.get("segments") or []:
+                    u = s.get("i")
+                    if isinstance(u, str) and u.startswith(DRAFT_URL):
+                        used.add(u[len(DRAFT_URL):])
+        removed, freed = 0, 0
+        if DRAFT_IMG.exists():
+            for p in DRAFT_IMG.iterdir():
+                if p.is_file() and p.name not in used:
+                    try:
+                        freed += p.stat().st_size
+                        p.unlink()
+                        removed += 1
+                    except Exception:
+                        pass
+        if removed:
+            print(f"  🧹 草稿图回收 {removed} 张（{freed//1024} KB，本机）")
+        return self._send(200, {"ok": True, "removed": removed,
+                                "freed": freed, "kept": len(used)})
+
+    def _space_scan(self, body):
+        """只读盘点：总量 / 在用 / 孤儿 / 大图。翻页要 1~2 分钟。"""
+        info, err = scan_space()
+        if err:
+            return self._send(502, {"ok": False, "error": err})
+        return self._send(200, {"ok": True, **info})
+
+    def _space_clean(self, body):
+        """回收孤儿图。**删除不可逆**，所以三重保险：
+
+        1. 只接受 `images/` 下的 key，别的直接跳过
+        2. 删之前**重新核对一次**引用 —— 此刻仍被引用的坚决不删
+           （扫描和删除之间用户可能刚好保存了一篇，用它当保护）
+        3. 先把 key 清单写到本机留档，删了什么有据可查
+        """
+        keys = body.get("keys") or []
+        if not isinstance(keys, list):
+            return self._send(400, {"ok": False, "error": "keys 必须是数组"})
+        if len(keys) > 20000:
+            return self._send(400, {"ok": False, "error": "一次最多 20000 个，分批来"})
+
+        refs = referenced_names()
+        man = (Path.home() / ".workbuddy" / "tmp"
+               / f"r2_orphan_manifest_{time.strftime('%Y%m%d_%H%M%S')}.txt")
+        try:
+            man.parent.mkdir(parents=True, exist_ok=True)
+            man.write_text("\n".join(str(k) for k in keys), encoding="utf-8")
+        except Exception:
+            pass
+
+        deleted, skipped, failed = 0, [], []
+        for k in keys:
+            k = str(k)
+            if not k.startswith("images/") or "/" in k[len("images/"):]:
+                skipped.append([k, "不是 images/ 下的对象"])
+                continue
+            if k.split("/", 1)[1] in refs:
+                skipped.append([k, "仍被正文引用，拒绝删除"])
+                continue
+            st, _ = call_r2("DELETE", f"{R2_API}/{urllib.parse.quote(k)}")
+            if st == 200:
+                deleted += 1
+            else:
+                failed.append([k, f"HTTP {st}"])
+        print(f"  🧹 回收空间：删除 {deleted} 个，跳过 {len(skipped)}，失败 {len(failed)}"
+              f"（清单留档 {man.name}）")
+        return self._send(200, {"ok": not failed, "deleted": deleted,
+                                "skipped": skipped[:20], "failed": failed[:20],
+                                "manifest": str(man)})
 
     def _theme(self, body):
         """保存外观参数到 content/theme.json（调参面板用）。"""

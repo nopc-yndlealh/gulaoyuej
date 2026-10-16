@@ -38,3 +38,13 @@ cf-token.txt
 
 # 恢复脚本的临时下载目录
 .recover-tmp/
+
+# 草稿：写一半的稿子 + 还没上云的本地图。
+# 这是「本机的工作台」，不是站点内容 —— 只存在这台机器上，绝不进仓库。
+content/_drafts/
+
+# 图片重压前的原始 JSON 备份（本机回滚用），不是站点内容
+content/_recompress_backup/
+
+# 构建输出目录（tools/build.py --dist dist 的产物）
+dist/

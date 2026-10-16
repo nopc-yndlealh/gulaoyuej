@@ -32,16 +32,15 @@ button.sm{padding:3px 8px;font-size:12px;border-radius:5px}
       border:1px solid var(--border);color:var(--muted)}
 .pill.ok{color:var(--ok);border-color:var(--ok)}
 .pill.err{color:var(--err);border-color:var(--err)}
-main{flex:1;display:grid;grid-template-columns:280px 1fr 380px;gap:0;min-height:0}
-@media (max-width:1200px){ main{grid-template-columns:240px 1fr} #preview{display:none} }
+main{flex:1;display:grid;grid-template-columns:260px 1fr 360px;gap:0;min-height:0}
+@media (max-width:1200px){ main{grid-template-columns:220px 1fr} #preview{display:none} }
 @media (max-width:820px){ main{grid-template-columns:1fr} #listpane{display:none} }
 .col{min-height:0;overflow:auto;padding:12px}
 #listpane{border-right:1px solid var(--border);background:var(--surface2)}
-#editpane{border-right:1px solid var(--border);background:var(--surface)}
+#editpane{border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column}
 #preview{background:var(--surface2)}
 input,select,textarea{width:100%;font:inherit;padding:7px 10px;border:1px solid var(--border);
   border-radius:7px;background:var(--surface);color:var(--text)}
-textarea{resize:vertical;min-height:64px;line-height:1.6}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
 label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -53,27 +52,58 @@ label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
 .list-item .t{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
 .list-item .m{font-size:11px;color:var(--muted);white-space:nowrap}
 .list-item.draft .t{opacity:.55}
-.seg{border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px;
-     background:var(--surface2);cursor:grab}
-.seg.dragging{opacity:.4}
-.seg.over{border-color:var(--accent)}
-.seg .hd{display:flex;align-items:center;gap:6px;margin-bottom:5px}
+
+/* ── 写作区 ── */
+.dochdr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+        padding:8px 0 6px;border-top:1px solid var(--border);margin-top:16px}
+.dochdr .bar{display:flex;gap:6px;flex-wrap:wrap}
+#doc{flex:1;min-height:320px;margin-top:8px;padding:22px 26px;background:var(--surface2);
+     border:1px solid var(--border);border-radius:var(--radius);outline:none;
+     line-height:1.9;font-size:14.5px;overflow:auto}
+#doc:focus{border-color:var(--accent)}
+#doc p,#doc div.para{margin:0 0 4px;white-space:pre-line}
+#doc:empty::before,#doc.pempty::before{
+  content:"在这里写正文。写完一段，把图片直接拖进来，或者按 Ctrl+V 粘贴截图。";
+  color:var(--muted);font-size:13px}
+/* ── 正文里的图片：对齐贴吧的实测结果 ──
+   贴吧正文图只有 .BDE_Image{margin-top:8px;max-width:570px} 这么一条规则，
+   直角、无阴影、无边框、无外壳、没有按钮。这里照做。
+   （贴吧的"宽度统一"其实靠图床按 w=580 出图 + HTML 写死 width=560，
+     我们放在前台用 CSS 解决，见 documents/贴吧发帖模式逆向结论.md） */
+#doc img{max-width:100%;height:auto;display:block;margin:8px 0 0;
+         border-radius:0;box-shadow:none;background:transparent}
+/* 上传中/失败：状态直接叠在图自己身上，不额外占位、不出现任何外壳 */
+#doc img.uploading{opacity:.45;outline:1px dashed var(--accent);outline-offset:2px}
+#doc img.failed{opacity:.9;outline:2px solid var(--err);outline-offset:2px}
+/* 底部状态行：只在有动静时出现，传完自动消失（贴吧也是把进度放在底部面板） */
+.upstatus{display:none;margin-top:8px;padding:7px 10px;border-radius:7px;font-size:12px;
+          background:var(--accent-soft);color:var(--accent);line-height:1.9}
+.upstatus.on{display:block}
+.upstatus.err{background:#fdecea;color:#8c2216}
+@media (prefers-color-scheme: dark){ .upstatus.err{background:#3a1714;color:#f2b8b0} }
+.vidblk{border:1px solid var(--border);border-radius:8px;padding:8px;margin:10px 0;background:var(--surface)}
+.vidblk .meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-bottom:4px}
 .badge{font-size:11px;padding:1px 7px;border-radius:4px;background:var(--accent-soft);color:var(--accent)}
-.badge.img{background:#e8f7ef;color:#1d9e75}
 .badge.vid{background:#fdf0e0;color:#ba7517}
-@media (prefers-color-scheme: dark){ .badge.img{background:#12331f} .badge.vid{background:#3a2c12} }
-.seg .thumb{max-height:80px;border-radius:6px;margin-top:5px;display:block}
+@media (prefers-color-scheme: dark){ .badge.vid{background:#3a2c12} }
+
 .mockup{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
 .mockup .mh{padding:14px 14px 6px}
 .mockup .mt{font-size:16px;font-weight:600;line-height:1.4}
 .mockup .mm{font-size:12px;color:var(--muted);margin-top:5px;display:flex;gap:10px;flex-wrap:wrap}
 .mockup .mb{padding:6px 14px 14px}
-.mockup .mb p{font-size:13.5px;line-height:1.75;margin-bottom:9px;white-space:pre-wrap}
-.mockup .mb img{width:100%;border-radius:8px;margin-bottom:9px;display:block}
+.mockup .mb p{font-size:13.5px;line-height:1.75;margin-bottom:9px;white-space:pre-wrap;text-indent:2em}
+.mockup .mb img{max-width:100%;border-radius:8px;margin-bottom:9px;display:block}
 .mockup .empty{padding:40px 16px;text-align:center;color:var(--muted)}
+/* 预览的三种前台渲染方案 —— 只作用于预览，绝不写回站点 CSS。
+   线上现在用的是 .mockup .mb img{max-width:100%}（= 小图不放大，就是"一大一小"的根因） */
+.mockup.pv-full .mb img{width:100%;max-width:100%}
+.mockup.pv-tieba .mb img{width:75%;max-width:75%}
+.pvhdr{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.pvhdr .on{background:var(--accent);border-color:var(--accent);color:#fff}
 #log{font-family:ui-monospace,Consolas,monospace;font-size:11.5px;white-space:pre-wrap;
      background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-     padding:8px;max-height:180px;overflow:auto;margin-top:10px;display:none}
+     padding:8px;max-height:150px;overflow:auto;margin-top:10px;display:none}
 .msg{padding:8px 10px;border-radius:7px;margin-bottom:10px;font-size:13px;display:none}
 .msg.err{background:#fdecea;color:#8c2216;border:1px solid #f3c0b8;display:block}
 .msg.warn{background:#fdf6e3;color:#7a4e07;border:1px solid #ecd9a5;display:block}
@@ -92,6 +122,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
   <span class="pill" id="p-r2">…</span>
   <span class="sp"></span>
   <button class="ghost" onclick="reload()">↻ 列表</button>
+  <button class="ghost" id="btn-space" onclick="spaceScan()" title="盘点并回收 R2 空间">🧹 空间</button>
   <button onclick="newPost()">＋ 新建</button>
   <button id="btn-save" class="primary" onclick="save()">保存</button>
   <button id="btn-pub" class="primary" onclick="publish()">🚀 发布</button>
@@ -99,6 +130,12 @@ label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
 
 <main>
   <div id="listpane" class="col">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <span class="hint" id="draftmeta" style="flex:1">…</span>
+      <button class="sm" onclick="newDraft()" title="另起一篇，和现有草稿互不干扰">＋ 新建草稿</button>
+    </div>
+    <div id="draftlist" style="margin-bottom:10px"></div>
+    <div style="border-top:1px solid var(--border);margin:10px 0"></div>
     <input id="q" placeholder="搜索标题 / 正文…" oninput="loadList()">
     <label>分类筛选</label>
     <select id="fcat" onchange="loadList()"><option value="">全部</option></select>
@@ -133,26 +170,52 @@ label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
       <div><label>作者名</label><input id="f-author" oninput="renderPreview()"></div>
     </div>
 
-    <label style="margin-top:18px">内容段落 <span class="hint">（拖左边的 ⠿ 排序；图文按顺序呈现）</span></label>
-    <div id="segs"></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-      <button class="sm" onclick="addSeg('t')">＋ 文字</button>
-      <button class="sm" onclick="addSeg('i')">＋ 图片（填 URL）</button>
-      <button class="sm" onclick="pickImage()">＋ 上传图片到 R2</button>
-      <button class="sm" onclick="addSeg('v')">＋ 视频外链</button>
-      <input type="file" id="file" accept="image/*" style="display:none" onchange="uploadFile(this.files[0])">
+    <div class="hint" id="draftbar"
+         style="margin-top:12px;padding:6px 9px;border:1px dashed var(--border);border-radius:6px">
+      改动会自动存成草稿
     </div>
+    <div class="dochdr">
+      <span class="badge">正文</span>
+      <div class="bar">
+        <button class="sm" onclick="pickImages()">＋ 图片（本地，可多选）</button>
+        <button class="sm" onclick="addImageByUrl()">＋ 图片（填 URL）</button>
+        <button class="sm" onclick="addVideo()">＋ 视频外链</button>
+      </div>
+      <input type="file" id="files" accept="image/*" multiple style="display:none">
+    </div>
+    <div class="hint" style="margin-top:6px">
+      <b>直接写就行。</b>图片可以直接拖进来、按 <b>Ctrl+V</b> 粘贴截图、或点上面的按钮 ——
+      都会插在<b>光标所在位置</b>，就是正文里的一张图，没有多余外壳。
+      想删掉某张图：点它一下，按 <b>退格</b>。<br>
+      图会先<b>存在本机</b>（自动转 WebP、最长边 1600），<b>点「保存」时才上传到云端</b> ——
+      写的时候不会往网上传东西。写一半也不要紧，改动会自动存成草稿。
+    </div>
+    <div id="up" class="upstatus"></div>
+    <div id="doc" contenteditable="true" spellcheck="false" class="pempty"></div>
     <div id="log"></div>
   </div>
 
   <div id="preview" class="col">
-    <div class="hint" style="margin-bottom:8px">前台详情预览</div>
+    <div class="pvhdr">
+      <span class="hint">前台详情预览</span>
+      <span style="flex:1"></span>
+      <button class="sm on" data-pv="now" title="线上现在就是这样">现在线上</button>
+      <button class="sm" data-pv="full" title="所有图统一撑满，小图会被放大">统一宽度</button>
+      <button class="sm" data-pv="tieba" title="贴吧实测：图占容器 75%，左对齐，右侧留白">贴吧式</button>
+    </div>
     <div class="mockup" id="mock"></div>
+    <div class="hint" style="margin-top:8px;font-size:11.5px" id="pvnote"></div>
   </div>
 </main>
 
 <script>
-let CATS = [], CUR = null, SEGS = [], DRAG = -1;
+/* ═══════════════════════════════════════════════════════════════
+   状态
+   ═══════════════════════════════════════════════════════════════ */
+const MAX_EDGE = 1600;           // 上传前把最长边压到这个值（只缩不放）
+const R2_PREFIX = 'https://img.feijibei.top/';
+const DRAFT_URL = '/draft-img/'; // 草稿图的本地地址前缀 —— 只在本机，没上云
+let CATS = [], CUR = null, PV = 'now';   // PV = 预览用的前台渲染方案（now | full | tieba）
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? '').replace(/[&<>"']/g,
@@ -169,6 +232,580 @@ async function api(path, opt){
   return d;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   正文区 ↔ segments 互转
+   ───────────────────────────────────────────────────────────────
+   存储格式绝不能变：content/posts/*.json 里就是 [{t}|{i}|{v}]。
+   这里的两个函数是整件事的地基，改动必须跑 test_editor_roundtrip.js。
+   ═══════════════════════════════════════════════════════════════ */
+
+/** 把一个元素里的文字取出来，<br> 和块级边界还原成 \n */
+function getText(el){
+  let out = '';
+  for (const n of el.childNodes){
+    if (n.nodeType === 3){ out += n.textContent; continue; }
+    if (n.nodeType !== 1) continue;
+    const tag = n.tagName;
+    if (tag === 'BR'){ out += '\n'; continue; }
+    if (tag === 'IMG' || tag === 'BUTTON' || tag === 'INPUT'){ continue; }
+    const isBlock = /^(DIV|P|LI|BLOCKQUOTE|H[1-6]|PRE|FIGURE|SECTION)$/.test(tag);
+    if (isBlock && out && !out.endsWith('\n')) out += '\n';
+    out += getText(n);
+    if (isBlock && !out.endsWith('\n')) out += '\n';
+  }
+  return out;
+}
+
+/** DOM → segments。tolerant=true 时容忍"还没传完的图"（预览用）。
+ *
+ *  规则（往返测试盯着，改之前先跑 test_editor_roundtrip.js）：
+ *   · 一个块级元素 = 一个文字段（段内换行原样保留）
+ *   · 图片/视频独立成段，按文档顺序插到文字段之间
+ *   · 只裁掉「块与块之间」多算出来的换行，别的字符一律原样保留
+ *     （曾经把 U+00A0 换成普通空格，害得全库 67 篇一保存就被悄悄改写）
+ */
+function domToSegments(tolerant){
+  const segs = [];
+  let buf = '';
+  const flush = () => {
+    const t = buf.replace(/^\n+/, '').replace(/\n+$/, '');
+    if (t.trim()) segs.push({t});
+    buf = '';
+  };
+  const takeImg = n => {
+    // 两种图都认：data-r2（已在云端）或 src 指向本机草稿仓（还没上云）
+    const r2 = n.getAttribute('data-r2') || '';
+    const src = n.getAttribute('src') || '';
+    const url = r2 || (src.startsWith(DRAFT_URL) ? src : '');
+    if (url){ flush(); segs.push({i: url}); return; }
+    if (tolerant){ flush(); return; }
+    throw new Error('有一张图还没存好（或上传失败了），先处理它再保存');
+  };
+  const run = parent => {
+    for (const n of parent.childNodes){
+      if (n.nodeType === 3){ buf += n.textContent; continue; }
+      if (n.nodeType !== 1) continue;
+      const tag = n.tagName;
+      if (tag === 'IMG'){ takeImg(n); continue; }
+      if (tag === 'BR'){ buf += '\n'; continue; }
+      if (n.classList.contains('vidblk')){
+        const u = (n.querySelector('input')?.value || '').trim();
+        flush();
+        if (u) segs.push({v: u});
+        continue;
+      }
+      const isBlock = /^(DIV|P|LI|BLOCKQUOTE|H[1-6]|PRE|FIGURE|SECTION|TABLE|UL|OL|ARTICLE)$/.test(tag);
+      if (!isBlock){ buf += getText(n); continue; }   // 行内元素：并进当前段
+      if (n.querySelector('img') || n.querySelector('.vidblk')){
+        run(n);                                        // 块里夹着图 → 进去拆
+        flush();
+      } else {
+        flush();
+        const t = getText(n).replace(/^\n+/, '').replace(/\n+$/, '');
+        if (t.trim()) segs.push({t});
+      }
+    }
+  };
+  run($('doc'));
+  flush();
+  return segs;
+}
+
+/** segments → DOM 片段 */
+function segmentsToDom(segs){
+  const frag = document.createDocumentFragment();
+  for (const s of segs || []){
+    if (s.t !== undefined && s.t !== null && String(s.t).length){
+      const p = document.createElement('p');
+      p.textContent = String(s.t);          // 用 textContent：自动转义，\n 原样保留
+      frag.appendChild(p);
+    } else if (s.i){
+      frag.appendChild(makeImg(s.i));
+    } else if (s.v){
+      frag.appendChild(makeVidBlock(s.v));
+    }
+  }
+  return frag;
+}
+
+/** 把 segments 灌进正文区 */
+function setDoc(segs){
+  const d = $('doc');
+  d.textContent = '';
+  d.appendChild(segmentsToDom(segs));
+  if (!d.childNodes.length) d.appendChild(emptyPara());
+  markEmpty();
+}
+function emptyPara(){ const p = document.createElement('p'); p.appendChild(document.createElement('br')); return p; }
+function markEmpty(){ $('doc').classList.toggle('pempty', !domToSegments(true).length); }
+
+/* ── 块工厂 ── */
+/** 造一张正文图：就是一个 <img>，没有任何外壳（对齐贴吧的实测结果）。 */
+function makeImg(url){
+  const img = document.createElement('img');
+  img.alt = '';
+  img.setAttribute('data-r2', url || '');
+  if (url) img.src = url;
+  return img;
+}
+
+function makeVidBlock(url){
+  const box = document.createElement('div');
+  box.className = 'vidblk';
+  box.contentEditable = 'false';
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const badge = document.createElement('span'); badge.className = 'badge vid'; badge.textContent = '视频';
+  const del = document.createElement('button');
+  del.className = 'sm'; del.textContent = '删除';
+  del.onclick = () => { box.remove(); renderPreview(); };
+  meta.append(badge, del);
+  const inp = document.createElement('input');
+  inp.placeholder = 'B站 / YouTube 链接';
+  inp.value = url || '';
+  inp.oninput = () => { host.dataset.v = inp.value.trim(); renderPreview(); };
+  const host = document.createElement('div');
+  host.setAttribute('data-v', url || '');
+  host.append(inp);
+  box.append(meta, host);
+  return box;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   在光标处插入 —— 这是这次改造的核心
+   ═══════════════════════════════════════════════════════════════ */
+function currentRange(){
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount) return null;
+  const r = sel.getRangeAt(0);
+  return $('doc').contains(r.startContainer) ? r : null;
+}
+
+function caretToTopBlock(container){
+  let n = container && container.nodeType === 3 ? container.parentNode : container;
+  while (n && n.parentNode !== $('doc')) n = n.parentNode;
+  return n && n.parentNode === $('doc') ? n : null;
+}
+
+/** 把一个块级元素插到光标处；光标在段中间时把该段一分为二。 */
+function insertBlockAtCaret(node, range){
+  const d = $('doc');
+  if (!d.childNodes.length) d.appendChild(emptyPara());
+  const r = range || currentRange();
+  if (!r){ d.appendChild(node); return afterInsert(node); }
+
+  const top = caretToTopBlock(r.startContainer);
+  if (!top){ d.appendChild(node); return afterInsert(node); }
+
+  const isTextBlock = /^(P|DIV)$/.test(top.tagName) && !top.classList.contains('vidblk');
+
+  if (isTextBlock){
+    // 用 Range 把当前段落按光标切成左右两半，图片夹在中间
+    const lr = document.createRange();
+    lr.setStart(top, 0);
+    lr.setEnd(r.startContainer, r.startOffset);
+    const rr = document.createRange();
+    rr.setStart(r.startContainer, r.startOffset);
+    rr.setEnd(top, top.childNodes.length);
+
+    const left = top.cloneNode(false); left.appendChild(lr.cloneContents());
+    const right = top.cloneNode(false); right.appendChild(rr.cloneContents());
+
+    const parent = top.parentNode;
+    parent.insertBefore(left, top);
+    parent.insertBefore(node, top);
+    parent.insertBefore(right, top);
+    top.remove();
+    // 清掉分出来的空段落（图片上方/下方不留空行）
+    if (!getText(left).trim() && !left.querySelector('img')) left.remove();
+    if (!getText(right).trim() && !right.querySelector('img')) right.remove();
+  } else {
+    top.parentNode.insertBefore(node, top.nextSibling);
+  }
+  afterInsert(node);
+}
+
+/** 插完之后：保证块后面有一个可打字的空段落，并把光标放过去 */
+function afterInsert(node){
+  const next = node.nextSibling;
+  const okPara = next && next.nodeType === 1 && /^(P|DIV)$/.test(next.tagName)
+    && !next.classList.contains('vidblk');
+  if (!okPara) node.parentNode.insertBefore(emptyPara(), node.nextSibling);
+  const target = node.nextSibling;
+  const r = document.createRange();
+  r.setStart(target, 0); r.collapse(true);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  if (node.scrollIntoView) node.scrollIntoView({block:'nearest'});
+  renderPreview(); markEmpty();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   图片上传：压缩 → WebP → R2 → 就地替换
+   ═══════════════════════════════════════════════════════════════ */
+function loadImageEl(file){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    const u = URL.createObjectURL(file);
+    img.onload = () => { URL.revokeObjectURL(u); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(u); rej(new Error('这张图浏览器读不出来')); };
+    img.src = u;
+  });
+}
+
+/** 长边≤1600，转 WebP（PNG 源给高一点的画质，避免截图文字发虚） */
+async function optimize(file){
+  const img = await loadImageEl(file);
+  const nw = img.naturalWidth, nh = img.naturalHeight;
+  if (!nw || !nh) throw new Error('图片尺寸读不出来');
+  const scale = Math.max(nw, nh) > MAX_EDGE ? MAX_EDGE / Math.max(nw, nh) : 1;
+  const w = Math.round(nw * scale), h = Math.round(nh * scale);
+  const cv = document.createElement('canvas');
+  cv.width = w; cv.height = h;
+  cv.getContext('2d').drawImage(img, 0, 0, w, h);
+  const isPng = /png/i.test(file.type) || /\.png$/i.test(file.name);
+  const q = isPng ? 0.92 : 0.82;
+  const blob = await new Promise(r => cv.toBlob(r, 'image/webp', q));
+  if (!blob || blob.type !== 'image/webp'){       // 浏览器不支持 WebP 编码 → 退回原图
+    return {blob: file, w: nw, h: nh, converted: false};
+  }
+  return {blob, w, h, converted: true};
+}
+
+function safeStem(name){
+  return (String(name || '').replace(/\.[^.]+$/, '')
+    .replace(/[^0-9A-Za-z._-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 48)) || 'img';
+}
+
+function blobToDataURL(b){
+  return new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(b); });
+}
+
+let INFLIGHT = 0;
+const FAILS = [];                 // [{file, img}] 存本机失败的，可以重试
+const PREVIEW = new WeakMap();    // img → 本地预览用的 objectURL（用完要 revoke）
+
+function renderUp(){
+  const el = $('up');
+  if (!INFLIGHT && !FAILS.length){ el.className = 'upstatus'; el.innerHTML = ''; return; }
+  if (FAILS.length){
+    el.className = 'upstatus err on';
+    el.innerHTML = `✗ 有 ${FAILS.length} 张没存进本机：` +
+      FAILS.map((f, i) => `<b>${esc(f.file.name)}</b><button class="sm" data-r="${i}">重试</button>`).join('　') +
+      `　<span style="opacity:.75">（或者点它一下、按退格删掉）</span>`;
+    el.querySelectorAll('[data-r]').forEach(b => b.onclick = () => {
+      const i = +b.dataset.r, f = FAILS.splice(i, 1)[0];
+      renderUp(); toDraft(f.file, f.img);
+    });
+  } else {
+    el.className = 'upstatus on';
+    el.textContent = `正在存进本机 ${INFLIGHT} 张…（虚线框消失就好了）`;
+  }
+}
+
+/** 把一张本地图存进【本机草稿仓】—— 这一步不上云。
+ *  图落在 content/_drafts/images/，写作全程只在本机；
+ *  只有点「保存」时才会由 /api/push-images 推到 R2。
+ *  （上一版是插图即上传，用户不该在插图那一刻就被传到云端。） */
+async function toDraft(file, img){
+  INFLIGHT++; renderUp();
+  img.classList.add('uploading'); img.classList.remove('failed');
+  try{
+    const {blob, w, h, converted} = await optimize(file);
+    const ext = converted ? 'webp'
+                          : (String(file.name).split('.').pop() || 'webp').toLowerCase();
+    const d = await api('/api/draft-image', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({filename: 'draft.' + ext, data: await blobToDataURL(blob)})});
+    img.src = d.url;                          // ← 本机地址，不是 R2
+    img.setAttribute('data-local', d.url);
+    img.removeAttribute('data-r2');
+    img.title = `${w}×${h}${converted ? ' · WebP' : ' · 原格式'} · `
+              + `${(d.size/1024).toFixed(0)} KB · 仅本机`;
+    img.classList.remove('uploading', 'failed');
+    msg('ok', '✓ 已插入。图先存在本机，点「保存」时才上传');
+  }catch(e){
+    img.classList.remove('uploading');
+    img.classList.add('failed');
+    img.removeAttribute('data-r2'); img.removeAttribute('data-local');
+    FAILS.push({file, img});
+    msg('err', '✗ ' + file.name + ' 存本机失败：' + e.message);
+  }finally{
+    const p = PREVIEW.get(img);
+    if (p){ URL.revokeObjectURL(p); PREVIEW.delete(img); }
+    INFLIGHT--; renderUp(); markEmpty(); renderPreview(); renderDraftBar(); scheduleDraft();
+  }
+}
+
+/** 把本地图片插到光标处：先挂本地预览（立刻可见），再并发存进本机草稿仓。 */
+async function insertFiles(files, range){
+  const list = [...files].filter(f => f && /^image\//.test(f.type));
+  if (!list.length){ msg('warn', '拖进来的东西里没有图片文件'); return; }
+  let r = range;
+  for (const f of list){
+    const img = makeImg('');
+    const localUrl = URL.createObjectURL(f);
+    img.src = localUrl;                       // 本地即时可见，不等网络
+    PREVIEW.set(img, localUrl);
+    img.classList.add('uploading');
+    insertBlockAtCaret(img, r);
+    r = null;
+    toDraft(f, img);                          // 故意不 await：多张并发
+  }
+  markEmpty(); renderPreview();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   草稿：写一半的稿子自动落盘，永不丢
+   —— 写作全程只在本机；只有点「保存」才动云端。
+   ═══════════════════════════════════════════════════════════════ */
+let DRAFT_KEY = '', DRAFT_T = null, DRAFT_AT = '';
+const LASTDRAFT = 'feijibei.lastDraft';   // 记住"上次写到哪"，下次自动回到那里
+
+function localImgs(){
+  return [...$('doc').querySelectorAll('img')]
+    .map(im => im.getAttribute('src') || '')
+    .filter(s => s.startsWith(DRAFT_URL));
+}
+function draftKey(){
+  return $('f-id').value.trim() || DRAFT_KEY;
+}
+function scheduleDraft(){
+  clearTimeout(DRAFT_T);
+  DRAFT_T = setTimeout(saveDraft, 1200);
+}
+async function saveDraft(){
+  if (!$('f-id').value.trim() && !DRAFT_KEY) DRAFT_KEY = 'draft_' + Date.now().toString(36);
+  const key = draftKey();
+  if (!key) return;
+  let d;
+  try { d = collect(); }                       // 图还没落盘时会抛错
+  catch { DRAFT_T = setTimeout(saveDraft, 1500); return; }
+  try{
+    const r = await api('/api/draft', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({key, draft: d})});
+    DRAFT_AT = r.saved_at; rememberDraft(key); renderDraftBar();
+  }catch(e){ /* 草稿存不下不要打断写作，静默 */ }
+}
+function renderDraftBar(){
+  const n = localImgs().length;
+  const bits = [];
+  if (DRAFT_AT) bits.push(`草稿已自动保存 ${DRAFT_AT}`);
+  if (n) bits.push(`<b>本机图 ${n} 张</b>（点「保存」才上传）`);
+  $('draftbar').innerHTML = (bits.join('　·　') || '改动会自动存成草稿')
+    + '　<span style="opacity:.65">Ctrl+S 保存入库</span>';
+}
+
+/** 保存前把本机图推到 R2，并把 DOM 里的地址换成云端地址。
+ *  这是「图片上云」的唯一入口 —— 是保存这个动作触发的，不是插图。 */
+async function pushLocalImages(){
+  const urls = [...new Set(localImgs())];
+  if (!urls.length) return 0;
+  msg('warn', `正在把 ${urls.length} 张本机图上传到云端…`);
+  const d = await api('/api/push-images', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify({urls})});
+  if (d.failed && d.failed.length)
+    throw new Error('有图上传失败：' + d.failed.map(f => f[1]).join('；')
+                    + '（图还在本机，再点一次保存即可）');
+  const m = d.mapping || {};
+  $('doc').querySelectorAll('img').forEach(im => {
+    const s = im.getAttribute('src') || '';
+    if (m[s]){ im.src = m[s]; im.setAttribute('data-r2', m[s]); im.removeAttribute('data-local'); }
+  });
+  return Object.keys(m).length;
+}
+
+async function loadDrafts(){
+  try{
+    const d = await api('/api/drafts');
+    const rows = d.drafts || [];
+    const cur = draftKey();
+    $('draftmeta').textContent = rows.length
+      ? `📝 草稿（${rows.length}）` : '📝 还没有草稿';
+    $('draftlist').innerHTML = rows.map(r => `
+      <div class="list-item${cur === r.key ? ' sel' : ''}">
+        <span class="t" onclick="loadDraft('${esc(r.key)}')">${esc(r.title || r.id || '(没写标题)')}</span>
+        <span class="m">${r.segs}段${r.local_imgs ? ' · 本机图' + r.local_imgs : ''}</span>
+        <button class="sm" onclick="deleteDraft('${esc(r.key)}')" title="删掉这份草稿">×</button>
+      </div>`).join('');
+  }catch(e){ $('draftmeta').textContent = '草稿列表读取失败'; }
+}
+
+/** 另起一篇 —— 各草稿 key 不同，互不干扰。 */
+function newDraft(){
+  newPost();
+  DRAFT_KEY = 'draft_' + Date.now().toString(36);
+  rememberDraft(DRAFT_KEY);
+  loadDrafts();
+  msg('ok', '已另起一篇。想切回之前那篇，点左栏草稿列表');
+}
+
+/** 删草稿：连本机没上传的图一起清（云端不受影响 —— 草稿图从来没上过云）。 */
+async function deleteDraft(key){
+  if (!confirm('删掉这份草稿？（' + key + '）\n\n'
+             + '· 草稿里没上传过的图会一起从本机清掉\n'
+             + '· 草稿里的图本来就没上过云，所以云端数据不受影响')) return;
+  await dropDraft(key);
+  // 清掉不再被任何草稿引用的本机图
+  let g = null;
+  try{
+    g = await api('/api/draft-gc', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body:'{}'});
+  }catch(e){}
+  if (draftKey() === key){
+    DRAFT_KEY = ''; DRAFT_AT = '';
+    try{ localStorage.removeItem(LASTDRAFT); }catch(e){}
+    newPost();
+  }
+  await loadDrafts();
+  msg('ok', '草稿已删除' + (g && g.removed ? `（顺带清掉本机 ${g.removed} 张没人用的图）` : ''));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   空间回收：先扫再删，删除不可逆，所以每一步都要你点头
+   ═══════════════════════════════════════════════════════════════ */
+const mb = n => (n / 1048576).toFixed(1);
+const gb = n => (n / 1073741824).toFixed(3);
+
+async function spaceScan(){
+  const btn = $('btn-space');
+  if (btn) btn.disabled = true;
+  msg('warn', '正在盘点 R2 空间…4 万多个对象要翻 40 多页，约 1~2 分钟，别关页面');
+  try{
+    const d = await api('/api/space-scan', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body:'{}'});
+    const top = (d.big_top || [])
+      .map(([k, s]) => `  ${(s / 1048576).toFixed(1)}MB  ${k.split('/').pop().slice(0, 46)}`)
+      .join('\n');
+    const ask =
+`R2 空间盘点
+———————
+对象总数        ${d.objects}
+总占用          ${mb(d.total_bytes)} MB（${gb(d.total_bytes)} GB / 10GB 配额）
+被正文引用      ${d.ref_count} 个 · ${mb(d.ref_bytes)} MB
+孤儿（没人引用）${d.orphan_count} 个 · ${mb(d.orphan_bytes)} MB
+
+大于 1MB 的在用图：${d.big_count} 张 · ${mb(d.big_bytes)} MB
+最大的几张（这些是"在用"的，不动）：
+${top}
+
+────────────
+要删掉这 ${d.orphan_count} 个孤儿图、回收 ${mb(d.orphan_bytes)} MB 吗？
+
+⚠️ 删除不可逆。这些图当前没有任何内容引用。
+   删之前会再核对一次引用，并把清单留档到本机。`;
+    if (!confirm(ask)){
+      msg('warn', `盘点完成，什么都没删。可回收 ${mb(d.orphan_bytes)} MB`);
+      return;
+    }
+    msg('warn', `正在删除 ${d.orphan_count} 个孤儿图…`);
+    const r = await api('/api/space-clean', {method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({keys: d.orphan_keys})});
+    msg('ok', `🧹 删除 ${r.deleted} 个，回收约 ${mb(d.orphan_bytes)} MB`
+      + (r.skipped && r.skipped.length ? `；跳过 ${r.skipped.length} 个（仍被引用）` : '')
+      + `。清单留档：${String(r.manifest || '').split('\\').pop()}`);
+  }catch(e){
+    msg('err', '盘点/清理失败：' + e.message);
+  }finally{
+    if (btn) btn.disabled = false;
+  }
+}
+
+/** 记住"上次写到哪"，下次打开自动回到那里。 */
+function rememberDraft(k){
+  try{ localStorage.setItem(LASTDRAFT, k); }catch(e){}
+}
+
+async function loadDraft(key){
+  const d = await api('/api/draft?key=' + encodeURIComponent(key));
+  DRAFT_KEY = key; DRAFT_AT = d._saved_at || '';
+  rememberDraft(key);
+  CUR = d;                     // 拿草稿本身当基线，collect() 的老字段就能原样带回
+  $('f-id').value = d.id || '';
+  $('f-title').value = d.title || '';
+  $('f-cat').value = d.cat || CATS[0];
+  $('f-source').value = d.source || '';
+  $('f-tag').value = d.tag || '';
+  $('f-time').value = d.time || '';
+  $('f-rawTitle').value = d.rawTitle || '';
+  $('f-author').value = (typeof d.author === 'string') ? d.author : (d.contentAuthor?.name || '');
+  $('f-status').value = d.status || 'published';
+  setDoc(d.segments || []);
+  msg('warn', `已载入草稿（${DRAFT_AT || '时间未知'}）—— 继续写，或点「保存」入库`);
+  renderPreview(); renderDraftBar(); loadList();
+}
+
+async function dropDraft(key){
+  try{ await api('/api/draft-delete', {method:'POST',
+        headers:{'Content-Type':'application/json'}, body: JSON.stringify({key})}); }catch(e){}
+}
+
+function pickImages(){ $('files').click(); }
+
+function addImageByUrl(){
+  const u = prompt('粘贴已在 R2 上的图片地址（须以 ' + R2_PREFIX + ' 开头）：', R2_PREFIX + 'images/');
+  if (!u) return;
+  const v = u.trim();
+  if (!v.startsWith(R2_PREFIX)){ msg('err', '只接受 ' + R2_PREFIX + ' 开头的地址（保存时会被后端拒绝）'); return; }
+  insertBlockAtCaret(makeImg(v));
+}
+
+function addVideo(){
+  const u = prompt('B站 / YouTube 视频链接：');
+  if (!u || !u.trim()) return;
+  insertBlockAtCaret(makeVidBlock(u.trim()));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   正文区事件：文件拖入 / 粘贴截图 / 纯文本粘贴 / 输入联动
+   ═══════════════════════════════════════════════════════════════ */
+function rangeFromPoint(x, y){
+  if (!Number.isFinite(x)) return null;
+  if (document.caretRangeFromPoint) return document.caretRangeFromPoint(x, y);
+  if (document.caretPositionFromPoint){
+    const p = document.caretPositionFromPoint(x, y);
+    if (!p) return null;
+    const r = document.createRange(); r.setStart(p.offsetNode, p.offset); r.collapse(true); return r;
+  }
+  return null;
+}
+
+$('doc').addEventListener('dragover', e => {
+  if ([...(e.dataTransfer?.types || [])].includes('Files')){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }
+});
+$('doc').addEventListener('drop', e => {
+  const files = [...(e.dataTransfer?.files || [])].filter(f => /^image\//.test(f.type));
+  if (!files.length) return;
+  e.preventDefault();
+  const r = rangeFromPoint(e.clientX, e.clientY);
+  insertFiles(files, r && $('doc').contains(r.startContainer) ? r : null);
+});
+$('doc').addEventListener('paste', e => {
+  const items = [...(e.clipboardData?.items || [])];
+  const files = items.filter(i => i.kind === 'file' && /^image\//.test(i.type))
+                     .map(i => i.getAsFile()).filter(Boolean);
+  if (files.length){ e.preventDefault(); insertFiles(files); return; }
+  // 纯文本：只取 text/plain，避免把外部的字体/颜色/背景一起带进来
+  const text = e.clipboardData?.getData('text/plain');
+  if (text){
+    e.preventDefault();
+    document.execCommand('insertHTML', false, text.split('\n').map(esc).join('<br>'));
+    renderPreview(); markEmpty();
+  }
+});
+$('doc').addEventListener('input', () => {
+  renderPreview(); markEmpty(); renderDraftBar(); scheduleDraft();
+});
+$('doc').addEventListener('click', e => { if (e.target === $('doc')) markEmpty(); });
+// 元数据改了也自动进草稿 —— 半截文稿本来就包括填了一半的表单
+['f-id','f-title','f-source','f-tag','f-time','f-rawTitle','f-author']
+  .forEach(id => $(id).addEventListener('input', scheduleDraft));
+['f-cat','f-status'].forEach(id => $(id).addEventListener('change', scheduleDraft));
+
+/* ═══════════════════════════════════════════════════════════════
+   列表 / 载入 / 保存 / 发布
+   ═══════════════════════════════════════════════════════════════ */
 async function boot(){
   const meta = await api('/api/meta');
   CATS = meta.cats;
@@ -177,7 +814,20 @@ async function boot(){
   $('p-r2').textContent = meta.r2 ? 'R2 已就绪' : 'R2 未配置';
   $('p-r2').className = 'pill ' + (meta.r2 ? 'ok' : 'err');
   document.querySelector('#listpane label').textContent = `分类筛选（共 ${meta.total} 条）`;
-  await loadList(); await refreshStatus();
+  setDoc([]);
+  await loadDrafts(); await loadList(); await refreshStatus();
+  // ★ 回到上次写作的地方：有未完成的草稿就自动打开，不用你去找
+  let last = null;
+  try{ last = localStorage.getItem(LASTDRAFT); }catch(e){}
+  if (last){
+    try{
+      await loadDraft(last);
+      msg('warn', `已自动回到上次写作的草稿（${DRAFT_AT || '时间未知'}）`
+        + '　—— 想另起一篇，点左栏「＋ 新建草稿」');
+    }catch(e){
+      try{ localStorage.removeItem(LASTDRAFT); }catch(_){}
+    }
+  }
 }
 
 async function refreshStatus(){
@@ -187,6 +837,8 @@ async function refreshStatus(){
     $('p-repo').className = 'pill' + (s.dirty ? '' : ' ok');
   }catch(e){ $('p-repo').textContent = '仓库状态未知'; }
 }
+
+function reload(){ loadList(); }
 
 async function loadList(){
   const q = $('q').value.trim(), cat = $('fcat').value;
@@ -212,60 +864,22 @@ async function openPost(id){
   $('f-rawTitle').value = p.rawTitle || '';
   $('f-author').value = (typeof p.author === 'string') ? p.author : (p.contentAuthor?.name || '');
   $('f-status').value = p.status || 'published';
-  SEGS = (p.segments || []).map(s => ({t:s.t||'', i:s.i||'', v:s.v||''}));
+  setDoc(p.segments || []);
+  DRAFT_KEY = ''; DRAFT_AT = ''; renderDraftBar();   // 已发布的内容不和草稿混着
   msg('', '');
-  renderSegs(); renderPreview(); loadList(); refreshStatus();
+  renderPreview(); loadList(); refreshStatus();
 }
 
 function newPost(){
-  CUR = null; SEGS = [{t:'',i:'',v:''}];
+  CUR = null;
   ['f-id','f-title','f-source','f-tag','f-time','f-rawTitle','f-author'].forEach(i => $(i).value = '');
   $('f-cat').value = CATS[0]; $('f-status').value = 'published';
-  msg('', ''); renderSegs(); renderPreview();
-}
-
-function addSeg(k){ SEGS.push({t:'',i:'',v:''}); renderSegs(); }
-function pickImage(){ $('file').click(); }
-function delSeg(i){ SEGS.splice(i,1); renderSegs(); renderPreview(); }
-function setSeg(i,k,val){ SEGS[i][k]=val; SEGS[i].k=k; renderPreview(); }
-
-function renderSegs(){
-  $('segs').innerHTML = SEGS.map((s,i) => {
-    const kind = s.k || (s.t?'t':s.i?'i':s.v?'v':'t');
-    const val = kind==='t'?s.t:kind==='i'?s.i:s.v;
-    const label = {t:'文字', i:'图片', v:'视频'}[kind];
-    const cls = {t:'', i:'img', v:'vid'}[kind];
-    const body = kind==='t'
-      ? `<textarea rows="3" placeholder="文字内容…" oninput="setSeg(${i},'t',this.value)">${esc(val)}</textarea>`
-      : `<input placeholder="${kind==='i'?'图片 URL（须在 img.feijibei.top 上）':'B站 / YouTube 链接'}"
-                value="${esc(val)}" oninput="setSeg(${i},'${kind}',this.value)">`;
-    const thumb = (kind==='i' && val) ? `<img class="thumb" src="${esc(val)}" loading="lazy">` : '';
-    return `<div class="seg" draggable="true" data-i="${i}"
-      ondragstart="DRAG=${i};this.classList.add('dragging')"
-      ondragover="event.preventDefault();this.classList.add('over')"
-      ondragleave="this.classList.remove('over')"
-      ondrop="event.preventDefault();dropSeg(${i})"
-      ondragend="this.classList.remove('dragging')">
-      <div class="hd"><span class="badge ${cls}">${label}</span>
-        <span class="hint">第 ${i+1} 段</span><span style="flex:1"></span>
-        <button class="sm" onclick="delSeg(${i})">删除</button></div>
-      ${body}${thumb}</div>`;
-  }).join('') || '<div class="hint">还没有段落，点下面的按钮添加</div>';
-}
-
-function dropSeg(to){
-  document.querySelectorAll('.seg').forEach(e => e.classList.remove('over','dragging'));
-  if (DRAG === -1 || DRAG === to) return;
-  const [m] = SEGS.splice(DRAG,1); SEGS.splice(to,0,m); DRAG = -1;
-  renderSegs(); renderPreview();
+  DRAFT_KEY = ''; DRAFT_AT = ''; renderDraftBar();
+  setDoc([]); msg('', ''); renderPreview();
 }
 
 function collect(){
-  const segs = SEGS.map(s => {
-    const kind = s.k || (s.t?'t':s.i?'i':s.v?'v':'t');
-    const v = (kind==='t'?s.t:kind==='i'?s.i:s.v || '').trim();
-    return v ? {[kind]: v} : null;
-  }).filter(Boolean);
+  const segs = domToSegments(false);
   const author = $('f-author').value.trim();
   const p = {
     id: $('f-id').value.trim(),
@@ -279,6 +893,7 @@ function collect(){
     segments: segs,
   };
   if (author) p.author = author;
+  // 这些字段编辑器不编辑，但绝不能丢 —— 载入时原样带回去
   if (CUR){
     for (const k of ['type','date','image','contentType','contentTag','contentAuthor','legacySource','seq','thumb'])
       if (CUR[k] !== undefined) p[k] = CUR[k];
@@ -287,12 +902,71 @@ function collect(){
   return p;
 }
 
+async function save(){
+  msg('', '');
+  const key = draftKey();
+  try{
+    const pushed = await pushLocalImages();   // ★ 图片在这一步才上云
+    const post = collect();
+    const d = await api('/api/save', {method:'POST', headers:{'Content-Type':'application/json'},
+                                      body: JSON.stringify({post})});
+    CUR = post; CUR.id = d.id;
+    if (key) await dropDraft(key);            // 入库了，草稿收掉
+    DRAFT_KEY = ''; DRAFT_AT = '';
+    try{ localStorage.removeItem(LASTDRAFT); }catch(e){}
+    msg(d.warnings && d.warnings.length ? 'warn' : 'ok',
+        `✓ 已${d.action} ${d.id}`
+        + (pushed ? `（${pushed} 张本机图已上传到云端）` : '')
+        + (d.warnings && d.warnings.length ? '　⚠ ' + d.warnings.join('；') : ''));
+    await loadList(); await refreshStatus(); await loadDrafts(); loadPost(d.id);
+    renderDraftBar();
+    return true;
+  }catch(e){
+    msg('err', '✗ ' + (e.payload?.errors ? e.payload.errors.join('；') : e.message));
+    return false;
+  }
+}
+
+async function loadPost(id){
+  const p = await api('/api/post?id=' + encodeURIComponent(id));
+  CUR = p; $('f-id').value = p.id; $('f-status').value = p.status || 'published';
+}
+
+async function publish(){
+  if (CUR && $('f-id').value.trim() && $('f-id').value.trim() === CUR.id){
+    if (!await save()) return;
+  }
+  $('btn-pub').disabled = true; $('btn-pub').textContent = '发布中…';
+  msg('', '');
+  try{
+    const d = await api('/api/publish', {method:'POST', headers:{'Content-Type':'application/json'},
+                                         body: JSON.stringify({})});
+    msg(d.step === 'nochange' ? 'warn' : 'ok',
+        (d.step==='nochange' ? '没有需要提交的改动' : `✓ ${d.message}（${d.commit}）`)
+        + '　Cloudflare 会在 1-2 分钟后部署完成');
+    log(d.log || '');
+  }catch(e){
+    msg('err', '✗ ' + (e.payload?.step ? `[${e.payload.step}] ` : '') + e.message);
+    log(e.payload?.log || '');
+  }finally{
+    $('btn-pub').disabled = false; $('btn-pub').textContent = '🚀 发布';
+    await refreshStatus();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   预览（按现在线上的样式：正文列 672px、首行缩进 2em）
+   ═══════════════════════════════════════════════════════════════ */
 function renderPreview(){
-  const p = collect();
-  const segs = p.segments || [];
-  if (!segs.length){ $('mock').innerHTML = '<div class="empty">还没有内容</div>'; return; }
+  let segs = [];
+  try { segs = domToSegments(true); } catch(e){ segs = []; }
+  $('mock').className = 'mockup' + (PV === 'now' ? '' : ' pv-' + PV);   // 保住用户选的预览方案
+  const p = { title: $('f-title').value.trim(), cat: $('f-cat').value,
+              author: $('f-author').value.trim(), tag: $('f-tag').value.trim(),
+              time: $('f-time').value.trim(), status: $('f-status').value };
+  if (!segs.length){ $('mock').innerHTML = '<div class="empty">还没有正文</div>'; return; }
   const body = segs.map(s => {
-    if (s.t) return s.t.split('\n').filter(Boolean).map(x => `<p>${esc(x)}</p>`).join('');
+    if (s.t) return s.t.split('\n').filter(x => x.trim()).map(x => `<p>${esc(x)}</p>`).join('');
     if (s.i) return `<img src="${esc(s.i)}" loading="lazy" alt="">`;
     if (s.v){
       const yt = s.v.match(/(?:youtu\.be\/|v=)([\w-]{6,})/);
@@ -313,74 +987,47 @@ function renderPreview(){
     <div class="mb">${body}</div>`;
 }
 
-async function save(){
-  msg('', '');
-  try{
-    const d = await api('/api/save', {method:'POST', headers:{'Content-Type':'application/json'},
-                                      body: JSON.stringify({post: collect()})});
-    CUR = collect(); CUR.id = d.id;
-    msg(d.warnings && d.warnings.length ? 'warn' : 'ok',
-        `✓ 已${d.action} ${d.id}` + (d.warnings && d.warnings.length ? '　⚠ ' + d.warnings.join('；') : ''));
-    await loadList(); await refreshStatus(); loadPost(d.id);
-  }catch(e){
-    msg('err', '✗ ' + (e.payload?.errors ? e.payload.errors.join('；') : e.message));
-  }
+/* ═══════════════════════════════════════════════════════════════
+   启动
+   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   预览的三种前台渲染方案（只是预览，不动站点 CSS）
+   ═══════════════════════════════════════════════════════════════ */
+const PV_NOTE = {
+  now: '现在线上：max-width:100% —— 只封顶、不放大。所以窄于 672px 的图会缩着显示，这就是"一张很大一张很小"的根因。',
+  full: '统一宽度：width:100% —— 所有图一律撑满 672px 正文列，最整齐。代价是极小的图（约 1%）被放大后会略发虚。',
+  tieba: '贴吧式：width:75% —— 贴吧实测正文图占容器 75%（560/740），左对齐、右侧留白，图片不抢文字的视觉重心。',
+};
+function setPV(v){
+  PV = v;
+  document.querySelectorAll('[data-pv]').forEach(x => x.classList.toggle('on', x.dataset.pv === v));
+  $('mock').className = 'mockup' + (v === 'now' ? '' : ' pv-' + v);
+  $('pvnote').textContent = PV_NOTE[v];
 }
+document.querySelectorAll('[data-pv]').forEach(b => b.onclick = () => setPV(b.dataset.pv));
+setPV('now');
 
-async function loadPost(id){
-  const p = await api('/api/post?id=' + encodeURIComponent(id));
-  CUR = p; $('f-id').value = p.id; $('f-status').value = p.status || 'published';
-}
-
-async function publish(){
-  if (CUR && $('f-id').value.trim() && $('f-id').value.trim() === CUR.id){
-    try{ await save(); }catch(e){ return; }
-  }
-  $('btn-pub').disabled = true; $('btn-pub').textContent = '发布中…';
-  msg('', '');
-  try{
-    const d = await api('/api/publish', {method:'POST', headers:{'Content-Type':'application/json'},
-                                         body: JSON.stringify({})});
-    msg(d.step === 'nochange' ? 'warn' : 'ok',
-        (d.step==='nochange' ? '没有需要提交的改动' : `✓ ${d.message}（${d.commit}）`)
-        + '　Cloudflare 会在 1-2 分钟后部署完成');
-    log(d.log || '');
-  }catch(e){
-    msg('err', '✗ ' + (e.payload?.step ? `[${e.payload.step}] ` : '') + e.message);
-    log(e.payload?.log || '');
-  }finally{
-    $('btn-pub').disabled = false; $('btn-pub').textContent = '🚀 发布';
-    await refreshStatus();
-  }
-}
-
-async function uploadFile(file){
-  if (!file) return;
-  if (file.size > 12 * 1024 * 1024){ msg('err', '图片超过 12MB'); return; }
-  msg('warn', `正在上传 ${file.name} …`);
-  const b64 = await new Promise(res => { const r = new FileReader(); r.onload = () => res(r.result); r.readAsDataURL(file); });
-  // 文件名规范：weibo__<原名>.webp 那种历史命名不动，新图统一加 wb 前缀避免撞名
-  const safe = file.name.replace(/[^\w.\-]+/g, '_');
-  const fname = safe.startsWith('wb_') ? safe : 'wb_' + Date.now().toString(36) + '_' + safe;
-  try{
-    const d = await api('/api/image', {method:'POST', headers:{'Content-Type':'application/json'},
-                                       body: JSON.stringify({filename: fname, data: b64})});
-    SEGS.push({i: d.url, t:'', v:'', k:'i'});
-    renderSegs(); renderPreview();
-    msg('ok', `✓ 已上传到 R2：${d.url.split('/').pop()}（${(d.size/1024).toFixed(0)} KB）`);
-  }catch(e){ msg('err', '✗ 上传失败：' + e.message); }
-  $('file').value = '';
-}
-
+$('files').addEventListener('change', e => { insertFiles(e.target.files); e.target.value = ''; });
 window.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 's'){ e.preventDefault(); save(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); save(); }
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); publish(); }
 });
 window.addEventListener('beforeunload', e => {
-  // 只有在 id/标题有内容且未保存时提示（简化判断）
+  // 临关页面前再兜一次草稿（防抖还没到点就被关掉）
+  const key = draftKey();
+  if (key){
+    try{
+      let d = null; try { d = collect(); } catch {}
+      if (d && navigator.sendBeacon){
+        navigator.sendBeacon('/api/draft',
+          new Blob([JSON.stringify({key, draft: d})], {type:'application/json'}));
+      }
+    }catch(err){}
+  }
   if (CUR && $('f-id').value.trim() !== CUR.id) { e.preventDefault(); e.returnValue = ''; }
 });
-boot().catch(e => msg('err', '启动失败：' + e.message));
+
+if (!window.__NO_BOOT__) boot().catch(e => msg('err', '启动失败：' + e.message));
 </script>
 </body>
 </html>
