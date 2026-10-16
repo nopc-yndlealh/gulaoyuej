@@ -518,6 +518,11 @@ SITE_FILES = [
     "sw.js", "manifest.json", "icon-192.svg", "icon-512.svg",
     "_headers", "_redirects", "robots.txt", "sitemap.xml",
     "admin.html", "sedum-evo-2019.html", "景天科演化图谱.html",
+    # Cloudflare Pages 对未知路径会找 404.html；没有它就退回 index.html
+    # 配 200 —— 即"软 404"，搜索引擎会收录一堆垃圾 URL，用户输错地址也
+    # 不知道自己错在哪。实测对比：GitHub Pages 那份镜像返回正确的 404，
+    # 主站反倒是 200。
+    "404.html",
 ]
 
 

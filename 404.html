@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff8e14" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#322040" />
+    <!-- 404 页本身不该被收录 -->
+    <meta name="robots" content="noindex" />
+    <link rel="manifest" href="./manifest.json" />
+    <title>页面不存在 · 园艺图鉴</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪴</text></svg>"
+    />
+    <!-- 不写 ?v= —— _headers 里 *.css 是 max-age=0 + must-revalidate，
+         靠 ETag 走 304 就够了，手写版本号迟早忘记同步（sw.js 里记过这个坑）。 -->
+    <link rel="stylesheet" href="./style.css" />
+    <style>
+      /* 只有布局是本页自己的；颜色 / 圆角 / 阴影全部沿用 style.css 的变量，
+         所以深浅色、以及用户在图鉴里手动选过的主题都会自动跟随
+         （手动主题由页面末尾的 SiteCommon.initTheme() 应用）。 */
+      body.detail-page {
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+      /* .dp-back 原本是给 <button> 写的，这里用 <a> 得补一句 */
+      a.dp-back {
+        text-decoration: none;
+        color: #fff;
+      }
+      .nf-main {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 44px 20px 72px;
+      }
+      .nf-card {
+        width: 100%;
+        max-width: 520px;
+        text-align: center;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow-md);
+        padding: 36px 28px 32px;
+      }
+      .nf-code {
+        font-size: 46px;
+        font-weight: 700;
+        line-height: 1;
+        letter-spacing: 2px;
+        color: var(--accent);
+        margin-bottom: 14px;
+      }
+      .nf-title {
+        margin: 0 0 10px;
+        font-size: 19px;
+        font-weight: 600;
+        color: var(--text);
+      }
+      .nf-desc {
+        margin: 0 0 18px;
+        font-size: 14px;
+        line-height: 1.85;
+        color: var(--text-secondary);
+      }
+      .nf-path {
+        margin: 0 0 24px;
+        font-size: 12.5px;
+        line-height: 1.7;
+        color: var(--text-muted);
+        word-break: break-all;
+      }
+      .nf-path code {
+        font-family: ui-monospace, Consolas, monospace;
+        background: var(--accent-soft);
+        color: var(--text-secondary);
+        padding: 2px 7px;
+        border-radius: 6px;
+      }
+      a.nf-home {
+        display: inline-block;
+        padding: 10px 24px;
+        font-size: 14px;
+        font-weight: 500;
+        background: var(--accent);
+        color: #fff;
+        text-decoration: none;
+        border-radius: 22px;
+        box-shadow: var(--shadow-sm);
+        transition:
+          filter 0.2s,
+          transform 0.2s;
+      }
+      a.nf-home:hover {
+        filter: brightness(1.08);
+      }
+      a.nf-home:active {
+        transform: scale(0.97);
+      }
+    </style>
+  </head>
+  <body class="detail-page">
+    <header class="dp-bar">
+      <a class="dp-back" href="./index.html" aria-label="返回图鉴">← 返回</a>
+      <span class="dp-brand">园艺图鉴</span>
+      <div class="dp-tools">
+        <a class="header-btn dp-home" href="./index.html" title="回到图鉴首页" aria-label="回到图鉴首页">🏠</a>
+      </div>
+    </header>
+
+    <main class="nf-main">
+      <div class="nf-card">
+        <div class="nf-code">404</div>
+        <h1 class="nf-title">这个页面不在图鉴里</h1>
+        <p class="nf-desc">
+          链接可能输错了，或者这条内容已经被移走。<br />
+          品种都还在，回首页接着逛吧。
+        </p>
+        <p class="nf-path">你请求的是 <code id="nf-here">/</code></p>
+        <a class="nf-home" href="./index.html">回到图鉴首页</a>
+      </div>
+    </main>
+
+    <script src="./site-common.js"></script>
+    <script>
+      (function () {
+        'use strict';
+        // 跟随用户在图鉴里选过的主题（没选过就看系统偏好）。
+        // 包在 try 里：脚本挂了也不该影响这一页的可用性。
+        try {
+          window.SiteCommon.initTheme();
+        } catch (e) {
+          /* 忽略：退回系统深浅色 */
+        }
+        // 把真实请求路径显示出来，方便看出自己是从哪条链接过来的。
+        // 先解码，否则中文路径会显示成一长串 %E4%B8%80… 完全没法看。
+        try {
+          var raw = location.pathname + location.search;
+          var pretty = raw;
+          try {
+            pretty = decodeURIComponent(raw);
+          } catch (e) {
+            /* 编码不合法就原样显示 */
+          }
+          var el = document.getElementById('nf-here');
+          if (el) el.textContent = pretty.length > 80 ? pretty.slice(0, 80) + '…' : pretty;
+        } catch (e) {
+          /* 忽略 */
+        }
+      })();
+    </script>
+  </body>
+</html>
