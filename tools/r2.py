@@ -28,12 +28,45 @@ import argparse
 import json
 import os
 import re
+import socket
 import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+# ─────────────────────────────────────────────────────────────────────
+# 环境修复（2026-10-17 加）。不修这两条，本工具在本机会**直接挂死**。
+#
+# 坑 1 · IPv6 死路
+#   本机到 Cloudflare 的 IPv6 不通（AAAA 记录连接超时 8s+），而 DNS 会优先返回
+#   AAAA，Python 又按 getaddrinfo 的返回顺序尝试 → 一卡 60 秒以上甚至永久挂住。
+#   curl 默认走 IPv4 所以没事 —— 这就是「curl 能通、Python 不通」的由来。
+#   修法：把 getaddrinfo 换成只返回 AF_INET。
+#
+# 坑 2 · 沙箱伪代理
+#   WorkBuddy 沙箱给每个子进程注入 HTTP_PROXY / HTTPS_PROXY（大小写都注入），
+#   urllib 照单全收 → 墙外站点被白名单代理拦掉。修法：清掉这些变量 + 装无代理 opener。
+# ─────────────────────────────────────────────────────────────────────
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+def _ipv4_only(host, port, family=0, type=0, proto=0, flags=0):
+    return _orig_getaddrinfo(host, port, socket.AF_INET, type, proto, flags)
+
+
+if not getattr(socket, "_v4_patched", False):
+    socket.getaddrinfo = _ipv4_only
+    socket._v4_patched = True
+
+for _v in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy",
+           "ALL_PROXY", "all_proxy"):
+    os.environ.pop(_v, None)
+os.environ["no_proxy"] = "*"
+os.environ["NO_PROXY"] = "*"
+urllib.request.install_opener(
+    urllib.request.build_opener(urllib.request.ProxyHandler({})))
 
 ROOT = Path(__file__).resolve().parent.parent
 POSTS = ROOT / "content" / "posts"
@@ -123,6 +156,33 @@ def list_keys(prefix=""):
     return keys
 
 
+def list_objs(prefix=""):
+    """列出对象，返回 [{"key": …, "size": …}]。
+
+    与 list_keys 的区别：带上 size。check-refs 要靠它发现 **0 字节空文件**
+    —— 那种文件是"存在"的，只查 key 根本查不出来（2026-10-17 实测踩过：
+    3 处活裂图因此被漏掉）。
+    """
+    out, cursor = [], None
+    while True:
+        q = {"per_page": "1000"}
+        if prefix:
+            q["prefix"] = prefix
+        if cursor:
+            q["cursor"] = cursor
+        st, body = call("GET", API + "?" + urllib.parse.urlencode(q))
+        if st != 200:
+            print(f"✗ 列取失败 HTTP {st}: {body[:200]}", file=sys.stderr)
+            break
+        d = json.loads(body)
+        res = d.get("result", [])
+        out += [{"key": o["key"], "size": o.get("size") or 0} for o in res]
+        cursor = (d.get("result_info") or {}).get("cursor")
+        if not cursor or not res:
+            break
+    return out
+
+
 def cmd_ls(args):
     keys = list_keys(args.prefix or "")
     print(f"共 {len(keys)} 个对象")
@@ -183,20 +243,28 @@ def cmd_rm(args):
 
 
 def cmd_check_refs(args):
-    """核对 content/posts 里引用的每一张图，在 R2 上是否真的存在。"""
+    """核对 content/posts 里引用的每一张图，在 R2 上是否真的存在、以及是不是 0 字节。
+
+    ⚠️ 只查"在不在"不够：2026-10-17 实测发现 R2 上有 **0 字节对象正被正文引用**，
+       旧版会报"全部存在于 R2"（文件确实存在，只是内容是空的）→ 3 处活裂图被漏掉。
+       所以这里同时检查 size == 0。
+    """
     print("正在拉取 R2 对象清单…")
-    names = set(k.split("/", 1)[1] for k in list_keys("images/"))
-    print(f"  R2 上 images/ 下共 {len(names)} 个对象\n")
+    objs = list_objs("images/")
+    names = set(o["key"].split("/", 1)[1] for o in objs)
+    size_of = {o["key"].split("/", 1)[1]: o["size"] for o in objs}
+    print(f"  R2 上 images/ 下共 {len(names)} 个对象"
+          f"（其中 0 字节 {sum(1 for o in objs if not o['size'])} 个）\n")
 
     posts = []
     for f in sorted(POSTS.glob("*.json")):
         with open(f, encoding="utf-8") as fh:
             posts.append(json.load(fh))
 
-    total = missing = 0
+    total = missing = empty = 0
     by_post = {}
     for p in posts:
-        bad = []
+        bad, emp = [], []
         for s in p.get("segments", []):
             u = s.get("i")
             if not u or "/images/" not in u:
@@ -207,23 +275,31 @@ def cmd_check_refs(args):
             n = u.split("?")[0].split("#")[0].rsplit("/", 1)[-1]
             if n not in names:
                 bad.append(n)
-        if bad:
-            by_post[p["id"]] = (p.get("cat"), p.get("status"), bad)
+            elif not size_of.get(n):
+                emp.append(n)
+        if bad or emp:
+            by_post[p["id"]] = (p.get("cat"), p.get("status"), bad, emp)
             missing += len(bad)
+            empty += len(emp)
 
-    print(f"正文引用的图片共 {total} 处，其中 R2 上不存在的 {missing} 处")
+    print(f"正文引用的图片共 {total} 处")
+    print(f"  R2 上不存在   : {missing} 处")
+    print(f"  存在但 0 字节 : {empty} 处   ← 同样会裂图，只查存在性发现不了")
     if not by_post:
-        print("✓ 全部存在于 R2")
+        print("✓ 全部存在于 R2，且都不是空文件")
         return 0
 
-    print(f"分布在 {len(by_post)} 个帖子：\n")
-    for pid, (cat, st, bad) in list(by_post.items())[:args.limit]:
-        print(f"  [{cat}/{st}] {pid}  缺 {len(bad)} 张")
+    print(f"\n分布在 {len(by_post)} 个帖子：\n")
+    for pid, (cat, st, bad, emp) in list(by_post.items())[:args.limit]:
+        print(f"  [{cat}/{st}] {pid}   缺 {len(bad)} 张 / 空 {len(emp)} 张")
         for n in bad[:2]:
-            print(f"      ✗ {n[:88]}")
+            print(f"      ✗ 不存在  {n[:84]}")
+        for n in emp[:2]:
+            print(f"      ✗ 0 字节  {n[:84]}")
     if len(by_post) > args.limit:
         print(f"  … 另有 {len(by_post) - args.limit} 个帖子")
-    print("\n提示：若是「文件名被重复拼接帖子 id」，用 tools/fix_image_names.py 修。")
+    print("\n提示：文件名被重复拼接帖子 id → tools/fix_image_names.py 修；"
+          "0 字节对象 → 用原图重压后同名覆盖上传（并给 URL 换新的缓存串）")
     return 1
 
 

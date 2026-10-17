@@ -9,6 +9,9 @@ import re
 import struct
 import sys
 import urllib.request
+
+import netfix  # noqa: F401,E402  —— 网络环境修复（IPv6 死路 / 沙箱伪代理），发请求前必须导入
+
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 

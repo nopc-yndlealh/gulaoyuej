@@ -21,6 +21,8 @@ import sys
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
+
+import netfix  # noqa: F401,E402  —— 网络环境修复（IPv6 死路 / 沙箱伪代理），发请求前必须导入
 from pathlib import Path
 
 ACCOUNT = "082a519e512f02161ab5a57b376d3f4c"

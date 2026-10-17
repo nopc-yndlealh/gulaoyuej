@@ -30,6 +30,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import netfix  # noqa: F401,E402  —— 网络环境修复（IPv6 死路 / 沙箱伪代理），发请求前必须导入
+
 ROOT = Path(__file__).resolve().parent.parent
 POSTS = ROOT / "content" / "posts"
 
